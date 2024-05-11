@@ -10,7 +10,7 @@ class UserProfileManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.save(using=self._db)
+        user.save()
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
@@ -34,6 +34,8 @@ class UserProfile(AbstractUser):
     USERNAME_FIELD = "email"
 
     REQUIRED_FIELDS: list[str] = []
+
+    objects = UserProfileManager()
 
     class Meta:
         db_table = "user_profile"
