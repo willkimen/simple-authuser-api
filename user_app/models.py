@@ -4,9 +4,13 @@ from django.db import models
 
 class UserProfileManager(BaseUserManager):
 
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("The email address must be entered")
+
+        if not password:
+            raise ValueError("The password address must be entered")
+
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
