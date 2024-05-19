@@ -58,7 +58,7 @@ def test_user_without_password_is_not_created(user_dict):
 
 
 @pytest.mark.django_db
-def test_unique_email(user_dict):
+def test_user_with_duplicate_email_is_not_created(user_dict):
     with pytest.raises(IntegrityError):
         persisted_user = UserProfile.objects.create_user(
             email=user_dict['email'],
