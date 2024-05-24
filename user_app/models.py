@@ -33,7 +33,7 @@ class UserProfile(AbstractUser):
     username = None
     first_name = models.CharField(max_length=100, blank=False, null=False)
     last_name = models.CharField(max_length=100, blank=False, null=False)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, null=False, blank=False)
 
     USERNAME_FIELD = "email"
 
