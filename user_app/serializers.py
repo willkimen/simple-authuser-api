@@ -5,14 +5,21 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 
+# Obtém o modelo de usuário personalizado
 User = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    """
+    Serializer para registro de novos usuários. Valida e cria um novo usuário no sistema.
+    """
+
+    # Campo para confirmar a senha
     password_confirmation = serializers.CharField()
 
     class Meta:
         model = UserProfile
+        # Campos incluídos no serializer
         fields = [
             'first_name',
             'last_name',
@@ -20,26 +27,62 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'password',
             'password_confirmation',
         ]
-
+        # Define campos como write_only para que não sejam exibidos nas respostas
         extra_kwargs = {
             'password': {'write_only': True},
             'password_confirmation': {'write_only': True},
         }
 
     def create(self, validated_data):
+        """
+        Cria e retorna um novo usuário após a validação dos dados.
+
+        Args:
+            validated_data (dict): Dados validados do novo usuário.
+
+        Returns:
+            UserProfile: O usuário criado.
+        """
+        # Remove o campo password_confirmation dos dados validados
         validated_data.pop('password_confirmation', None)
+        # Cria o usuário com os dados fornecidos
         return User.objects.create_user(**validated_data)
 
     def validate(self, data):
-        if data.get('password') != data.get('password_confirmation'):
-            raise serializers.ValidationError(detail={'password_confirmation': 'Password do not match'})
+        """
+        Valida os dados fornecidos durante o registro.
 
+        Args:
+            data (dict): Dados fornecidos para validação.
+
+        Raises:
+            serializers.ValidationError: Se as senhas não coincidirem.
+
+        Returns:
+            dict: Dados validados.
+        """
+        # Verifica se a senha e a confirmação de senha coincidem
+        if data.get('password') != data.get('password_confirmation'):
+            raise serializers.ValidationError(detail={'password_confirmation': 'Passwords do not match'})
         return data
 
     def validate_password(self, password):
+        """
+        Valida a força da senha utilizando as validações padrão do Django.
+
+        Args:
+            password (str): Senha a ser validada.
+
+        Raises:
+            serializers.ValidationError: Se a senha não atender aos requisitos de validação.
+
+        Returns:
+            str: A senha validada.
+        """
         try:
+            # Utiliza a validação padrão de senha do Django
             validate_password(password)
         except ValidationError as e:
+            # Levanta um erro de validação com os detalhes do erro
             raise serializers.ValidationError(detail=e)
-
         return password
