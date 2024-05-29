@@ -58,14 +58,19 @@ def test_invalid_when_passwords_differ(user_with_differents_passwords: dict):
     """
     Testa se um erro é levantado quando as senhas não coincidem.
     """
-    expected_error_message = "Password do not match"
+    expected_error_message = "Passwords do not match"
 
     # Inicializa o serializer com os dados do usuário
     serializer = UserRegistrationSerializer(data=user_with_differents_passwords)
 
     # Verifica se o serializer é inválido e se a mensagem de erro é a esperada
     assert not serializer.is_valid()
-    assert expected_error_message == serializer.errors["confirmation_password"]
+
+    error_detail_field: ErrorDetail = serializer.errors.get("confirmation_password", [])[0]
+    # Obtém a mensagem
+    error_detail_message: str = error_detail_field.__str__()
+
+    assert expected_error_message == error_detail_message
 
 
 @pytest.mark.django_db
