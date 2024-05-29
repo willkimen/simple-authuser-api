@@ -15,7 +15,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     """
 
     # Campo para confirmar a senha
-    password_confirmation = serializers.CharField()
+    confirmation_password = serializers.CharField()
 
     class Meta:
         model = UserProfile
@@ -25,12 +25,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'last_name',
             'email',
             'password',
-            'password_confirmation',
+            'confirmation_password',
         ]
         # Define campos como write_only para que não sejam exibidos nas respostas
         extra_kwargs = {
             'password': {'write_only': True},
-            'password_confirmation': {'write_only': True},
+            'confirmation_password': {'write_only': True},
         }
 
     def create(self, validated_data):
@@ -44,7 +44,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             UserProfile: O usuário criado.
         """
         # Remove o campo password_confirmation dos dados validados
-        validated_data.pop('password_confirmation', None)
+        validated_data.pop('confirmation_password', None)
         # Cria o usuário com os dados fornecidos
         return User.objects.create_user(**validated_data)
 
@@ -62,8 +62,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             dict: Dados validados.
         """
         # Verifica se a senha e a confirmação de senha coincidem
-        if data.get('password') != data.get('password_confirmation'):
-            raise serializers.ValidationError(detail={'password_confirmation': 'Passwords do not match'})
+        if data.get('password') != data.get('confirmation_password'):
+            raise serializers.ValidationError(detail={'confirmation_password': 'Passwords do not match'})
         return data
 
     def validate_password(self, password):
