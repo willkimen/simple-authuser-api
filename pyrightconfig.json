@@ -1,0 +1,12 @@
+{
+  "venvPath": ".",
+  "venv": "venv",
+  "pythonVersion": "3.10.12",
+  "include": ["."],
+  "typeCheckingMode": "strict",
+  "reportMissingTypeStubs": true,
+  "reportMissingImports": true,
+  "useLibraryCodeForTypes": true,
+  "autoSearchPaths": true
+}
+
