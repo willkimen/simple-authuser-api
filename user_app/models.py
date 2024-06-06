@@ -29,7 +29,9 @@ class UserProfileManager(BaseUserManager):
             raise ValueError("The password address must be entered")
 
         email = self.normalize_email(email)  # Normaliza o domínio do email
-        user = self.model(email=email, **extra_fields)  # Cria a instância do usuário com os campos adicionais
+        user = self.model(
+            email=email, **extra_fields
+        )  # Cria a instância do usuário com os campos adicionais
         user.set_password(password)  # Seta a senha no formato raw para hash
         user.save()
         return user
@@ -51,9 +53,13 @@ class UserProfileManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
-        if extra_fields.get("is_staff") is not True:  # Verifica se is_staff está definida como True.
-            raise ValueError("Superuser must have is_staff=True.") 
-        if extra_fields.get("is_superuser") is not True:  # Verifica se is_superuser está definida como True.
+        if (
+            extra_fields.get("is_staff") is not True
+        ):  # Verifica se is_staff está definida como True.
+            raise ValueError("Superuser must have is_staff=True.")
+        if (
+            extra_fields.get("is_superuser") is not True
+        ):  # Verifica se is_superuser está definida como True.
             raise ValueError("Superuser must have is_superuser=True.")
 
         return self.create_user(email, password, **extra_fields)
@@ -64,6 +70,7 @@ class UserProfile(AbstractUser):
     Modelo de perfil de usuário que substitui o campo 'username' pelo campo 'email' para
     a autenticação.
     """
+
     username = None  # Remove o campo username
     first_name = models.CharField(max_length=100, blank=False, null=False)
     last_name = models.CharField(max_length=100, blank=False, null=False)
@@ -71,9 +78,11 @@ class UserProfile(AbstractUser):
 
     USERNAME_FIELD = "email"  # Define o email como o campo utilizado para autenticação
 
-    REQUIRED_FIELDS: list[str] = []  # Lista de campos obrigatórios além do email e senha (vazia neste caso)
+    REQUIRED_FIELDS: list[str] = (
+        []
+    )  # Lista de campos obrigatórios além do email e senha (vazia neste caso)
 
-    objects = UserProfileManager()   # Define o gerenciador personalizado
+    objects = UserProfileManager()  # Define o gerenciador personalizado
 
     class Meta:
         db_table = "user_profile"
