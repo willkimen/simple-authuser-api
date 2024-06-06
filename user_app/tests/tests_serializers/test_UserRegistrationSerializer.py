@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model  # type: ignore
 from rest_framework.exceptions import ErrorDetail  # type: ignore
 
-from user_app.serializers import UserRegistrationSerializer
+from user_app.serializers import UserSerializer
 
 User = get_user_model()
 
@@ -53,6 +53,7 @@ def user_with_invalid_passwords():
 
 # Testes
 
+
 @pytest.mark.django_db
 def test_invalid_when_passwords_differ(user_with_differents_passwords: dict):
     """
@@ -61,12 +62,14 @@ def test_invalid_when_passwords_differ(user_with_differents_passwords: dict):
     expected_error_message = "Passwords do not match"
 
     # Inicializa o serializer com os dados do usuário
-    serializer = UserRegistrationSerializer(data=user_with_differents_passwords)
+    serializer = UserSerializer(data=user_with_differents_passwords)
 
     # Verifica se o serializer é inválido e se a mensagem de erro é a esperada
     assert not serializer.is_valid()
 
-    error_detail_field: ErrorDetail = serializer.errors.get("confirmation_password", [])[0]
+    error_detail_field: ErrorDetail = serializer.errors.get(
+        "confirmation_password", []
+    )[0]
     # Obtém a mensagem
     error_detail_message: str = error_detail_field.__str__()
 
@@ -79,7 +82,7 @@ def test_user_persistence(user_with_valid_fields: dict):
     Testa se um usuário com dados válidos é criado corretamente no banco de dados.
     """
     # Inicializa o serializer com os dados do usuário
-    serializer = UserRegistrationSerializer(data=user_with_valid_fields)
+    serializer = UserSerializer(data=user_with_valid_fields)
 
     # Verifica se o serializer é válido e se o usuário foi persistido no banco de dados
     assert serializer.is_valid()
@@ -92,7 +95,7 @@ def test_confirmation_password_not_persisted(user_with_valid_fields: dict):
     Testa se o campo 'confirmation_password' não é persistido no modelo de usuário.
     """
     # Inicializa o serializer com os dados do usuário
-    serializer = UserRegistrationSerializer(data=user_with_valid_fields)
+    serializer = UserSerializer(data=user_with_valid_fields)
 
     # Verifica se o serializer é válido e se o campo 'confirmation_password' não está presente no objeto salvo
     assert serializer.is_valid()
@@ -111,7 +114,7 @@ def test_invalid_password_validation(user_with_invalid_passwords):
     ]
 
     # Inicializa o serializer com os dados do usuário
-    serializer = UserRegistrationSerializer(data=user_with_invalid_passwords)
+    serializer = UserSerializer(data=user_with_invalid_passwords)
 
     # Verifica se o serializer é inválido
     assert not serializer.is_valid()

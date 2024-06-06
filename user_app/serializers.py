@@ -1,15 +1,15 @@
-from rest_framework import serializers
-from .models import UserProfile
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from rest_framework import serializers
 
+from .models import UserProfile
 
 # Obtém o modelo de usuário personalizado
 User = get_user_model()
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """
     Serializer para registro de novos usuários. Valida e cria um novo usuário no sistema.
     """
@@ -21,16 +21,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = UserProfile
         # Campos incluídos no serializer
         fields = [
-            'first_name',
-            'last_name',
-            'email',
-            'password',
-            'confirmation_password',
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+            "confirmation_password",
         ]
         # Define campos como write_only para que não sejam exibidos nas respostas
         extra_kwargs = {
-            'password': {'write_only': True},
-            'confirmation_password': {'write_only': True},
+            "password": {"write_only": True},
+            "confirmation_password": {"write_only": True},
         }
 
     def create(self, validated_data):
@@ -44,7 +44,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             UserProfile: O usuário criado.
         """
         # Remove o campo password_confirmation dos dados validados
-        validated_data.pop('confirmation_password', None)
+        validated_data.pop("confirmation_password", None)
         # Cria o usuário com os dados fornecidos
         return User.objects.create_user(**validated_data)
 
@@ -62,8 +62,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             dict: Dados validados.
         """
         # Verifica se a senha e a confirmação de senha coincidem
-        if data.get('password') != data.get('confirmation_password'):
-            raise serializers.ValidationError(detail={'confirmation_password': 'Passwords do not match'})
+        if data.get("password") != data.get("confirmation_password"):
+            raise serializers.ValidationError(
+                detail={"confirmation_password": "Passwords do not match"}
+            )
         return data
 
     def validate_password(self, password):
