@@ -3,9 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from .models import UserProfile
-
-# Obtém o modelo de usuário personalizado
+# Obtém o usuário personalizado
 User = get_user_model()
 
 
@@ -14,13 +12,14 @@ class UserSerializer(serializers.ModelSerializer):
     Serializer para registro de novos usuários. Valida e cria um novo usuário no sistema.
     """
 
-    # Campo para confirmar a senha
-    confirmation_password = serializers.CharField()
+    # Campo adicional para confirmar a senha, deve ser semre write_only
+    confirmation_password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = UserProfile
+        model = User
         # Campos incluídos no serializer
         fields = [
+            "id",
             "first_name",
             "last_name",
             "email",
@@ -30,7 +29,6 @@ class UserSerializer(serializers.ModelSerializer):
         # Define campos como write_only para que não sejam exibidos nas respostas
         extra_kwargs = {
             "password": {"write_only": True},
-            "confirmation_password": {"write_only": True},
         }
 
     def create(self, validated_data):
