@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from user_app.serializers import UserSerializer, UserUpdateSerializer
+from user_app.serializers import UserSerializer
 
 User = get_user_model()
 
@@ -32,7 +32,7 @@ def update(request, id: int):
             {"message": "User with id not found."}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    serializer = UserUpdateSerializer(instance=user, data=request.data, partial=True)
+    serializer = UserSerializer(instance=user, data=request.data, partial=True)
     if not serializer.is_valid():
         return Response(
             {"validation_errors": serializer.errors},
