@@ -58,14 +58,19 @@ def test_creates_user_with_valid_data(
     expected_user_data["id"] = response.data["user"]["id"]
 
     # Verifica se o usuário foi criado no banco de dados com os dados esperado
-    assert User.objects.filter(**expected_user_data).exists()
+    assert User.objects.filter(
+        **expected_user_data
+    ).exists(), "Usuário não foi criado no banco de dados com os dados esperados."
     # Verifica o código de status da resposta
-    assert status.HTTP_201_CREATED == response.status_code
+    assert (
+        status.HTTP_201_CREATED == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica a mensagem de sucesso na resposta
-    assert "User registered successfully" == response.data["message"]
+    assert (
+        "User registered successfully" == response.data["message"]
+    ), "Mensagem de sucesso inesperada na resposta."
 
 
-# Email vadalidaton
 @pytest.mark.parametrize(
     "invalid_email_format",
     [
@@ -101,11 +106,17 @@ def test_does_not_create_user_with_invalid_email_format(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'email' está presente nos erros de validação
-    assert "email" in response.data["validation_errors"]
+    assert (
+        "email" in response.data["validation_errors"]
+    ), "'email' não está presente nos erros de validação."
     # Verifica a mensagem de erro.
-    assert "Enter a valid email address." in response.data["validation_errors"]["email"]
+    assert (
+        "Enter a valid email address." in response.data["validation_errors"]["email"]
+    ), "Mensagem de erro inesperada para 'email'."
 
 
 @pytest.mark.django_db
@@ -126,14 +137,18 @@ def test_does_not_create_user_with_duplicate_email(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'email' está presente nos erros de validação
-    assert "email" in response.data["validation_errors"]
+    assert (
+        "email" in response.data["validation_errors"]
+    ), "'email' não está presente nos erros de validação."
     # Verifica a mensagem de erro.
     assert (
         "User Profile with this email already exists."
         in response.data["validation_errors"]["email"]
-    )
+    ), "Mensagem de erro inesperada para 'email'."
 
 
 @pytest.mark.django_db
@@ -153,11 +168,17 @@ def test_does_not_create_use_with_blank_email(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.status_code == status.HTTP_400_BAD_REQUEST
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'email' está presente nos erros de validação
-    assert "email" in response.data["validation_errors"]
+    assert (
+        "email" in response.data["validation_errors"]
+    ), "'email' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
-    assert "This field is required." in response.data["validation_errors"]["email"]
+    assert (
+        "This field is required." in response.data["validation_errors"]["email"]
+    ), "Mensagem de erro inesperada para 'email'."
 
 
 @pytest.mark.django_db
@@ -177,14 +198,19 @@ def test_does_not_create_user_with_null_email(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'email' está presente nos erros de validação
-    assert "email" in response.data["validation_errors"]
+    assert (
+        "email" in response.data["validation_errors"]
+    ), "'email' não está presente nos erros de validação."
     # Verifica a mensagem de erro.
-    assert "This field may not be null." in response.data["validation_errors"]["email"]
+    assert (
+        "This field may not be null." in response.data["validation_errors"]["email"]
+    ), "Mensagem de erro inesperada para 'email'."
 
 
-# Password validation
 @pytest.mark.django_db
 def test_passwords_not_in_response(
     client: APIClient, user_registration_data: dict[str, str]
@@ -202,8 +228,12 @@ def test_passwords_not_in_response(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se esses campos não constam na response
-    assert not "password" in response.data["user"]
-    assert not "confirmation_password" in response.data["user"]
+    assert (
+        not "password" in response.data["user"]
+    ), "'password' está presente na resposta."
+    assert (
+        not "confirmation_password" in response.data["user"]
+    ), "'confirmation_password' está presente na resposta."
 
 
 @pytest.mark.django_db
@@ -224,14 +254,18 @@ def test_does_not_create_user_with_different_passwords(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'confirmation_password' está presente nos erros de validação
-    assert "confirmation_password" in response.data["validation_errors"]
+    assert (
+        "confirmation_password" in response.data["validation_errors"]
+    ), "'confirmation_password' não está presente nos erros de validação."
     # Verifica a mensagem de erro.
     assert (
         "Passwords do not match"
         in response.data["validation_errors"]["confirmation_password"]
-    )
+    ), "Mensagem de erro inesperada para 'confirmation_password'."
 
 
 @pytest.mark.django_db
@@ -254,14 +288,18 @@ def test_does_not_create_user_with_short_password(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'password' está presente nos erros de validação
-    assert "password" in response.data["validation_errors"]
+    assert (
+        "password" in response.data["validation_errors"]
+    ), "'password' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "This password is too short. It must contain at least 8 characters."
         in response.data["validation_errors"]["password"].__str__()
-    )
+    ), "Mensagem de erro inesperada para 'password'."
 
 
 @pytest.mark.django_db
@@ -284,14 +322,18 @@ def test_does_not_create_user_with_numeric_password(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'password' está presente nos erros de validação
-    assert "password" in response.data["validation_errors"]
+    assert (
+        "password" in response.data["validation_errors"]
+    ), "'password' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "This password is entirely numeric."
         in response.data["validation_errors"]["password"].__str__()
-    )
+    ), "Mensagem de erro inesperada para 'password'."
 
 
 @pytest.mark.django_db
@@ -314,17 +356,18 @@ def test_does_not_create_user_with_common_password(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'password' está presente nos erros de validação
-    assert "password" in response.data["validation_errors"]
+    assert (
+        "password" in response.data["validation_errors"]
+    ), "'password' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "This password is too common."
         in response.data["validation_errors"]["password"].__str__()
-    )
-
-
-# first_name test
+    ), "Mensagem de erro inesperada para 'password'."
 
 
 @pytest.mark.django_db
@@ -344,14 +387,18 @@ def test_does_not_create_user_with_blank_first_name(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'first_name' está presente nos erros de validação
-    assert "first_name" in response.data["validation_errors"]
+    assert (
+        "first_name" in response.data["validation_errors"]
+    ), "'first_name' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "This field may not be blank."
         in response.data["validation_errors"]["first_name"]
-    )
+    ), "Mensagem de erro inesperada para 'first_name'."
 
 
 @pytest.mark.django_db
@@ -371,14 +418,18 @@ def test_does_not_create_user_with_null_first_name(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'first_name' está presente nos erros de validação
-    assert "first_name" in response.data["validation_errors"]
+    assert (
+        "first_name" in response.data["validation_errors"]
+    ), "'first_name' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "This field may not be null."
         in response.data["validation_errors"]["first_name"]
-    )
+    ), "Mensagem de erro inesperada para 'first_name'."
 
 
 @pytest.mark.django_db
@@ -398,14 +449,18 @@ def test_does_not_create_user_with_too_long_first_name(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'first_name' está presente nos erros de validação
-    assert "first_name" in response.data["validation_errors"]
+    assert (
+        "first_name" in response.data["validation_errors"]
+    ), "'first_name' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "Ensure this field has no more than 100 characters."
         in response.data["validation_errors"]["first_name"]
-    )
+    ), "Mensagem de erro inesperada para 'first_name'."
 
 
 @pytest.mark.django_db
@@ -425,14 +480,18 @@ def test_does_not_create_user_with_blank_last_name(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'last_name' está presente nos erros de validação
-    assert "last_name" in response.data["validation_errors"]
+    assert (
+        "last_name" in response.data["validation_errors"]
+    ), "'last_name' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "This field may not be blank."
         in response.data["validation_errors"]["last_name"]
-    )
+    ), "Mensagem de erro inesperada para 'last_name'."
 
 
 @pytest.mark.django_db
@@ -452,13 +511,17 @@ def test_does_not_create_user_with_null_last_name(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'last_name' está presente nos erros de validação
-    assert "last_name" in response.data["validation_errors"]
+    assert (
+        "last_name" in response.data["validation_errors"]
+    ), "'last_name' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "This field may not be null." in response.data["validation_errors"]["last_name"]
-    )
+    ), "Mensagem de erro inesperada para 'last_name'."
 
 
 @pytest.mark.django_db
@@ -478,11 +541,15 @@ def test_does_not_create_user_with_too_long_last_name(
     response = client.post(url, data=user_registration_data, format="json")
 
     # Verifica se o código de status da resposta é 400 BAD REQUEST
-    assert status.HTTP_400_BAD_REQUEST == response.status_code
+    assert (
+        status.HTTP_400_BAD_REQUEST == response.status_code
+    ), f"Código de status inesperado: {response.status_code}"
     # Verifica se o campo 'last_name' está presente nos erros de validação
-    assert "last_name" in response.data["validation_errors"]
+    assert (
+        "last_name" in response.data["validation_errors"]
+    ), "'last_name' não está presente nos erros de validação."
     # Verifica se a mensagem de erro
     assert (
         "Ensure this field has no more than 100 characters."
         in response.data["validation_errors"]["last_name"]
-    )
+    ), "Mensagem de erro inesperada para 'last_name'."
