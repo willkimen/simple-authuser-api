@@ -6,9 +6,8 @@ from user_app.serializers import UserSerializer
 
 User = get_user_model()
 
+
 # Fixtures para fornecer dados de teste
-
-
 @pytest.fixture
 def user_with_valid_fields():
     """
@@ -51,13 +50,13 @@ def user_with_invalid_passwords():
     }
 
 
-# Testes
-
-
 @pytest.mark.django_db
 def test_invalid_when_passwords_differ(user_with_differents_passwords: dict):
     """
     Testa se um erro é levantado quando as senhas não coincidem.
+
+    Args:
+        user_with_differents_passwords (dict): Dados de usuário onde as senhas não coincidem.
     """
     expected_error_message = "Passwords do not match"
 
@@ -65,47 +64,66 @@ def test_invalid_when_passwords_differ(user_with_differents_passwords: dict):
     serializer = UserSerializer(data=user_with_differents_passwords)
 
     # Verifica se o serializer é inválido e se a mensagem de erro é a esperada
-    assert not serializer.is_valid()
+    assert (
+        not serializer.is_valid()
+    ), "Serializer deve ser inválido quando as senhas não coincidem."
 
+    # Obtém o objeto ErrorDetail, que contém a mensagem de erro para o campo confirmation_password
     error_detail_field: ErrorDetail = serializer.errors.get(
         "confirmation_password", []
     )[0]
-    # Obtém a mensagem
+
+    # Obtém a mensagem do ErrorDetail
     error_detail_message: str = error_detail_field.__str__()
 
-    assert expected_error_message == error_detail_message
+    assert (
+        expected_error_message == error_detail_message
+    ), f"Mensagem de erro inesperada: {error_detail_message}"
 
 
 @pytest.mark.django_db
 def test_user_persistence(user_with_valid_fields: dict):
     """
-    Testa se um usuário com dados válidos é criado corretamente no banco de dados.
+    Testa se um usuário com dados válidos é criado co
+
+    Args:
+        user_with_valid_fields (dict): Dados válidos para um novo usuário.rretamente no banco de dados.
     """
     # Inicializa o serializer com os dados do usuário
     serializer = UserSerializer(data=user_with_valid_fields)
 
     # Verifica se o serializer é válido e se o usuário foi persistido no banco de dados
-    assert serializer.is_valid()
-    assert User.objects.filter(id=serializer.save().id).exists()
+    assert serializer.is_valid(), "Serializer deve ser válido para dados válidos."
+    assert User.objects.filter(
+        id=serializer.save().id
+    ).exists(), "Usuário não foi persistido no banco de dados."
 
 
 @pytest.mark.django_db
 def test_confirmation_password_not_persisted(user_with_valid_fields: dict):
     """
-    Testa se o campo 'confirmation_password' não é persistido no modelo de usuário.
+    Testa se o campo 'confirmation_password' não é persi
+
+    Args:
+        user_with_valid_fields (dict): Dados válidos para um novo usuário.stido no modelo de usuário.
     """
     # Inicializa o serializer com os dados do usuário
     serializer = UserSerializer(data=user_with_valid_fields)
 
     # Verifica se o serializer é válido e se o campo 'confirmation_password' não está presente no objeto salvo
-    assert serializer.is_valid()
-    assert not hasattr(serializer.save(), "confirmation_password")
+    assert serializer.is_valid(), "Serializer deve ser válido para dados válidos."
+    assert not hasattr(
+        serializer.save(), "confirmation_password"
+    ), "Campo 'confirmation_password' não deve ser persistido, porém foi."
 
 
 @pytest.mark.django_db
 def test_invalid_password_validation(user_with_invalid_passwords):
     """
     Testa se a validação de senha inválida retorna os erros esperados.
+
+    Args:
+        user_with_invalid_passwords (dict): Dados de usuário com uma senha inválida.
     """
     expected_error_messages: list[str] = [
         "This password is too short. It must contain at least 8 characters.",
@@ -117,7 +135,9 @@ def test_invalid_password_validation(user_with_invalid_passwords):
     serializer = UserSerializer(data=user_with_invalid_passwords)
 
     # Verifica se o serializer é inválido
-    assert not serializer.is_valid()
+    assert (
+        not serializer.is_valid()
+    ), "Serializer deve ser inválido para senhas inválidas."
 
     # Obtém o primeiro erro do campo 'password'
     error_detail_field: ErrorDetail = serializer.errors.get("password", [])[0]
@@ -128,4 +148,4 @@ def test_invalid_password_validation(user_with_invalid_passwords):
     errors_messages: list[str] = eval(error_detail_message)
 
     # Verifica se as mensagens de erro são as esperadas
-    expected_error_messages == errors_messages
+    expected_error_messages == errors_messages, f"Mensagens de erro inesperadas: {errors_messages}"
