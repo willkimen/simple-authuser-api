@@ -1,9 +1,10 @@
 import pytest
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.models import UserProfile
+User = get_user_model()
 
 url: str = reverse("register")
 
@@ -53,17 +54,15 @@ def test_creates_user_with_valid_data(
     # Faz a solicitação POST para registrar o usuário
     response = client.post(url, data=user_registration_data, format="json")
 
-    # Verifica se o usuário foi criado no banco de dados
-    assert UserProfile.objects.filter(**expected_user_data).exists()
+    # Adiciona o ID do usuário criado aos dados esperados
+    expected_user_data["id"] = response.data["user"]["id"]
+
+    # Verifica se o usuário foi criado no banco de dados com os dados esperado
+    assert User.objects.filter(**expected_user_data).exists()
     # Verifica o código de status da resposta
     assert status.HTTP_201_CREATED == response.status_code
     # Verifica a mensagem de sucesso na resposta
     assert "User registered successfully" == response.data["message"]
-    # Verifica se o ID do usuário na resposta corresponde ao usuário criado
-    assert (
-        UserProfile.objects.get(email=user_registration_data["email"]).id
-        == response.data["user_id"]
-    )
 
 
 # Email vadalidaton
