@@ -186,6 +186,27 @@ def test_does_not_create_user_with_null_email(
 
 # Password validation
 @pytest.mark.django_db
+def test_passwords_not_in_response(
+    client: APIClient, user_registration_data: dict[str, str]
+):
+    """
+    Testa se não retorna os campos password e confirmation_password na response.
+
+    Args:
+        client (APIClient): Cliente de API para fazer solicitações.
+        user_registration_data (dict): Dados de registro do usuário para a solicitação.
+
+    """
+
+    # Faz a solicitação POST para registrar o usuário
+    response = client.post(url, data=user_registration_data, format="json")
+
+    # Verifica se esses campos não constam na response
+    assert not "password" in response.data["user"]
+    assert not "confirmation_password" in response.data["user"]
+
+
+@pytest.mark.django_db
 def test_does_not_create_user_with_different_passwords(
     client: APIClient, user_registration_data: dict[str, str]
 ):
