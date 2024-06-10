@@ -16,9 +16,9 @@ def register(request):
             {"validation_errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    user = serializer.save()
+    serializer.save()
     return Response(
-        {"user_id": user.id, "message": "User registered successfully"},
+        {"user": serializer.data, "message": "User registered successfully"},
         status=status.HTTP_201_CREATED,
     )
 
@@ -27,7 +27,7 @@ def register(request):
 def update(request, id: int):
     try:
         user = User.objects.get(id=id)
-    except ObjectDoesNotExist:
+    except User.DoesNotExist:
         return Response(
             {"message": "User with id not found."}, status=status.HTTP_400_BAD_REQUEST
         )
@@ -41,5 +41,6 @@ def update(request, id: int):
 
     serializer.save()
     return Response(
-        {"message": "User updated successfully."}, status=status.HTTP_200_OK
+        {"user": serializer.data, "message": "User updated successfully."},
+        status=status.HTTP_200_OK,
     )
