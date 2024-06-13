@@ -32,12 +32,12 @@ env_cors_allowed_origins = os.getenv("ENV_CORS_ALLOWED_ORIGINS")
 
 # Divide a string em uma lista de origens permitidas
 # e remove os espaços em branco ao redor de cada origem
-cors_allowed_origins = [
+cors_allowed_origins: list[str] = [
     origin.strip() for origin in env_cors_allowed_origins.split(",")
 ]
 
 # Agora você pode usar a lista cors_allowed_origins como o valor de CORS_ALLOWED_ORIGINS
-CORS_ALLOWED_ORIGINS = cors_allowed_origins
+CORS_ALLOWED_ORIGINS: list[str] = cors_allowed_origins
 
 # Aplicativos instalados
 # -----------------------------------------------------------------------------
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "user_app",
 ]
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
