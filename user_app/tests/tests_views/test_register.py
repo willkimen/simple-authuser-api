@@ -54,8 +54,9 @@ def test_creates_user_with_valid_data(
     # Faz a solicitação POST para registrar o usuário
     response = client.post(url, data=user_registration_data, format="json")
 
-    # Adiciona o ID do usuário criado aos dados esperados
+    # Adiciona o ID do usuário criado aos dados esperados e adiciona o campo is_active como False
     expected_user_data["id"] = response.data["user"]["id"]
+    expected_user_data["is_active"] = False
 
     # Verifica se o usuário foi criado no banco de dados com os dados esperado
     assert User.objects.filter(

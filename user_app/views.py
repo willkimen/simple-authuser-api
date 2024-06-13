@@ -16,7 +16,10 @@ def register(request):
             {"validation_errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    serializer.save()
+    user = serializer.save()
+    user.is_active = False
+    user.save()
+
     return Response(
         {"user": serializer.data, "message": "User registered successfully"},
         status=status.HTTP_201_CREATED,
