@@ -15,29 +15,15 @@ SECRET_KEY = os.environ.get(
 DEBUG = True
 
 # -----  Hosts permitidos -----
-# Obtém a lista de hosts permitidos a partir de uma variável de ambiente
-# A variável de ambiente deve conter os hosts separados por vírgulas
-env_allowed_hosts = os.getenv("ENV_ALLOWED_HOSTS")
-
-# Divide a string de hosts separados por vírgulas em uma lista
-# Remove espaços em branco extras de cada host com strip()
-allowed_hosts: list[str] = [origin.strip() for origin in env_allowed_hosts.split(",")]
-
-# Define a lista de hosts permitidos no Django
-ALLOWED_HOSTS: list[str] = allowed_hosts
-
-# ---- Cors ----
-# Obtém o valor da variável de ambiente ENV_CORS_ALLOWED_ORIGINS
-env_cors_allowed_origins = os.getenv("ENV_CORS_ALLOWED_ORIGINS")
-
-# Divide a string em uma lista de origens permitidas
-# e remove os espaços em branco ao redor de cada origem
-cors_allowed_origins: list[str] = [
-    origin.strip() for origin in env_cors_allowed_origins.split(",")
+ALLOWED_HOSTS: list[str] = [
+    host.strip() for host in os.environ.get("ENV_ALLOWED_HOSTS", "").split(",")
 ]
 
-# Agora você pode usar a lista cors_allowed_origins como o valor de CORS_ALLOWED_ORIGINS
-CORS_ALLOWED_ORIGINS: list[str] = cors_allowed_origins
+# ---- Cors ----
+CORS_ALLOWED_ORIGINS: list[str] = [
+    origin.strip()
+    for origin in os.environ.get("ENV_CORS_ALLOWED_ORIGINS", "").split(",")
+]
 
 # Aplicativos instalados
 # -----------------------------------------------------------------------------
