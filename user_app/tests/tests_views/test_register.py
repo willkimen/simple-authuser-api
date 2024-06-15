@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -38,7 +40,9 @@ def expected_user_data() -> dict[str:str]:
 
 
 @pytest.mark.django_db
+@patch("user_app.utils.email_service.send_activation_email")
 def test_creates_user_with_valid_data(
+    mock_send_activation_email,
     client: APIClient,
     user_registration_data: dict[str:str],
     expected_user_data: dict[str:str],
@@ -47,6 +51,7 @@ def test_creates_user_with_valid_data(
     Testa se um novo usuário é criado corretamente com dados válidos.
 
     Args:
+        mock_send_activation_email (Mock): Mock da função de envio de e-mail de ativação.
         client (APIClient): Cliente de API para fazer solicitações.
         user_registration_data (dict): Dados de registro do usuário para a solicitação.
         expected_user_data (dict): Dados esperados do usuário no banco de dados após a criação.
@@ -70,6 +75,11 @@ def test_creates_user_with_valid_data(
     assert (
         "User registered successfully" == response.data["message"]
     ), "Mensagem de sucesso inesperada na resposta."
+
+    # Verifica se a função de envio de e-mail foi chamada
+    mock_send_activation_email.assert_called_once_with(
+        User.objects.get(id=expected_user_data["id"]), response.wsgi_request
+    )
 
 
 @pytest.mark.parametrize(
