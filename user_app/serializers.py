@@ -3,21 +3,21 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-# Obtém o usuário personalizado
+# Get the custom user model
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
     """
-    Serializer para registro de novos usuários. Valida e cria um novo usuário no sistema.
+    Serializer for registering new users. Validates and creates a new user in the system.
     """
 
-    # Campo adicional para confirmar a senha, deve ser semre write_only
+    # Additional field to confirm the password, should always be write_only
     confirmation_password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        # Campos incluídos no serializer
+        # Fields included in the serializer
         fields = [
             "id",
             "first_name",
@@ -26,40 +26,40 @@ class UserSerializer(serializers.ModelSerializer):
             "password",
             "confirmation_password",
         ]
-        # Define campos como write_only para que não sejam exibidos nas respostas
+        # Set fields as write_only so they are not displayed in responses
         extra_kwargs = {
             "password": {"write_only": True},
         }
 
     def create(self, validated_data):
         """
-        Cria e retorna um novo usuário após a validação dos dados.
+        Creates and returns a new user after validating the data.
 
         Args:
-            validated_data (dict): Dados validados do novo usuário.
+            validated_data (dict): Validated data of the new user.
 
         Returns:
-            UserProfile: O usuário criado.
+            UserProfile: The created user.
         """
-        # Remove o campo password_confirmation dos dados validados
+        # Remove the confirmation_password field from the validated data
         validated_data.pop("confirmation_password", None)
-        # Cria o usuário com os dados fornecidos
+        # Create the user with the provided data
         return User.objects.create_user(**validated_data)
 
     def validate(self, data):
         """
-        Valida os dados fornecidos durante o registro.
+        Validates the data provided during registration.
 
         Args:
-            data (dict): Dados fornecidos para validação.
+            data (dict): Data provided for validation.
 
         Raises:
-            serializers.ValidationError: Se as senhas não coincidirem.
+            serializers.ValidationError: If the passwords do not match.
 
         Returns:
-            dict: Dados validados.
+            dict: Validated data.
         """
-        # Verifica se a senha e a confirmação de senha coincidem
+        # Check if the password and confirmation_password match
         if data.get("password") != data.get("confirmation_password"):
             raise serializers.ValidationError(
                 detail={"confirmation_password": "Passwords do not match"}
@@ -68,21 +68,21 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_password(self, password):
         """
-        Valida a força da senha utilizando as validações padrão do Django.
+        Validates the password strength using Django's standard validations.
 
         Args:
-            password (str): Senha a ser validada.
+            password (str): Password to be validated.
 
         Raises:
-            serializers.ValidationError: Se a senha não atender aos requisitos de validação.
+            serializers.ValidationError: If the password does not meet the validation requirements.
 
         Returns:
-            str: A senha validada.
+            str: The validated password.
         """
         try:
-            # Utiliza a validação padrão de senha do Django
+            # Use Django's standard password validation
             validate_password(password)
         except ValidationError as e:
-            # Levanta um erro de validação com os detalhes do erro
+            # Raise a validation error with the details of the error
             raise serializers.ValidationError(detail=e)
         return password
