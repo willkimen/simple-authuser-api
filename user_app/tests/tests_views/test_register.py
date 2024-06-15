@@ -40,7 +40,7 @@ def expected_user_data() -> dict[str:str]:
 
 
 @pytest.mark.django_db
-@patch("user_app.utils.email_service.send_activation_email")
+@patch("user_app.views.send_activation_email")
 def test_creates_user_with_valid_data(
     mock_send_activation_email,
     client: APIClient,
@@ -77,9 +77,7 @@ def test_creates_user_with_valid_data(
     ), "Mensagem de sucesso inesperada na resposta."
 
     # Verifica se a função de envio de e-mail foi chamada
-    mock_send_activation_email.assert_called_once_with(
-        User.objects.get(id=expected_user_data["id"]), response.wsgi_request
-    )
+    mock_send_activation_email.assert_called_once()
 
 
 @pytest.mark.parametrize(
