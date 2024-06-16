@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
 
-# Diretório base do projeto
+# Project base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Segurança
+# Security
 # -----------------------------------------------------------------------------
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
@@ -14,7 +14,7 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# -----  Hosts permitidos -----
+# ----- Allowed hosts -----
 ALLOWED_HOSTS: list[str] = [
     host.strip() for host in os.environ.get("ENV_ALLOWED_HOSTS", "").split(",")
 ]
@@ -25,7 +25,7 @@ CORS_ALLOWED_ORIGINS: list[str] = [
     for origin in os.environ.get("ENV_CORS_ALLOWED_ORIGINS", "").split(",")
 ]
 
-# Aplicativos instalados
+# Installed apps
 # -----------------------------------------------------------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -52,7 +52,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# Configurações de URLs
+# URL configurations
 # -----------------------------------------------------------------------------
 ROOT_URLCONF = "config.urls"
 
@@ -78,7 +78,7 @@ TEMPLATES = [
 # -----------------------------------------------------------------------------
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Banco de dados
+# Database
 # -----------------------------------------------------------------------------
 DATABASES = {
     "default": {
@@ -88,7 +88,7 @@ DATABASES = {
 }
 
 
-# Configuraçao para desenvolver com container postgres
+# Configuration for developing with PostgreSQL container
 """
 DATABASES = {
     "default": {
@@ -102,7 +102,7 @@ DATABASES = {
 }
 """
 
-# Validação de senhas
+# Password validation
 # -----------------------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -119,45 +119,45 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Configuração do modelo de usuário
+# User model configuration
 # -----------------------------------------------------------------------------
 AUTH_USER_MODEL = "user_app.UserProfile"
 
-# Internacionalização
+# Internationalization
 # -----------------------------------------------------------------------------
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Arquivos estáticos
+# Static files
 # -----------------------------------------------------------------------------
 STATIC_URL = "static/"
 
-# Configuração do campo auto incrementado padrão
+# Default auto field configuration
 # -----------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Configurações para envio de email
+# Email settings
 # -----------------------------------------------------------------------------
 
-# Define o backend de email a ser usado pelo Django. Neste caso, o backend SMTP.
+# Define the email backend to be used by Django. In this case, the SMTP backend.
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-# Obtém o host do servidor SMTP a partir das variáveis de ambiente.
+# Get the SMTP server host from environment variables.
 EMAIL_HOST = os.environ.get("ENV_EMAIL_HOST")
 
-# Obtém a porta do servidor SMTP a partir das variáveis de ambiente.
+# Get the SMTP server port from environment variables.
 EMAIL_PORT = os.environ.get("ENV_EMAIL_PORT")
 
-# Define se o TLS (Transport Layer Security) deve ser usado. Converte a variável de ambiente de string para booleano.
+# Define whether TLS (Transport Layer Security) should be used. Convert the environment variable from string to boolean.
 EMAIL_USE_TLS: bool = True if os.environ.get("ENV_EMAIL_USE_TLS") == "True" else False
 
-# Obtém o nome de usuário para autenticação no servidor SMTP a partir das variáveis de ambiente.
+# Get the username for SMTP server authentication from environment variables.
 EMAIL_HOST_USER = os.environ.get("ENV_EMAIL_HOST_USE")
 
-# Obtém a senha para autenticação no servidor SMTP a partir das variáveis de ambiente.
+# Get the password for SMTP server authentication from environment variables.
 EMAIL_HOST_PASSWORD = os.environ.get("ENV_EMAIL_HOST_PASSWORD")
 
-# Obtém o endereço de email padrão a ser usado como remetente nas mensagens enviadas.
+# Get the default email address to be used as the sender in sent messages.
 DEFAULT_FROM_EMAIL = os.environ.get("ENV_DEFAULT_FROM_EMAIL")
