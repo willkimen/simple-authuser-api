@@ -13,33 +13,33 @@ User = get_user_model()
 @api_view(["POST"])
 def register(request):
     """
-    Registra um novo usuário.
+    Registers a new user.
 
     Args:
-        request (Request): A instância do request contendo os dados do usuário.
+        request (Request): The request instance containing user data.
 
     Returns:
-        Response: Uma resposta contendo os dados do usuário registrado ou os erros de validação.
+        Response: A response containing the registered user data or validation errors.
 
-    Este endpoint registra um novo usuário no sistema. Se os dados fornecidos forem válidos,
-    o usuário é criado e um email de ativação é enviado para o endereço de email fornecido.
-    O usuário é inicialmente marcado como inativo até que ele ative sua conta através do email de ativação.
+    This endpoint registers a new user in the system. If the provided data is valid,
+    the user is created and an activation email is sent to the provided email address.
+    The user is initially marked as inactive until they activate their account through the activation email.
     """
-    # Inicializa o serializer com os dados do request
+    # Initialize the serializer with the request data
     serializer = UserSerializer(data=request.data)
 
-    # Verifica se os dados fornecidos são válidos
+    # Check if the provided data is valid
     if not serializer.is_valid():
         return Response(
             {"validation_errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Salva o usuário no banco de dados
+    # Save the user to the database
     user = serializer.save()
-    user.is_active = False  # Marca o usuário como inativo
+    user.is_active = False  # Mark the user as inactive
     user.save()
 
-    # Envia o email de ativação
+    # Send the activation email
     send_activation_email(user, request)
 
     return Response(
@@ -69,3 +69,7 @@ def update(request, id: int):
         {"user": serializer.data, "message": "User updated successfully."},
         status=status.HTTP_200_OK,
     )
+
+
+# TODO nao finalizado
+def confirmation_register(request, id, token): ...
