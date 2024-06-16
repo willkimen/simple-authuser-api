@@ -4,37 +4,37 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 class UserActiveTokenGenerator(PasswordResetTokenGenerator):
     """
-    Gera um token para verificar se um usuário está ativo.
+    Generates a token to verify if a user is active.
 
-    Este gerador de tokens é baseado na classe PasswordResetTokenGenerator,
-    que será usada para especificamente, confirmação de cadastro do usuário.
+    This token generator is based on the PasswordResetTokenGenerator class,
+    which will be used specifically for user registration confirmation.
 
 
-    Métodos:
+    Methods:
         _make_hash_value(user, timestamp):
-            Gera o valor hash para o token utilizando o ID do usuário,
-            timestamp, is_active e email.
+            Generates the hash value for the token using the user's ID,
+            timestamp, is_active, and email.
     """
 
     def _make_hash_value(self, user: AbstractBaseUser, timestamp: int) -> str:
         """
-        Cria o valor hash para o token.
+        Creates the hash value for the token.
 
         Args:
-            user (AbstractBaseUser): A instância do usuário para o qual o token é gerado.
-            timestamp (int): O timestamp atual.
+            user (AbstractBaseUser): The user instance for which the token is generated.
+            timestamp (int): The current timestamp.
 
         Returns:
-            str: O valor hash gerado.
+            str: The generated hash value.
         """
         email_field = (
             user.get_email_field_name()
-        )  # Obtém o nome do campo de email do usuário
+        )  # Gets the name of the user's email field
         email = (
             getattr(user, email_field, "") or ""
-        )  # Obtém o valor do email do usuário, ou uma string vazia se não houver email
-        return f"{user.id}{timestamp}{user.is_active}{email}"  # Retorna o valor hash composto pelo ID, timestamp, is_active e email
+        )  # Gets the user's email value, or an empty string if no email exists
+        return f"{user.id}{timestamp}{user.is_active}{email}"  # Returns the hash value composed of ID, timestamp, is_active, and email
 
 
-# Instância do gerador de token de atividade do usuário
+# Instance of the user activity token generator
 user_active_generate_token = UserActiveTokenGenerator()
