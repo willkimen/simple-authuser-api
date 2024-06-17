@@ -21,7 +21,7 @@ class UserActiveTokenGenerator(PasswordResetTokenGenerator):
         Creates the hash value for the token.
 
         Args:
-            user (AbstractBaseUser): The user instance for which the token is generated.
+          user (AbstractBaseUser): The user instance for which the token is generated.
             timestamp (int): The current timestamp.
 
         Returns:
