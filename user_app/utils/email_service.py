@@ -26,7 +26,7 @@ def send_activation_email(user: AbstractBaseUser) -> None:
     )  # Generate an activation token for the user
     end_point = reverse("confirmation_register", kwargs={"id": uid, "token": token})
 
-    activation_link = f"http://{os.environ.get('ENV_DOMAIN')}/api/v1/{end_point}"  # Create the activation link
+    activation_link = f"http://{os.environ.get('ENV_DOMAIN')}{end_point}"  # Create the activation link
 
     email_body = f"""
     Hi {user.first_name} {user.last_name},
