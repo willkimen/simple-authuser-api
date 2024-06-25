@@ -154,7 +154,7 @@ EMAIL_PORT = os.environ.get("ENV_EMAIL_PORT")
 EMAIL_USE_TLS: bool = True if os.environ.get("ENV_EMAIL_USE_TLS") == "True" else False
 
 # Get the username for SMTP server authentication from environment variables.
-EMAIL_HOST_USER = os.environ.get("ENV_EMAIL_HOST_USE")
+EMAIL_HOST_USER = os.environ.get("ENV_EMAIL_HOST_USER")
 
 # Get the password for SMTP server authentication from environment variables.
 EMAIL_HOST_PASSWORD = os.environ.get("ENV_EMAIL_HOST_PASSWORD")
