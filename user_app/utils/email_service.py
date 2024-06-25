@@ -21,14 +21,14 @@ def send_activation_email(user: AbstractBaseUser) -> None:
     """
     email_subject = "Activate your account"  # Email subject
     uid = urlsafe_base64_encode(force_bytes(user.id))  # Encode the user ID in base64
-    token = user_active_generate_token.make_token(
-        user
-    )  # Generate an activation token for the user
+    # Generate an activation token for the user
+    token = user_active_generate_token.make_token(user)
     end_point = reverse("confirmation_register", kwargs={"id": uid, "token": token})
 
     activation_link = f"http://{os.environ.get('ENV_DOMAIN')}{end_point}"  # Create the activation link
 
-    email_body = f"""
+    email_body = dedent(
+        f"""
     Hi {user.first_name} {user.last_name},
 
     Please click the link below to activate your account:
