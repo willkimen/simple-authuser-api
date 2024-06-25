@@ -1,3 +1,5 @@
+import smtplib
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -40,7 +42,17 @@ def register(request):
     user.save()
 
     # Send the activation email
-    send_activation_email(user, request)
+    try:
+        send_activation_email(user)
+    except smtplib.SMTPException as e:
+        user.delete()
+        return Response(
+            {
+                "message": "User not created. Error sending email.",
+                "error_send_email": str(e),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     return Response(
         {"user": serializer.data, "message": "User registered successfully"},
