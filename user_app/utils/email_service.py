@@ -1,5 +1,5 @@
 import os
-import threading
+import smtplib
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.core.mail import EmailMessage
@@ -10,28 +10,6 @@ from django.utils.http import urlsafe_base64_encode
 from ..utils.token import user_active_generate_token
 
 
-class EmailThread(threading.Thread):
-    """
-    Class to send email in a new thread.
-
-    Args:
-        email (EmailMessage): The email instance to be sent.
-
-    Methods:
-        run(): Sends the email.
-    """
-
-    def __init__(self, email: EmailMessage) -> None:
-        super().__init__()
-        self.email = email
-
-    def run(self) -> None:
-        """
-        Sends the email when the thread is started.
-        """
-        self.email.send()
-
-
 def send_activation_email(user: AbstractBaseUser) -> None:
     """
     Sends an activation email to the user.
@@ -40,7 +18,6 @@ def send_activation_email(user: AbstractBaseUser) -> None:
         user (User): The user instance to whom the email will be sent.
 
     This function creates the content of the account activation email, including an activation link with a secure token.
-    The email is then sent in a new thread to avoid blocking the main process.
     """
     email_subject = "Activate your account"  # Email subject
     uid = urlsafe_base64_encode(force_bytes(user.id))  # Encode the user ID in base64
@@ -60,9 +37,35 @@ def send_activation_email(user: AbstractBaseUser) -> None:
 
     If you did not request this email, please ignore it.
     """
+    )
 
-    email = EmailMessage(
-        subject=email_subject, body=email_body, to=[user.email]
-    )  # Create the email message
-    email_thread = EmailThread(email)  # Create a new thread to send the email
-    email_thread.start()  # Start the thread to send the email
+    # Create the email messag
+    email = EmailMessage(subject=email_subject, body=email_body, to=[user.email])
+    try:
+        email.send()
+    except smtplib.SMTPConnectError as e:
+        raise smtplib.SMTPConnectError(f"Failed to connect to the SMTP server: {e}")
+    except smtplib.SMTPAuthenticationError as e:
+        raise smtplib.SMTPAuthenticationError(
+            f"SMTP authentication error. Check your username and password: {e}"
+        )
+    except smtplib.SMTPSenderRefused as e:
+        raise smtplib.SMTPSenderRefused(
+            f"The sender address was refused by the server: {e}"
+        )
+    except smtplib.SMTPRecipientsRefused as e:
+        raise smtplib.SMTPRecipientsRefused(
+            f"All recipient addresses were refused by the server: {e}"
+        )
+    except smtplib.SMTPDataError as e:
+        raise smtplib.SMTPDataError(
+            f"The SMTP server refused to accept the message data: {e}"
+        )
+    except smtplib.SMTPResponseException as e:
+        raise smtplib.SMTPResponseException(
+            e.smtp_code,
+            e.smtp_error,
+            f"SMTP server returned an error: {e.smtp_code} - {e.smtp_error}",
+        )
+    except smtplib.SMTPException as e:
+        raise smtplib.SMTPException(f"An SMTP error occurred: {e}")
