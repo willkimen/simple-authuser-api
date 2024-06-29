@@ -1,11 +1,9 @@
 from textwrap import dedent
-from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth import get_user_model
 
-from user_app.tests.tests_views.test_register import expected_user_data
 from user_app.utils.email_service import send_activation_email
 
 User = get_user_model()
