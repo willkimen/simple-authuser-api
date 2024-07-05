@@ -6,7 +6,7 @@ urlpatterns = [
     path("users/", register, name="register"),
     path("users/<int:id>/", update, name="update"),
     path(
-        "users/confirmation_register/<str:id>/<str:token>/",
+        "users/confirmation_register/",
         confirmation_register,
         name="confirmation_register",
     ),

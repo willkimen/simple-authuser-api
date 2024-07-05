@@ -1,18 +1,14 @@
-import os
 import smtplib
+from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
-from django.shortcuts import redirect
-from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from user_app.serializers import UserSerializer
-
+from .models import ConfirmationCode
+from .serializers import UserSerializer
 from .utils.email_service import send_activation_email
-from .utils.token import user_active_generate_token
 
 User = get_user_model()
 
@@ -21,12 +17,6 @@ User = get_user_model()
 def register(request):
     """
     Registers a new user.
-
-    Args:
-        request (Request): The request instance containing user data.
-
-    Returns:
-        Response: A response containing the registered user data or validation errors.
 
     This endpoint registers a new user in the system. If the provided data is valid,
     the user is created and an activation email is sent to the provided email address.
@@ -88,40 +78,50 @@ def update(request, id: int):
     )
 
 
-@api_view(["GET"])
-def confirmation_register(request, id, token):
+@api_view(["POST"])
+def confirmation_register(request):
     """
     Confirms user registration and activates the account.
 
-    Args:
-        request (Request): The request instance.
-        id (str): The encoded user ID.
-        token (str): The user's activation token.
-
-    Returns:
-        HttpResponseRedirect: Redirects to the success or failure URL depending on token validation.
-
-    This function is called when a user clicks on the activation link sent via email.
-    It decodes the user ID, checks the existence of the user, and validates the token.
-    If the token is valid, the user's account is activated and they are redirected to the success URL.
-    Otherwise, the user is redirected to the failure URL.
     """
-    # Decode the user ID from the URL-safe base64 string
-    id = int(force_str(urlsafe_base64_decode(id)))
+    code = request.POST.get("code")
 
+    # Checks if code exists in the data base
     try:
-        # Attempt to retrieve the user by ID
-        user = User.objects.get(id=id)
-    except User.DoesNotExist:
-        # Redirect to the failure URL if the user does not exist
-        return redirect(os.environ.get("ENV_EMAIL_CONFIRM_FAILURE_URL"))
+        confirmation_code = ConfirmationCode.objects.get(code=code)
+    except ConfirmationCode.DoesNotExist:
+        return Response(
+            {"message": "Confirmation code not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
-    # Check if the token is valid
-    if user_active_generate_token.check_token(user, token):
-        user.is_active = True  # Activate the user's account
-        user.save()
-        # Redirect to the success URL
-        return redirect(os.environ.get("ENV_EMAIL_CONFIRM_SUCCESS_URL"))
-    else:
-        # Redirect to the failure URL if the token is invalid
-        return redirect(os.environ.get("ENV_EMAIL_CONFIRM_FAILURE_URL"))
+    # Checks if user has already activate
+    user = User.objects.get(email=confirmation_code.user_email)
+    if user.is_active == True:
+        return Response(
+            {"message": "User has already confirmed email"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Checks if type code is the correct
+    if confirmation_code.type_code != "registration_email_confirmation":
+        return Response(
+            {
+                "message": "Invalid confirmation code type. The code does not belong to the email confirmation type"
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Checks if the code is expired
+    expired = timedelta(days=1)
+    now = datetime.now()
+    if (now - confirmation_code.created_at) >= expired:
+        confirmation_code.delete()
+        return Response({"message": "Code expired"}, status=status.HTTP_410_GONE)
+
+    # Activate user and save
+    user.is_active = True
+    user.save()
+    return Response(
+        {"message": "User email confirmed successfully"}, status=status.HTTP_200_OK
+    )

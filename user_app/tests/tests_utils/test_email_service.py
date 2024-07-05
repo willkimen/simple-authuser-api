@@ -1,5 +1,5 @@
 from textwrap import dedent
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -13,13 +13,11 @@ User = get_user_model()
 def expected_email_body():
     return dedent(
         """
-    Hi John Doe,
+    Your confirmation code is below - enter it in your open browser window and we'll help you to sign in.
 
-    Please click the link below to activate your account:
+    mocked-code
 
-    http://mocked-domain/api/v1/users/confirmation_register/mocked-uid/mocked-token/
-
-    If you did not request this email, please ignore it.
+    If you haven't requested this email, there's nothing to worry about - you can safely ignore it.
     """
     )
 
@@ -36,28 +34,28 @@ def mock_user():
     return mock_user
 
 
+@pytest.mark.django_db
 @patch("user_app.utils.email_service.EmailMessage")
-@patch("user_app.utils.email_service.os.environ.get")
-@patch("user_app.utils.email_service.user_active_generate_token.make_token")
-@patch("user_app.utils.email_service.urlsafe_base64_encode")
+@patch("user_app.utils.email_service.generate_random_code", return_value="mocked-code")
+@patch("user_app.utils.email_service.ConfirmationCode.objects.create")
 def test_success_send_email(
-    mock_encode,
-    mock_make_token,
-    mock_environ_domain,
+    mock_create,
+    mock_generate_random_code,
     MockEmailMessage,
     mock_user,
     expected_email_body,
 ):
-    mock_encode.return_value = "mocked-uid"
-    mock_make_token.return_value = "mocked-token"
-    mock_environ_domain.return_value = "mocked-domain"
     mock_email_message_instance = MockEmailMessage.return_value
-    email_subject_expected = "Activate your account"
+    email_subject_expected = "Confirm your email address"
 
     send_activation_email(mock_user)
 
     MockEmailMessage.assert_called_once_with(
         subject=email_subject_expected, body=expected_email_body, to=[mock_user.email]
     )
-    # Verify if the email send
     mock_email_message_instance.send.assert_called_once()
+    mock_create.assert_called_once_with(
+        confirmation_code=mock_generate_random_code(),
+        user_email=mock_user.email,
+        type_code="registration_email_confirmation",
+    )

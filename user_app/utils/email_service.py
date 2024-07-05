@@ -1,14 +1,11 @@
-import os
 import smtplib
 from textwrap import dedent
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.core.mail import EmailMessage
-from django.urls import reverse
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
 
-from ..utils.token import user_active_generate_token
+from ..models import ConfirmationCode
+from .random_code import generate_random_code
 
 
 def send_activation_email(user: AbstractBaseUser) -> None:
@@ -20,23 +17,17 @@ def send_activation_email(user: AbstractBaseUser) -> None:
 
     This function creates the content of the account activation email, including an activation link with a secure token.
     """
-    email_subject = "Activate your account"  # Email subject
-    uid = urlsafe_base64_encode(force_bytes(user.id))  # Encode the user ID in base64
-    # Generate an activation token for the user
-    token = user_active_generate_token.make_token(user)
-    end_point = reverse("confirmation_register", kwargs={"id": uid, "token": token})
+    email_subject = "Confirm your email address"
 
-    activation_link = f"http://{os.environ.get('ENV_DOMAIN')}{end_point}"  # Create the activation link
+    confirmation_code = generate_random_code()
 
     email_body = dedent(
         f"""
-    Hi {user.first_name} {user.last_name},
+    Your confirmation code is below - enter it in your open browser window and we'll help you to sign in.
 
-    Please click the link below to activate your account:
+    {confirmation_code}
 
-    {activation_link}
-
-    If you did not request this email, please ignore it.
+    If you haven't requested this email, there's nothing to worry about - you can safely ignore it.
     """
     )
 
@@ -44,6 +35,11 @@ def send_activation_email(user: AbstractBaseUser) -> None:
     email = EmailMessage(subject=email_subject, body=email_body, to=[user.email])
     try:
         email.send()
+        ConfirmationCode.objects.create(
+            confirmation_code=confirmation_code,
+            user_email=user.email,
+            type_code="registration_email_confirmation",
+        )
     except smtplib.SMTPConnectError as e:
         raise smtplib.SMTPConnectError(f"Failed to connect to the SMTP server: {e}")
     except smtplib.SMTPAuthenticationError as e:

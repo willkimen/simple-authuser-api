@@ -88,3 +88,28 @@ class UserProfile(AbstractUser):
         db_table = "user_profile"
         verbose_name = "User Profile"
         verbose_name_plural = "Users Profile"
+
+
+class ConfirmationCode(models.Model):
+    REGISTRATION_EMAIL_CONFIRMATION = "registration_email_confirmation"
+    EMAIL_CHANGE_CONFIRMATION = "email_change_confirmation"
+    PASSWORD_CHANGE_CONFIRMATION = "password_change_confirmation"
+    PASSWORD_RESET_CONFIRMATION = "password_reset_confirmation"
+
+    OPTIONS = [
+        (REGISTRATION_EMAIL_CONFIRMATION, "Registration Email Confirmation"),
+        (EMAIL_CHANGE_CONFIRMATION, "Email Change Confirmation"),
+        (PASSWORD_CHANGE_CONFIRMATION, "Password Change Confirmation"),
+        (PASSWORD_RESET_CONFIRMATION, "Password Reset Confirmation"),
+    ]
+
+    user_email = models.EmailField(unique=False, null=False, blank=False)
+    code = models.CharField(max_length=32, unique=True, null=False, blank=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    type_code = models.CharField(
+        max_length=64, unique=False, null=False, blank=False, choices=OPTIONS
+    )
+
+    class Meta:
+        db_table = "confirmation_code"
+        verbose_name = "Confirmation Code"
