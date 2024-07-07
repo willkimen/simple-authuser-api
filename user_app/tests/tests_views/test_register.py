@@ -1,3 +1,4 @@
+import smtplib
 from unittest.mock import patch
 
 import pytest
@@ -5,6 +6,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+
+from user_app.utils.email_service import send_activation_email
 
 User = get_user_model()
 
@@ -85,6 +88,35 @@ def test_creates_user_with_valid_data(
 
     # Check if the email sending function was called
     mock_send_activation_email.assert_called_once()
+
+
+@pytest.mark.django_db
+@patch("user_app.views.send_activation_email", side_effect=smtplib.SMTPException())
+def test_does_not_create_user_when_email_sending_fails(
+    mock_send_activation_email,
+    client: APIClient,
+    user_registration_data: dict[str, str],
+):
+    """
+    Tests if user is not created when attempt to send email failed.
+
+    Args:
+        mock_send_activation_email(MagicMock): Mock object to send email function
+        client (APIClient): API client to make requests.
+        user_registration_data (dict): User registration data for the request.
+    """
+
+    expected_message = "User not created. Error sending email."
+    expected_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    response = client.post(url, data=user_registration_data, format="json")
+
+    assert expected_message == response.data["message"]
+    assert expected_code == response.status_code
+    # Verify if user was not created
+    assert not User.objects.filter(
+        email=user_registration_data["email"]
+    ).exists(), "User was not created in the database with the expected data."
 
 
 @pytest.mark.parametrize(
