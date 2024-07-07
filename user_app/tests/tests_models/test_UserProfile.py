@@ -24,23 +24,25 @@ def user_data():
 def test_creates_user_instance(user_data):
     """
     Tests if a user instance is correctly created with the provided data.
-
-    Args:
-        user_data (dict): User data.
     """
     user_instance = UserProfile.objects.create_user(**user_data)
 
     assert user_instance.email == user_data["email"], "User email does not match."
+
     assert user_instance.check_password(
         user_data["password"]
     ), "User password does not match."
+
     assert (
         user_instance.first_name == user_data["first_name"]
     ), "User first name does not match."
+
     assert (
         user_instance.last_name == user_data["last_name"]
     ), "User last name does not match."
+
     assert not user_instance.is_staff, "User should not be staff."
+
     assert not user_instance.is_superuser, "User should not be superuser."
 
 
@@ -48,9 +50,6 @@ def test_creates_user_instance(user_data):
 def test_does_not_create_user_without_email(user_data):
     """
     Tests if an error is raised when trying to create a user without an email.
-
-    Args:
-        user_data (dict): User data.
     """
     del user_data["email"]
     with pytest.raises(TypeError):
@@ -61,9 +60,6 @@ def test_does_not_create_user_without_email(user_data):
 def test_normalizes_email_domain(user_data):
     """
     Tests if the email domain is normalized to lowercase.
-
-    Args:
-        user_data (dict): User data.
     """
     user_data["email"] = "email@DOMAINUPPERCASE.com"
     user = UserProfile.objects.create_user(**user_data)
@@ -75,9 +71,6 @@ def test_normalizes_email_domain(user_data):
 def test_does_not_create_user_with_duplicate_email(user_data):
     """
     Tests if an integrity error is raised when trying to create two users with the same email.
-
-    Args:
-        user_data (dict): User data.
     """
     with pytest.raises(IntegrityError):
         UserProfile.objects.create_user(**user_data)
@@ -88,9 +81,6 @@ def test_does_not_create_user_with_duplicate_email(user_data):
 def test_does_not_create_user_without_password(user_data):
     """
     Tests if an error is raised when trying to create a user without a password.
-
-    Args:
-        user_data (dict): User data.
     """
     del user_data["password"]
     with pytest.raises(TypeError):
@@ -101,9 +91,6 @@ def test_does_not_create_user_without_password(user_data):
 def test_creates_superuser(user_data):
     """
     Tests if a superuser instance is correctly created with the provided data.
-
-    Args:
-        user_data (dict): User data.
     """
     superuser = UserProfile.objects.create_superuser(**user_data)
 

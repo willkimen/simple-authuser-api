@@ -17,7 +17,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # Fields included in the serializer
         fields = [
             "id",
             "first_name",
@@ -50,9 +49,6 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Validates the data provided during registration.
 
-        Args:
-            data (dict): Data provided for validation.
-
         Raises:
             serializers.ValidationError: If the passwords do not match.
 
@@ -69,9 +65,6 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_password(self, password):
         """
         Validates the password strength using Django's standard validations.
-
-        Args:
-            password (str): Password to be validated.
 
         Raises:
             serializers.ValidationError: If the password does not meet the validation requirements.

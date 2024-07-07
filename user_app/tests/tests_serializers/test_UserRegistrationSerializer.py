@@ -54,9 +54,6 @@ def user_with_invalid_passwords():
 def test_invalid_when_passwords_differ(user_with_differents_passwords: dict):
     """
     Tests if an error is raised when the passwords do not match.
-
-    Args:
-        user_with_differents_passwords (dict): User data where the passwords do not match.
     """
     expected_error_message = "Passwords do not match"
 
@@ -85,17 +82,15 @@ def test_invalid_when_passwords_differ(user_with_differents_passwords: dict):
 def test_user_persistence(user_with_valid_fields: dict):
     """
     Tests if a user with valid data is correctly created and persisted in the database.
-
-    Args:
-        user_with_valid_fields (dict): Valid data for a new user.
     """
     # Initialize the serializer with the user data
     serializer = UserSerializer(data=user_with_valid_fields)
+    user_id = serializer.save().id
 
     # Check if the serializer is valid and the user is persisted in the database
     assert serializer.is_valid(), "Serializer should be valid for valid data."
     assert User.objects.filter(
-        id=serializer.save().id
+        id=user_id
     ).exists(), "User was not persisted in the database."
 
 
@@ -103,9 +98,6 @@ def test_user_persistence(user_with_valid_fields: dict):
 def test_confirmation_password_not_persisted(user_with_valid_fields: dict):
     """
     Tests if the confirmation_password field is not persisted in the user model.
-
-    Args:
-        user_with_valid_fields (dict): Valid data for a new user.
     """
     # Initialize the serializer with the user data
     serializer = UserSerializer(data=user_with_valid_fields)
@@ -121,9 +113,6 @@ def test_confirmation_password_not_persisted(user_with_valid_fields: dict):
 def test_invalid_password_validation(user_with_invalid_passwords):
     """
     Tests if invalid password validation returns the expected errors.
-
-    Args:
-        user_with_invalid_passwords (dict): User data with an invalid password.
     """
     expected_error_messages: list[str] = [
         "This password is too short. It must contain at least 8 characters.",

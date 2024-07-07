@@ -11,10 +11,6 @@ class UserProfileManager(BaseUserManager):
     def create_user(self, email, password, **extra_fields):
         """Creates a regular user
 
-        Args:
-            email (str): User's email.
-            password (str): User's password.
-
         Raises:
             ValueError: If the email address is not provided.
             ValueError: If the password is not provided.
@@ -28,20 +24,16 @@ class UserProfileManager(BaseUserManager):
         if not password:
             raise ValueError("The password must be entered")
 
-        email = self.normalize_email(email)  # Normalize the email domain
-        user = self.model(
-            email=email, **extra_fields
-        )  # Create the user instance with additional fields
-        user.set_password(password)  # Set the raw password for hashing
+        # Normalize the email domain
+        email = self.normalize_email(email)
+        # Create the user instance with additional fields
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
         user.save()
         return user
 
     def create_superuser(self, email, password, **extra_fields):
         """Creates a superuser
-
-        Args:
-            email (str): User's email.
-            password (str): User's password.
 
         Raises:
             ValueError: If the is_staff field is not True.
@@ -53,13 +45,11 @@ class UserProfileManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
-        if (
-            extra_fields.get("is_staff") is not True
-        ):  # Check if is_staff is set to True.
+        # Check if is_staff is set to True.
+        if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
-        if (
-            extra_fields.get("is_superuser") is not True
-        ):  # Check if is_superuser is set to True.
+        # Check if is_superuser is set to True.
+        if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
 
         return self.create_user(email, password, **extra_fields)
@@ -78,9 +68,8 @@ class UserProfile(AbstractUser):
 
     USERNAME_FIELD = "email"  # Set email as the field used for authentication
 
-    REQUIRED_FIELDS: list[str] = (
-        []
-    )  # List of required fields besides email and password (empty in this case)
+    # List of required fields besides email and password (empty in this case)
+    REQUIRED_FIELDS: list[str] = []
 
     objects = UserProfileManager()  # Set the custom manager
 
@@ -96,7 +85,7 @@ class ConfirmationCode(models.Model):
     PASSWORD_CHANGE_CONFIRMATION = "password_change_confirmation"
     PASSWORD_RESET_CONFIRMATION = "password_reset_confirmation"
 
-    OPTIONS = [
+    TYPE_CODE_OPTIONS = [
         (REGISTRATION_EMAIL_CONFIRMATION, "Registration Email Confirmation"),
         (EMAIL_CHANGE_CONFIRMATION, "Email Change Confirmation"),
         (PASSWORD_CHANGE_CONFIRMATION, "Password Change Confirmation"),
@@ -107,7 +96,7 @@ class ConfirmationCode(models.Model):
     code = models.CharField(max_length=32, unique=True, null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     type_code = models.CharField(
-        max_length=64, unique=False, null=False, blank=False, choices=OPTIONS
+        max_length=64, unique=False, null=False, blank=False, choices=TYPE_CODE_OPTIONS
     )
 
     class Meta:

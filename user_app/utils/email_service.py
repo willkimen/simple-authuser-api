@@ -11,11 +11,8 @@ from .random_code import generate_random_code
 def send_activation_email(user: AbstractBaseUser) -> None:
     """
     Sends an activation email to the user.
-
-    Args:
-        user (User): The user instance to whom the email will be sent.
-
-    This function creates the content of the account activation email, including an activation link with a secure token.
+    This function creates content with a random code to confirm the user's email address.
+    The code will be persisted in the database, along with the user's email.
     """
     email_subject = "Confirm your email address"
 
