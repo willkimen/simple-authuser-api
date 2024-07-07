@@ -85,10 +85,10 @@ def test_user_persistence(user_with_valid_fields: dict):
     """
     # Initialize the serializer with the user data
     serializer = UserSerializer(data=user_with_valid_fields)
-    user_id = serializer.save().id
 
     # Check if the serializer is valid and the user is persisted in the database
     assert serializer.is_valid(), "Serializer should be valid for valid data."
+    user_id = serializer.save().id
     assert User.objects.filter(
         id=user_id
     ).exists(), "User was not persisted in the database."
