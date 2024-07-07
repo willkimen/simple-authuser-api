@@ -16,7 +16,10 @@ def send_activation_email(user_email: str) -> None:
     """
     email_subject = "Confirm your email address"
 
+    # Creates confirmation code and verify if already exists in database
     confirmation_code = generate_random_code()
+    while ConfirmationCode.objects.exists(code=confirmation_code):
+        confirmation_code = generate_random_code()
 
     email_body = dedent(
         f"""
