@@ -22,7 +22,6 @@ def register(request):
     the user is created and an activation email is sent to the provided email address.
     The user is initially marked as inactive until they activate their account through the activation email.
     """
-    # Initialize the serializer with the request data
     serializer = UserSerializer(data=request.data)
 
     # Check if the provided data is valid
@@ -31,16 +30,10 @@ def register(request):
             {"validation_errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Save the user to the database
-    user = serializer.save()
-    user.is_active = False  # Mark the user as inactive
-    user.save()
-
     # Send the activation email
     try:
-        send_activation_email(user)
+        send_activation_email(serializer.validated_data["email"])
     except smtplib.SMTPException as e:
-        user.delete()
         return Response(
             {
                 "message": "User not created. Error sending email.",
@@ -49,6 +42,10 @@ def register(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+    # Save the user to the database
+    user = serializer.save()
+    user.is_active = False  # Mark the user as inactive
+    user.save()
     return Response(
         {"user": serializer.data, "message": "User registered successfully"},
         status=status.HTTP_201_CREATED,
@@ -82,7 +79,6 @@ def update(request, id: int):
 def confirmation_register(request):
     """
     Confirms user registration and activates the account.
-
     """
     code = request.POST.get("code")
 
@@ -119,7 +115,7 @@ def confirmation_register(request):
         confirmation_code.delete()
         return Response({"message": "Code expired"}, status=status.HTTP_410_GONE)
 
-    # Activate user and save
+    # Activate user and save in the database
     user.is_active = True
     user.save()
     return Response(

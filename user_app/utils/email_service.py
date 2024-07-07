@@ -8,7 +8,7 @@ from ..models import ConfirmationCode
 from .random_code import generate_random_code
 
 
-def send_activation_email(user: AbstractBaseUser) -> None:
+def send_activation_email(user_email: str) -> None:
     """
     Sends an activation email to the user.
     This function creates content with a random code to confirm the user's email address.
@@ -28,13 +28,16 @@ def send_activation_email(user: AbstractBaseUser) -> None:
     """
     )
 
-    # Create the email messag
-    email = EmailMessage(subject=email_subject, body=email_body, to=[user.email])
+    # Create the email message object
+    email_message = EmailMessage(
+        subject=email_subject, body=email_body, to=[user_email]
+    )
     try:
-        email.send()
+        email_message.send()
+        # Persists code in the database
         ConfirmationCode.objects.create(
-            confirmation_code=confirmation_code,
-            user_email=user.email,
+            code=confirmation_code,
+            user_email=user_email,
             type_code="registration_email_confirmation",
         )
     except smtplib.SMTPConnectError as e:
