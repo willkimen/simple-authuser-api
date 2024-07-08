@@ -123,5 +123,5 @@ class ConfirmationCode(models.Model):
     )
 
     class Meta:
-        db_table = "confirmation_type_code"
+        db_table = "confirmation_code"
         verbose_name = "Confirmation Code"
