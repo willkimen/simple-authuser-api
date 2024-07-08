@@ -3,12 +3,13 @@ from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
 
 from .constants import response_messages
 from .models import ConfirmationCode
 from .serializers import UserSerializer
+from .throttlings import ConfirmationRegisterThrottle
 from .utils.email_service import send_activation_email
 
 User = get_user_model()
@@ -84,6 +85,7 @@ def update(request, id: int):
 
 
 @api_view(["POST"])
+@throttle_classes([ConfirmationRegisterThrottle])
 def confirmation_register(request):
     """
     Confirms user registration and activates the account.

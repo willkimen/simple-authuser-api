@@ -56,6 +56,14 @@ MIDDLEWARE = [
 # -----------------------------------------------------------------------------
 ROOT_URLCONF = "config.urls"
 
+# Rest Framework Configurations
+# -----------------------------------------------------------------------------
+REST_FRAMEWORK = {
+    "DEFAULT_THROTTLE_RATES": {
+        "confirmation_register": "5/minute",
+    },
+}
+
 # Templates
 # -----------------------------------------------------------------------------
 TEMPLATES = [
