@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from .constants import response_messages
 from .models import ConfirmationCode
 from .serializers import UserSerializer
 from .utils.email_service import send_activation_email
@@ -36,7 +37,7 @@ def register(request):
     except smtplib.SMTPException as e:
         return Response(
             {
-                "message": "User not created. Error sending email.",
+                "message": response_messages.ERROR_SENDING_EMAIL,
                 "error_send_email": str(e),
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -47,7 +48,10 @@ def register(request):
     user.is_active = False  # Mark the user as inactive
     user.save()
     return Response(
-        {"user": serializer.data, "message": "User registered successfully"},
+        {
+            "user": serializer.data,
+            "message": response_messages.USER_REGISTERED_SUCCESSFULLY,
+        },
         status=status.HTTP_201_CREATED,
     )
 
@@ -58,7 +62,8 @@ def update(request, id: int):
         user = User.objects.get(id=id)
     except User.DoesNotExist:
         return Response(
-            {"message": "User with id not found."}, status=status.HTTP_400_BAD_REQUEST
+            {"message": response_messages.USER_NOT_FOUND},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     serializer = UserSerializer(instance=user, data=request.data, partial=True)
@@ -70,7 +75,10 @@ def update(request, id: int):
 
     serializer.save()
     return Response(
-        {"user": serializer.data, "message": "User updated successfully."},
+        {
+            "user": serializer.data,
+            "message": response_messages.USER_UPDATED_SUCCESSFULLY,
+        },
         status=status.HTTP_200_OK,
     )
 
@@ -87,7 +95,7 @@ def confirmation_register(request):
         confirmation_code = ConfirmationCode.objects.get(code=code)
     except ConfirmationCode.DoesNotExist:
         return Response(
-            {"message": "Confirmation code not found."},
+            {"message": response_messages.CONFIRMATION_CODE_NOT_FOUND},
             status=status.HTTP_404_NOT_FOUND,
         )
 
@@ -95,16 +103,14 @@ def confirmation_register(request):
     user = User.objects.get(email=confirmation_code.user_email)
     if user.is_active == True:
         return Response(
-            {"message": "User has already confirmed email"},
+            {"message": response_messages.USER_ACTIVATED},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     # Checks if type code is the correct
     if confirmation_code.type_code != "registration_email_confirmation":
         return Response(
-            {
-                "message": "Invalid confirmation code type. The code does not belong to the email confirmation type"
-            },
+            {"message": response_messages.INVALID_CONFIRMATION_CODE_TYPE},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -113,11 +119,13 @@ def confirmation_register(request):
     now = datetime.now()
     if (now - confirmation_code.created_at) >= expired:
         confirmation_code.delete()
-        return Response({"message": "Code expired"}, status=status.HTTP_410_GONE)
+        return Response(
+            {"message": response_messages.CODE_EXPIRED}, status=status.HTTP_410_GONE
+        )
 
     # Activate user and save in the database
     user.is_active = True
     user.save()
     return Response(
-        {"message": "User email confirmed successfully"}, status=status.HTTP_200_OK
+        {"message": response_messages.EMAIL_CONFIRMED}, status=status.HTTP_200_OK
     )

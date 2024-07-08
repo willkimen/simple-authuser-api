@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.utils.email_service import send_activation_email
+from user_app.constants import response_messages
 
 User = get_user_model()
 
@@ -62,8 +62,7 @@ def test_creates_user_with_valid_data(
 
     # Define variables for expected status code and expected message
     expected_status_code = status.HTTP_201_CREATED
-    expected_message = "User registered successfully"
-
+    expected_message = response_messages.USER_REGISTERED_SUCCESSFULLY
     # Make the POST request to register the user
     response = client.post(url, data=user_registration_data, format="json")
 
@@ -106,7 +105,7 @@ def test_does_not_create_user_when_email_sending_fails(
         user_registration_data (dict): User registration data for the request.
     """
 
-    expected_message = "User not created. Error sending email."
+    expected_message = response_messages.ERROR_SENDING_EMAIL
     expected_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     response = client.post(url, data=user_registration_data, format="json")

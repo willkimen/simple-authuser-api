@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+from .constants import confirmation_type_code
+
 
 class UserProfileManager(BaseUserManager):
     """
@@ -80,16 +82,37 @@ class UserProfile(AbstractUser):
 
 
 class ConfirmationCode(models.Model):
-    REGISTRATION_EMAIL_CONFIRMATION = "registration_email_confirmation"
-    EMAIL_CHANGE_CONFIRMATION = "email_change_confirmation"
-    PASSWORD_CHANGE_CONFIRMATION = "password_change_confirmation"
-    PASSWORD_RESET_CONFIRMATION = "password_reset_confirmation"
+    """
+    Model representing a confirmation code for various user actions.
+
+    Attributes:
+        REGISTRATION_EMAIL_CONFIRMATION (str): Constant for registration email confirmation type.
+        EMAIL_CHANGE_CONFIRMATION (str): Constant for email change confirmation type.
+        PASSWORD_CHANGE_CONFIRMATION (str): Constant for password change confirmation type.
+        PASSWORD_RESET_CONFIRMATION (str): Constant for password reset confirmation type.
+
+        TYPE_CODE_OPTIONS (list): List of tuples containing the available types of confirmation codes.
+
+        user_email (EmailField): The email associated with the confirmation code.
+        code (CharField): The unique confirmation code.
+        created_at (DateTimeField): The date and time when the confirmation code was created.
+        type_code (CharField): The type of confirmation code, chosen from TYPE_CODE_OPTIONS.
+    """
 
     TYPE_CODE_OPTIONS = [
-        (REGISTRATION_EMAIL_CONFIRMATION, "Registration Email Confirmation"),
-        (EMAIL_CHANGE_CONFIRMATION, "Email Change Confirmation"),
-        (PASSWORD_CHANGE_CONFIRMATION, "Password Change Confirmation"),
-        (PASSWORD_RESET_CONFIRMATION, "Password Reset Confirmation"),
+        (
+            confirmation_type_code.REGISTRATION_EMAIL_CONFIRMATION,
+            "Registration Email Confirmation",
+        ),
+        (confirmation_type_code.EMAIL_CHANGE_CONFIRMATION, "Email Change Confirmation"),
+        (
+            confirmation_type_code.PASSWORD_CHANGE_CONFIRMATION,
+            "Password Change Confirmation",
+        ),
+        (
+            confirmation_type_code.PASSWORD_RESET_CONFIRMATION,
+            "Password Reset Confirmation",
+        ),
     ]
 
     user_email = models.EmailField(unique=False, null=False, blank=False)
@@ -100,5 +123,5 @@ class ConfirmationCode(models.Model):
     )
 
     class Meta:
-        db_table = "confirmation_code"
+        db_table = "confirmation_type_code"
         verbose_name = "Confirmation Code"

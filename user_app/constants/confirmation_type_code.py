@@ -1,0 +1,4 @@
+REGISTRATION_EMAIL_CONFIRMATION = "registration_email_confirmation"
+EMAIL_CHANGE_CONFIRMATION = "email_change_confirmation"
+PASSWORD_CHANGE_CONFIRMATION = "password_change_confirmation"
+PASSWORD_RESET_CONFIRMATION = "password_reset_confirmation"
