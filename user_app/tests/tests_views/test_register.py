@@ -176,13 +176,17 @@ def test_does_not_create_user_with_invalid_email_format(
 
 
 @pytest.mark.django_db
+@patch("user_app.views.send_activation_email")
 def test_does_not_create_user_with_duplicate_email(
-    client: APIClient, user_registration_data: dict[str, str]
+    mock_send_activation_email,
+    client: APIClient,
+    user_registration_data: dict[str, str],
 ):
     """
     Tests if a user is not created when the email is already registered.
 
     Args:
+        mock_send_activation_email (Mock): Mock of the activation email sending function.
         client (APIClient): API client to make requests.
         user_registration_data (dict): User registration data for the request.
     """
@@ -293,13 +297,17 @@ def test_does_not_create_user_with_null_email(
 
 
 @pytest.mark.django_db
+@patch("user_app.views.send_activation_email")
 def test_passwords_not_in_response(
-    client: APIClient, user_registration_data: dict[str, str]
+    mock_send_activation_email,
+    client: APIClient,
+    user_registration_data: dict[str, str],
 ):
     """
     Tests if the password and confirmation_password fields are not in the response.
 
     Args:
+        mock_send_activation_email (Mock): Mock of the activation email sending function.
         client (APIClient): API client to make requests.
         user_registration_data (dict): User registration data for the request.
     """

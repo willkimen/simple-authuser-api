@@ -26,7 +26,11 @@ def expected_email_body():
 @patch("user_app.utils.email_service.EmailMessage")
 @patch("user_app.utils.email_service.generate_random_code", return_value="mocked-code")
 @patch("user_app.utils.email_service.ConfirmationCode.objects.create")
+@patch(
+    "user_app.utils.email_service.ConfirmationCode.objects.exists", return_value=False
+)
 def test_success_send_email(
+    mock_exists,
     mock_create,
     mock_generate_random_code,
     MockEmailMessage,
