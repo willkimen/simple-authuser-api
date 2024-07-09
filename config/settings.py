@@ -60,7 +60,7 @@ ROOT_URLCONF = "config.urls"
 # -----------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
-        "confirmation_register": "5/minute",
+        "account_activation": "5/minute",
     },
 }
 

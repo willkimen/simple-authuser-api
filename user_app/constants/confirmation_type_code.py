@@ -1,4 +1,4 @@
-REGISTRATION_EMAIL_CONFIRMATION = "registration_email_confirmation"
-EMAIL_CHANGE_CONFIRMATION = "email_change_confirmation"
-PASSWORD_CHANGE_CONFIRMATION = "password_change_confirmation"
-PASSWORD_RESET_CONFIRMATION = "password_reset_confirmation"
+ACCOUNT_ACTIVATION = "account_activation"
+EMAIL_CHANGE = "email_change"
+PASSWORD_CHANGE = "password_change"
+PASSWORD_RESET = "password_reset"

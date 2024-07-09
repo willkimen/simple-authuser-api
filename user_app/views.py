@@ -6,10 +6,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
 
-from .constants import response_messages
+from .constants import confirmation_type_code, response_messages
 from .models import ConfirmationCode
 from .serializers import UserSerializer
-from .throttlings import ConfirmationRegisterThrottle
+from .throttlings import AccountActivationRequestRateLimit
 from .utils.email_service import send_activation_email
 
 User = get_user_model()
@@ -85,10 +85,10 @@ def update(request, id: int):
 
 
 @api_view(["POST"])
-@throttle_classes([ConfirmationRegisterThrottle])
-def confirmation_register(request):
+@throttle_classes([AccountActivationRequestRateLimit])
+def activate_account(request):
     """
-    Confirms user registration and activates the account.
+    Verify code and activates the user account.
     """
     code = request.data.get("code", None)
 
@@ -108,12 +108,12 @@ def confirmation_register(request):
         confirmation_code = ConfirmationCode.objects.get(code=code)
     except ConfirmationCode.DoesNotExist:
         return Response(
-            {"message": response_messages.CONFIRMATION_CODE_NOT_FOUND},
+            {"message": response_messages.ACCOUNT_ACTIVATION_CODE_NOT_FOUND},
             status=status.HTTP_404_NOT_FOUND,
         )
 
     # Checks if type code is the correct
-    if confirmation_code.type_code != "registration_email_confirmation":
+    if confirmation_code.type_code != confirmation_type_code.ACCOUNT_ACTIVATION:
         return Response(
             {"message": response_messages.INVALID_CONFIRMATION_CODE_TYPE},
             status=status.HTTP_400_BAD_REQUEST,
@@ -134,5 +134,5 @@ def confirmation_register(request):
     user.save()
     confirmation_code.delete()
     return Response(
-        {"message": response_messages.EMAIL_CONFIRMED}, status=status.HTTP_200_OK
+        {"message": response_messages.ACCOUNT_ACTIVATED}, status=status.HTTP_200_OK
     )

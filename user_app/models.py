@@ -86,11 +86,6 @@ class ConfirmationCode(models.Model):
     Model representing a confirmation code for various user actions.
 
     Attributes:
-        REGISTRATION_EMAIL_CONFIRMATION (str): Constant for registration email confirmation type.
-        EMAIL_CHANGE_CONFIRMATION (str): Constant for email change confirmation type.
-        PASSWORD_CHANGE_CONFIRMATION (str): Constant for password change confirmation type.
-        PASSWORD_RESET_CONFIRMATION (str): Constant for password reset confirmation type.
-
         TYPE_CODE_OPTIONS (list): List of tuples containing the available types of confirmation codes.
 
         user_email (EmailField): The email associated with the confirmation code.
@@ -101,16 +96,16 @@ class ConfirmationCode(models.Model):
 
     TYPE_CODE_OPTIONS = [
         (
-            confirmation_type_code.REGISTRATION_EMAIL_CONFIRMATION,
-            "Registration Email Confirmation",
+            confirmation_type_code.ACCOUNT_ACTIVATION,
+            "Registration Email Confirmation to account activation",
         ),
-        (confirmation_type_code.EMAIL_CHANGE_CONFIRMATION, "Email Change Confirmation"),
+        (confirmation_type_code.EMAIL_CHANGE, "Email Change Confirmation"),
         (
-            confirmation_type_code.PASSWORD_CHANGE_CONFIRMATION,
+            confirmation_type_code.PASSWORD_CHANGE,
             "Password Change Confirmation",
         ),
         (
-            confirmation_type_code.PASSWORD_RESET_CONFIRMATION,
+            confirmation_type_code.PASSWORD_RESET,
             "Password Reset Confirmation",
         ),
     ]
