@@ -90,7 +90,18 @@ def confirmation_register(request):
     """
     Confirms user registration and activates the account.
     """
-    code = request.POST.get("code")
+    code = request.data.get("code", None)
+
+    # Checks if code field was sent by the request
+    if code is None:
+        return Response(
+            {"message": response_messages.CODE_FIELD_IS_REQUIRED},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Convert to string if the type is different
+    if not isinstance(code, str):
+        code = str(code)
 
     # Checks if code exists in the data base
     try:
@@ -99,14 +110,6 @@ def confirmation_register(request):
         return Response(
             {"message": response_messages.CONFIRMATION_CODE_NOT_FOUND},
             status=status.HTTP_404_NOT_FOUND,
-        )
-
-    # Checks if user has already activate
-    user = User.objects.get(email=confirmation_code.user_email)
-    if user.is_active == True:
-        return Response(
-            {"message": response_messages.USER_ACTIVATED},
-            status=status.HTTP_400_BAD_REQUEST,
         )
 
     # Checks if type code is the correct
@@ -126,8 +129,10 @@ def confirmation_register(request):
         )
 
     # Activate user and save in the database
+    user = User.objects.get(email=confirmation_code.user_email)
     user.is_active = True
     user.save()
+    confirmation_code.delete()
     return Response(
         {"message": response_messages.EMAIL_CONFIRMED}, status=status.HTTP_200_OK
     )
