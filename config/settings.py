@@ -62,6 +62,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "account_activation": "5/minute",
     },
+    "EXCEPTION_HANDLER": "user_app.custom_exception_handler.custom_exception_handler",
 }
 
 # Templates
