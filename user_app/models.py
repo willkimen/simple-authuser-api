@@ -11,7 +11,7 @@ class UserProfileManager(BaseUserManager):
     """
 
     def create_user(self, email, password, **extra_fields):
-        """Creates a regular user
+        """Creates a regular user with with account not activated by default.
 
         Raises:
             ValueError: If the email address is not provided.
@@ -31,6 +31,7 @@ class UserProfileManager(BaseUserManager):
         # Create the user instance with additional fields
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
+        user.is_active = False
         user.save()
         return user
 
@@ -46,6 +47,7 @@ class UserProfileManager(BaseUserManager):
         """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
 
         # Check if is_staff is set to True.
         if extra_fields.get("is_staff") is not True:

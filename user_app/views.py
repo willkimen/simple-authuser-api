@@ -47,7 +47,6 @@ def register(request):
 
     # Save the user to the database
     user = serializer.save()
-    user.is_active = False  # Mark the user as inactive
     user.save()
     return Response(
         {
