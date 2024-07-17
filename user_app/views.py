@@ -11,7 +11,7 @@ from .constants import confirmation_type_code, response_messages
 from .models import ConfirmationCode
 from .serializers import UserSerializer
 from .throttlings import AccountActivationRequestRateLimit
-from .utils.email_service import send_activation_email
+from .utils.email_service import send_email_for_account_activation
 
 User = get_user_model()
 
@@ -35,7 +35,7 @@ def register(request):
 
     # Send the activation email
     try:
-        send_activation_email(serializer.validated_data["email"])
+        send_email_for_account_activation(serializer.validated_data["email"])
     except smtplib.SMTPException as e:
         return Response(
             {

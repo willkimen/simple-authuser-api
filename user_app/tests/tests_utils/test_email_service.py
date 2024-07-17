@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 from django.contrib.auth import get_user_model
 
-from user_app.utils.email_service import send_activation_email
+from user_app.utils.email_service import send_email_for_account_activation
 
 User = get_user_model()
 
@@ -40,7 +40,7 @@ def test_success_send_email(
     mock_email_message_instance = MockEmailMessage.return_value
     email_subject_expected = "Confirm your email address"
 
-    send_activation_email(user_email)
+    send_email_for_account_activation(user_email)
 
     MockEmailMessage.assert_called_once_with(
         subject=email_subject_expected, body=expected_email_body, to=[user_email]

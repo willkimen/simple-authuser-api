@@ -43,9 +43,9 @@ def expected_user_data() -> dict[str:str]:
 
 
 @pytest.mark.django_db
-@patch("user_app.views.send_activation_email")
+@patch("user_app.views.send_email_for_account_activation")
 def test_creates_user_with_valid_data(
-    mock_send_activation_email,
+    mock_send_email_for_account_activation,
     client: APIClient,
     user_registration_data: dict[str:str],
     expected_user_data: dict[str:str],
@@ -54,7 +54,7 @@ def test_creates_user_with_valid_data(
     Tests if a new user is correctly created with valid data.
 
     Args:
-        mock_send_activation_email (Mock): Mock of the activation email sending function.
+        mock_send_email_for_account_activation (Mock): Mock of the activation email sending function.
         client (APIClient): API client to make requests.
         user_registration_data (dict): User registration data for the request.
         expected_user_data (dict): Expected user data in the database after creation.
@@ -86,13 +86,16 @@ def test_creates_user_with_valid_data(
     ), f"Unexpected success message in the response. Expected: '{expected_message}'"
 
     # Check if the email sending function was called
-    mock_send_activation_email.assert_called_once()
+    mock_send_email_for_account_activation.assert_called_once()
 
 
 @pytest.mark.django_db
-@patch("user_app.views.send_activation_email", side_effect=smtplib.SMTPException())
+@patch(
+    "user_app.views.send_email_for_account_activation",
+    side_effect=smtplib.SMTPException(),
+)
 def test_does_not_create_user_when_email_sending_fails(
-    mock_send_activation_email,
+    mock_send_email_for_account_activation,
     client: APIClient,
     user_registration_data: dict[str, str],
 ):
@@ -100,7 +103,7 @@ def test_does_not_create_user_when_email_sending_fails(
     Tests if user is not created when attempt to send email failed.
 
     Args:
-        mock_send_activation_email(MagicMock): Mock object to send email function
+        mock_send_email_for_account_activation(MagicMock): Mock object to send email function
         client (APIClient): API client to make requests.
         user_registration_data (dict): User registration data for the request.
     """
@@ -176,9 +179,9 @@ def test_does_not_create_user_with_invalid_email_format(
 
 
 @pytest.mark.django_db
-@patch("user_app.views.send_activation_email")
+@patch("user_app.views.send_email_for_account_activation")
 def test_does_not_create_user_with_duplicate_email(
-    mock_send_activation_email,
+    mock_send_email_for_account_activation,
     client: APIClient,
     user_registration_data: dict[str, str],
 ):
@@ -186,7 +189,7 @@ def test_does_not_create_user_with_duplicate_email(
     Tests if a user is not created when the email is already registered.
 
     Args:
-        mock_send_activation_email (Mock): Mock of the activation email sending function.
+        mock_send_email_for_account_activation (Mock): Mock of the activation email sending function.
         client (APIClient): API client to make requests.
         user_registration_data (dict): User registration data for the request.
     """
@@ -297,9 +300,9 @@ def test_does_not_create_user_with_null_email(
 
 
 @pytest.mark.django_db
-@patch("user_app.views.send_activation_email")
+@patch("user_app.views.send_email_for_account_activation")
 def test_passwords_not_in_response(
-    mock_send_activation_email,
+    mock_send_email_for_account_activation,
     client: APIClient,
     user_registration_data: dict[str, str],
 ):
@@ -307,7 +310,7 @@ def test_passwords_not_in_response(
     Tests if the password and confirmation_password fields are not in the response.
 
     Args:
-        mock_send_activation_email (Mock): Mock of the activation email sending function.
+        mock_send_email_for_account_activation (Mock): Mock of the activation email sending function.
         client (APIClient): API client to make requests.
         user_registration_data (dict): User registration data for the request.
     """
