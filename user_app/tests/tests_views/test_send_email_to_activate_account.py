@@ -23,6 +23,15 @@ def client() -> APIClient:
 
 @pytest.fixture
 def email_of_user_with_activated_account() -> str:
+    """
+    Fixture that creates a user with an activated account for testing purposes.
+
+    This fixture creates a User instance with an active account status. It returns
+    the email address of the activated user.
+
+    Returns:
+        str: The email address of the user with the activated account.
+    """
     email = "johndoe@email.com"
     User.objects.create_user(
         first_name="John",
@@ -37,6 +46,15 @@ def email_of_user_with_activated_account() -> str:
 
 @pytest.fixture
 def email_of_user_with_deactivated_account() -> str:
+    """
+    Fixture that creates a user with a deactivated account for testing purposes.
+
+    This fixture creates a User instance with a deactivated account status (default).
+    It returns the email address of the deactivated user.
+
+    Returns:
+        str: The email address of the user with the deactivated account.
+    """
     email = "johndoe@email.com"
     user = User.objects.create_user(
         first_name="John",
@@ -80,6 +98,16 @@ def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
 def test_does_not_send_email_when_email_field_is_empty(
     mock_allow_request, client: APIClient
 ):
+    """
+    Test if the email sending request returns 400 when the email field is empty.
+
+    Args:
+        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        client (APIClient): The API client used to make requests.
+
+    This test checks that the server returns a 400 Bad Request status code and an appropriate
+    error message when the email field is empty in the request.
+    """
     email_empty = {"email": ""}
     expected_message = "This field may not be blank."
     expected_status_code = status.HTTP_400_BAD_REQUEST
@@ -100,6 +128,16 @@ def test_does_not_send_email_when_email_field_is_empty(
 def test_does_not_send_email_when_email_field_is_null(
     mock_allow_request, client: APIClient
 ):
+    """
+    Test if the email sending request returns 400 when the email field is null.
+
+    Args:
+        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        client (APIClient): The API client used to make requests.
+
+    This test checks that the server returns a 400 Bad Request status code and an appropriate
+    error message when the email field is null in the request.
+    """
     email_null = {"email": None}
     expected_message = "This field may not be null."
     expected_status_code = status.HTTP_400_BAD_REQUEST
@@ -137,6 +175,17 @@ def test_does_not_send_email_when_email_field_is_null(
 def test_does_not_send_email_with_invalid_email_format(
     mock_allow_request, invalid_email_format, client: APIClient
 ):
+    """
+    Test if the email sending request returns 400 when the email format is invalid.
+
+    Args:
+        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        invalid_email_format (str): Invalid email format to test.
+        client (APIClient): The API client used to make requests.
+
+    This test checks that the server returns a 400 Bad Request status code and an appropriate
+    error message when the email field contains an invalid email format.
+    """
     email_with_invalid_format = {"email": invalid_email_format}
     expected_message = "Enter a valid email address."
     expected_status_code = status.HTTP_400_BAD_REQUEST
@@ -157,6 +206,16 @@ def test_does_not_send_email_with_invalid_email_format(
 def test_does_not_send_email_when_user_does_not_exists(
     mock_allow_request, client: APIClient
 ):
+    """
+    Test if the email sending request returns 404 when the user does not exist.
+
+    Args:
+        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        client (APIClient): The API client used to make requests.
+
+    This test checks that the server returns a 404 Not Found status code and an appropriate
+    error message when the email field contains an email address that does not belong to any user.
+    """
     expected_message = response_messages.USER_NOT_FOUND
     expected_status_code = status.HTTP_404_NOT_FOUND
     email_not_exist = {"email": "mynameisnobody@email.com"}
@@ -175,6 +234,17 @@ def test_does_not_send_email_when_user_does_not_exists(
 def test_does_not_send_email_when_user_has_already_activated(
     mock_allow_request, client: APIClient, email_of_user_with_activated_account: str
 ):
+    """
+    Test if the email sending request returns 400 when the user has already activated their account.
+
+    Args:
+        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        client (APIClient): The API client used to make requests.
+        email_of_user_with_activated_account (str): The email address of the user with an activated account.
+
+    This test checks that the server returns a 400 Bad Request status code and an appropriate
+    error message when the email field contains an email address of a user who has already activated their account.
+    """
     expected_message = response_messages.USER_HAS_ALREADY_ACTIVATED
     expected_status_code = status.HTTP_400_BAD_REQUEST
     email_activated = {"email": email_of_user_with_activated_account}
@@ -200,6 +270,18 @@ def test_failed_to_send_email(
     client: APIClient,
     email_of_user_with_deactivated_account: str,
 ):
+    """
+    Test if the email sending request returns 500 when there is an error sending the email.
+
+    Args:
+        mock_send_email (MagicMock): Mocked method to simulate an SMTP exception.
+        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        client (APIClient): The API client used to make requests.
+        email_of_user_with_deactivated_account (str): The email address of the user with a deactivated account.
+
+    This test checks that the server returns a 500 Internal Server Error status code and an appropriate
+    error message when there is an SMTP exception while sending the activation email.
+    """
     expected_message = response_messages.ERROR_SENDING_EMAIL
     expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
@@ -223,7 +305,18 @@ def test_send_email_successfully(
     client: APIClient,
     email_of_user_with_deactivated_account: str,
 ):
+    """
+    Test if the email sending request returns 200 when the email is sent successfully.
 
+    Args:
+        mock_send_email (MagicMock): Mocked method to simulate successful email sending.
+        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        client (APIClient): The API client used to make requests.
+        email_of_user_with_deactivated_account (str): The email address of the user with a deactivated account.
+
+    This test checks that the server returns a 200 OK status code and an appropriate
+    success message when the activation email is sent successfully.
+    """
     expected_status_code = status.HTTP_200_OK
     expected_message = response_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY
 
