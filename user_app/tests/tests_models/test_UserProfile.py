@@ -41,8 +41,8 @@ def test_creates_user_instance(user_data):
         user_instance.last_name == user_data["last_name"]
     ), "User last name does not match."
 
+    assert not user_instance.is_active
     assert not user_instance.is_staff, "User should not be staff."
-
     assert not user_instance.is_superuser, "User should not be superuser."
 
 
@@ -96,3 +96,4 @@ def test_creates_superuser(user_data):
 
     assert superuser.is_staff, "Superuser should be staff."
     assert superuser.is_superuser, "Superuser should be superuser."
+    assert superuser.is_active
