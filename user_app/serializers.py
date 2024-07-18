@@ -79,3 +79,7 @@ class UserSerializer(serializers.ModelSerializer):
             # Raise a validation error with the details of the error
             raise serializers.ValidationError(detail=e)
         return password
+
+
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()

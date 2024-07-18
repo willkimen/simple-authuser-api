@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import activate_account, register, update
+from .views import activate_account, register, send_email_to_activate_account, update
 
 urlpatterns = [
     path("users/", register, name="register"),
@@ -9,5 +9,10 @@ urlpatterns = [
         "users/activate_account/",
         activate_account,
         name="activate_account",
+    ),
+    path(
+        "users/send_email_to_activate_account/",
+        send_email_to_activate_account,
+        name="send_email_to_activate_account",
     ),
 ]

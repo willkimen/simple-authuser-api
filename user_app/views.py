@@ -9,8 +9,11 @@ from rest_framework.response import Response
 
 from .constants import confirmation_type_code, response_messages
 from .models import ConfirmationCode
-from .serializers import UserSerializer
-from .throttlings import AccountActivationRequestRateLimit
+from .serializers import EmailSerializer, UserSerializer
+from .throttlings import (
+    AccountActivationRequestRateLimit,
+    SendEmailActivateAccountRequestRateLimit,
+)
 from .utils.email_service import send_email_for_account_activation
 
 User = get_user_model()
@@ -64,7 +67,7 @@ def update(request, id: int):
     except User.DoesNotExist:
         return Response(
             {"message": response_messages.USER_NOT_FOUND},
-            status=status.HTTP_400_BAD_REQUEST,
+            status=status.HTTP_404_NOT_FOUND,
         )
 
     serializer = UserSerializer(instance=user, data=request.data, partial=True)
@@ -135,4 +138,49 @@ def activate_account(request):
     confirmation_code.delete()
     return Response(
         {"message": response_messages.ACCOUNT_ACTIVATED}, status=status.HTTP_200_OK
+    )
+
+
+@api_view(["POST"])
+@throttle_classes([SendEmailActivateAccountRequestRateLimit])
+def send_email_to_activate_account(request):
+    serializer = EmailSerializer(data=request.data)
+
+    # Check if the provided data is valid
+    if not serializer.is_valid():
+        return Response(
+            {"validation_errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Checks if user exists
+    try:
+        user = User.objects.get(email=serializer.validated_data["email"])
+    except User.DoesNotExist:
+        return Response(
+            {"message": response_messages.USER_NOT_FOUND},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Checks if the user already has the account activated
+    if user.is_active == True:
+        return Response(
+            {"message": response_messages.USER_HAS_ALREADY_ACTIVATED},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Send email
+    try:
+        send_email_for_account_activation(serializer.validated_data["email"])
+    except smtplib.SMTPException as e:
+        return Response(
+            {
+                "message": response_messages.ERROR_SENDING_EMAIL,
+                "error_send_email": str(e),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(
+        {"message": response_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY},
+        status=status.HTTP_200_OK,
     )

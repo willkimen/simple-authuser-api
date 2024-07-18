@@ -61,6 +61,7 @@ ROOT_URLCONF = "config.urls"
 REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "account_activation": "5/minute",
+        "send_email_to_activate_account": "5/minute",
     },
     "EXCEPTION_HANDLER": "user_app.custom_exception_handler.custom_exception_handler",
 }
