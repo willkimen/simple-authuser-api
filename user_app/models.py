@@ -10,7 +10,7 @@ class UserProfileManager(BaseUserManager):
     regular users and superusers.
     """
 
-    def create_user(self, email, password, **extra_fields):
+    def create_user(self, email, password, is_active=False, **extra_fields):
         """Creates a regular user with with account not activated by default.
 
         Raises:
@@ -31,7 +31,7 @@ class UserProfileManager(BaseUserManager):
         # Create the user instance with additional fields
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.is_active = False
+        user.is_active = is_active
         user.save()
         return user
 
