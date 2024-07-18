@@ -47,7 +47,6 @@ class UserProfileManager(BaseUserManager):
         """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("is_active", True)
 
         # Check if is_staff is set to True.
         if extra_fields.get("is_staff") is not True:
@@ -56,7 +55,10 @@ class UserProfileManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
 
-        return self.create_user(email, password, **extra_fields)
+        user = self.create_user(email, password, **extra_fields)
+        user.is_active = True
+        user.save()
+        return user
 
 
 class UserProfile(AbstractUser):
