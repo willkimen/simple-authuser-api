@@ -71,7 +71,7 @@ def user_id_and_code() -> dict:
     Returns:
         dict: A dictionary with the user's ID and the confirmation code.
     """
-    user = User.objects.create(
+    user = User.objects.create_user(
         first_name="John",
         last_name="Doe",
         email="johndoe@email.com",
