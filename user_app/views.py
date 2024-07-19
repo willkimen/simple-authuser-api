@@ -14,7 +14,7 @@ from .throttlings import (
     AccountActivationRequestRateLimit,
     SendEmailActivateAccountRequestRateLimit,
 )
-from .utils.email_service import send_email_for_account_activation
+from .utils.email_service import send_activation_code_by_email
 
 User = get_user_model()
 
@@ -38,7 +38,7 @@ def register(request):
 
     # Send the activation email
     try:
-        send_email_for_account_activation(serializer.validated_data["email"])
+        send_activation_code_by_email(serializer.validated_data["email"])
     except smtplib.SMTPException as e:
         return Response(
             {
@@ -170,7 +170,7 @@ def send_email_to_activate_account(request):
 
     # Send email
     try:
-        send_email_for_account_activation(serializer.validated_data["email"])
+        send_activation_code_by_email(serializer.validated_data["email"])
     except smtplib.SMTPException as e:
         return Response(
             {

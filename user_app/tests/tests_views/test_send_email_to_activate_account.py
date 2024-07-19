@@ -261,7 +261,7 @@ def test_does_not_send_email_when_user_has_already_activated(
     return_value=True,
 )
 @patch(
-    "user_app.views.send_email_for_account_activation",
+    "user_app.views.send_activation_code_by_email",
     side_effect=smtplib.SMTPException(),
 )
 def test_failed_to_send_email(
@@ -298,7 +298,7 @@ def test_failed_to_send_email(
     "user_app.views.SendEmailActivateAccountRequestRateLimit.allow_request",
     return_value=True,
 )
-@patch("user_app.views.send_email_for_account_activation")
+@patch("user_app.views.send_activation_code_by_email")
 def test_send_email_successfully(
     mock_send_email,
     mock_allow_request,

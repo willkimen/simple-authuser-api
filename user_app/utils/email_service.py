@@ -8,7 +8,7 @@ from ..models import ConfirmationCode
 from .random_code import generate_random_code
 
 
-def send_email_for_account_activation(user_email: str) -> None:
+def send_activation_code_by_email(user_email: str) -> None:
     """
     Sends an activation email to the user.
     This function creates content with a random code to confirm the user's email address.
