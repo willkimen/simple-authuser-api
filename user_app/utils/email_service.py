@@ -4,6 +4,8 @@ from textwrap import dedent
 from django.contrib.auth.models import AbstractBaseUser
 from django.core.mail import EmailMessage
 
+from user_app.constants import confirmation_type_code
+
 from ..models import ConfirmationCode
 from .random_code import generate_random_code
 
@@ -41,7 +43,7 @@ def send_activation_code_by_email(user_email: str) -> None:
         ConfirmationCode.objects.create(
             code=confirmation_code,
             user_email=user_email,
-            type_code="registration_email_confirmation",
+            type_code=confirmation_type_code.ACCOUNT_ACTIVATION,
         )
     except smtplib.SMTPConnectError as e:
         raise smtplib.SMTPConnectError(f"Failed to connect to the SMTP server: {e}")

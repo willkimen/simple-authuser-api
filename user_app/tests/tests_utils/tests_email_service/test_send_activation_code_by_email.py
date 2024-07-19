@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 from django.contrib.auth import get_user_model
 
+from user_app.constants import confirmation_type_code
 from user_app.utils.email_service import send_activation_code_by_email
 
 User = get_user_model()
@@ -49,5 +50,5 @@ def test_success_send_email(
     mock_create.assert_called_once_with(
         code=mock_generate_random_code(),
         user_email=user_email,
-        type_code="registration_email_confirmation",
+        type_code=confirmation_type_code.ACCOUNT_ACTIVATION,
     )
