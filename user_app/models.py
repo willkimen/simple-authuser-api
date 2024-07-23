@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
@@ -124,3 +126,14 @@ class ConfirmationCode(models.Model):
     class Meta:
         db_table = "confirmation_code"
         verbose_name = "Confirmation Code"
+
+
+class JWTBlackList(models.Model):
+    TYPE_TOKEN_CHOICES = [
+        ("access", "access"),
+        ("refresh", "refresh"),
+    ]
+
+    jti = models.CharField(max_length=255)
+    exp = models.DateTimeField()
+    typ = models.CharField(max_length=10, choices=TYPE_TOKEN_CHOICES)
