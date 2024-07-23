@@ -49,8 +49,7 @@ def register(request):
         )
 
     # Save the user to the database
-    user = serializer.save()
-    user.save()
+    serializer.save()
     return Response(
         {
             "user": serializer.data,
