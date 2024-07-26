@@ -1,10 +1,11 @@
 import hashlib
 import os
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import jwt
 
+from user_app.constants import jwt_error_messages
 from user_app.exceptions import JWTBlackListException
 from user_app.models import JWTBlackList
 
@@ -123,16 +124,25 @@ def check_token(token: str) -> dict:
     """
     try:
         payload = jwt.decode(
-            jwt=token, key=os.environ.get("ENV_JWT_SECRET"), algorithms=["HS256"]
+            jwt=token,
+            key=os.environ.get("ENV_JWT_SECRET"),
+            algorithms=["HS256"],
+            options={"require": ["exp", "jti", "uid", "typ"]},
         )
     except jwt.exceptions.ExpiredSignatureError:
-        raise jwt.exceptions.ExpiredSignatureError()
+        raise jwt.exceptions.ExpiredSignatureError(jwt_error_messages.EXPIRED_SIGNATURE)
+    except jwt.exceptions.InvalidAlgorithmError:
+        raise jwt.exceptions.InvalidAlgorithmError(jwt_error_messages.INVALID_ALGORITHM)
+    except jwt.exceptions.MissingRequiredClaimError:
+        raise jwt.exceptions.MissingRequiredClaimError(
+            jwt_error_messages.MISSING_REQUIRED_CLAIM
+        )
     except jwt.exceptions.InvalidSignatureError:
-        raise jwt.exceptions.InvalidTokenError()
+        raise jwt.exceptions.InvalidSignatureError(jwt_error_messages.INVALID_SIGNATURE)
     except jwt.exceptions.DecodeError:
-        raise jwt.exceptions.DecodeError()
+        raise jwt.exceptions.DecodeError(jwt_error_messages.DECODE_ERROR)
     except jwt.exceptions.InvalidTokenError:
-        raise jwt.exceptions.InvalidTokenError()
+        raise jwt.exceptions.InvalidTokenError(jwt_error_messages.INVALID_TOKEN)
 
     if JWTBlackList.objects.filter(jti=payload["jti"]).exists():
         raise JWTBlackListException()
