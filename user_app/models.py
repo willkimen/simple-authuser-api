@@ -1,5 +1,7 @@
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
@@ -129,6 +131,16 @@ class ConfirmationCode(models.Model):
 
 
 class JWTBlackList(models.Model):
+    """
+    Model to store blacklisted JWTs.
+
+    Attributes:
+        TYPE_TOKEN_CHOICES (list): List of token type choices.
+        jti (str): The JWT ID.
+        exp (datetime): The expiration date and time of the token.
+        typ (str): The type of the token, either 'access' or 'refresh'.
+    """
+
     TYPE_TOKEN_CHOICES = [
         ("access", "access"),
         ("refresh", "refresh"),
@@ -137,3 +149,14 @@ class JWTBlackList(models.Model):
     jti = models.CharField(max_length=255)
     exp = models.DateTimeField()
     typ = models.CharField(max_length=10, choices=TYPE_TOKEN_CHOICES)
+
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to handle the expiration field.
+
+        Converts the expiration field from an integer timestamp to a datetime object
+        if it is not already a datetime object.
+        """
+        if isinstance(self.exp, int):
+            self.exp = datetime.fromtimestamp(self.exp, tz=ZoneInfo(settings.TIMEZONE))
+        super().save(*args, **kwargs)
