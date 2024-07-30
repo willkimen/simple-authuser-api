@@ -1,11 +1,14 @@
 import smtplib
 from datetime import datetime, timedelta
 
+import jwt
 from django.contrib.auth import get_user_model
 from django.utils.timezone import make_aware
 from rest_framework import status
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
+
+from user_app.utils.jwt_token import create_pair_jwt
 
 from .constants import confirmation_type_code, response_messages
 from .models import ConfirmationCode
@@ -57,6 +60,42 @@ def register(request):
         },
         status=status.HTTP_201_CREATED,
     )
+
+
+@api_view(["POST"])
+def login(request):
+    """
+    Handle user login by email and password.
+
+    Args:
+        request (Request): The request object containing email and password.
+
+    Returns:
+        Response: A response object containing JWT tokens if successful or an error message if failed.
+    """
+    email = request.data.get("email", None)
+    password = request.data.get("password", None)
+
+    # Verify if user exists
+    try:
+        user = User.objects.get(email=email, password=password)
+    except User.DoesNotExist:
+        return Response(
+            {"message": response_messages.USER_NOT_FOUND},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Verify if user has activated account
+    if user.is_active is False:
+        return Response(
+            {"message": response_messages.USER_ACCOUNT_NOT_ACTIVATED},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # Create pair jwt: access and refresh
+    pair_jwt: dict[str:str] = create_pair_jwt(user.id)
+
+    return Response(pair_jwt, status=status.HTTP_200_OK)
 
 
 @api_view(["PATCH"])
