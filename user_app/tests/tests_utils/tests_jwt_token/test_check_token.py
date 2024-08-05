@@ -1,6 +1,5 @@
 import base64
 import json
-import time
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
@@ -125,59 +124,6 @@ def token_with_invalid_algorithm() -> str:
     return f"{modified_header}.{payload}.{signature}"
 
 
-@pytest.fixture
-def token_with_missing_required_claim() -> list:
-    """
-    Fixture that creates a list of JWTs with missing required claims for testing purposes.
-
-    Returns:
-        list: A list of JWTs with missing required claims.
-    """
-    tokens_with_claim = []
-    tokens_with_claim.append(
-        jwt.encode(
-            {
-                "typ": "access",
-                "jti": "test_jti",
-                "exp": int((datetime.now() + timedelta(days=1)).timestamp()),
-            },
-            JWT_SECRET_FOR_TESTS,
-        )
-    )
-    tokens_with_claim.append(
-        jwt.encode(
-            {
-                "uid": 10,
-                "jti": "test_jti",
-                "exp": int((datetime.now() + timedelta(days=1)).timestamp()),
-            },
-            JWT_SECRET_FOR_TESTS,
-        )
-    )
-    tokens_with_claim.append(
-        jwt.encode(
-            {
-                "uid": 10,
-                "typ": "access",
-                "exp": int((datetime.now() + timedelta(days=1)).timestamp()),
-            },
-            JWT_SECRET_FOR_TESTS,
-        )
-    )
-    tokens_with_claim.append(
-        jwt.encode(
-            {
-                "uid": 10,
-                "typ": "access",
-                "jti": "test_jti",
-            },
-            JWT_SECRET_FOR_TESTS,
-        )
-    )
-
-    return tokens_with_claim
-
-
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=JWT_SECRET_FOR_TESTS)
 def test_token_expired(jwt_secret_mock, token_expired):
     """
@@ -228,22 +174,6 @@ def test_invalid_algorithm(jwt_secret_mock, token_with_invalid_algorithm):
     """
     with pytest.raises(jwt.exceptions.InvalidAlgorithmError):
         check_token(token_with_invalid_algorithm)
-
-
-@patch("user_app.utils.jwt_token.os.environ.get", return_value=JWT_SECRET_FOR_TESTS)
-def test_missing_required_claim(
-    jwt_secret_mock, token_with_missing_required_claim: list
-):
-    """
-    Test if the function raises MissingRequiredClaimError when the token is missing required claims.
-
-    Args:
-        jwt_secret_mock: Mocked environment variable for JWT secret.
-        token_with_missing_required_claim (list): The list of JWTs with missing required claims.
-    """
-    for token in token_with_missing_required_claim:
-        with pytest.raises(jwt.exceptions.MissingRequiredClaimError):
-            check_token(token)
 
 
 @pytest.mark.django_db

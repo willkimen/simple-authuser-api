@@ -1,7 +1,6 @@
 import smtplib
 from datetime import datetime, timedelta
 
-import jwt
 from django.contrib.auth import get_user_model
 from django.utils.timezone import make_aware
 from rest_framework import status

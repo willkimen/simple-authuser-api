@@ -116,7 +116,6 @@ def check_token(token: str) -> dict:
     Raises:
         jwt.exceptions.ExpiredSignatureError: If the token has expired.
         jwt.exceptions.InvalidAlgorithmError: If the token's algorithm is invalid.
-        jwt.exceptions.MissingRequiredClaimError: If the token is missing required claims.
         jwt.exceptions.InvalidSignatureError: If the token signature is invalid.
         jwt.exceptions.DecodeError: If the token cannot be decoded.
         jwt.exceptions.InvalidTokenError: If the token is invalid.
@@ -127,16 +126,11 @@ def check_token(token: str) -> dict:
             jwt=token,
             key=os.environ.get("ENV_JWT_SECRET"),
             algorithms=["HS256"],
-            options={"require": ["exp", "jti", "uid", "typ"]},
         )
     except jwt.exceptions.ExpiredSignatureError:
         raise jwt.exceptions.ExpiredSignatureError(jwt_error_messages.EXPIRED_SIGNATURE)
     except jwt.exceptions.InvalidAlgorithmError:
         raise jwt.exceptions.InvalidAlgorithmError(jwt_error_messages.INVALID_ALGORITHM)
-    except jwt.exceptions.MissingRequiredClaimError:
-        raise jwt.exceptions.MissingRequiredClaimError(
-            jwt_error_messages.MISSING_REQUIRED_CLAIM
-        )
     except jwt.exceptions.InvalidSignatureError:
         raise jwt.exceptions.InvalidSignatureError(jwt_error_messages.INVALID_SIGNATURE)
     except jwt.exceptions.DecodeError:
