@@ -26,7 +26,7 @@ def token_expired() -> str:
         "uid": 10,
         "typ": "access",
         "jti": "test_jti",
-        "exp": int((datetime.now() + timedelta(seconds=1)).timestamp()),
+        "exp": int((datetime.now() - timedelta(seconds=10)).timestamp()),
     }
 
     return jwt.encode(payload, JWT_SECRET_FOR_TESTS)
@@ -187,7 +187,6 @@ def test_token_expired(jwt_secret_mock, token_expired):
         jwt_secret_mock: Mocked environment variable for JWT secret.
         token_expired (str): The expired JWT.
     """
-    time.sleep(2)
     with pytest.raises(jwt.exceptions.ExpiredSignatureError):
         check_token(token_expired)
 
