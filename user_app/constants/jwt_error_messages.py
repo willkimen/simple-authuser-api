@@ -1,3 +1,7 @@
+"""
+Constants used in JWT related errors.
+"""
+
 DECODE_ERROR = (
     "Failed to decode the JWT token. Please ensure the token is properly formatted."
 )
