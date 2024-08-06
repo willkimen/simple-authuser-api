@@ -40,15 +40,19 @@ FAKE_SECRET = "fake_secret"
 FAKE_JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 FAKE_UID_EXIST_IN_DATABASE = 1
 FAKE_UID = 10
-FAKE_PAYLOAD = {
-    "uid": FAKE_UID,
-    "typ": "fake_typ",
-    "jti": "fake_jti",
-    "exp": int((datetime.now() + timedelta(days=1)).timestamp()),
-}
 
 
 # ================== Fixtures ===================
+@pytest.fixture
+def fake_payload() -> dict:
+    return {
+        "uid": FAKE_UID,
+        "typ": "fake_typ",
+        "jti": "fake_jti",
+        "exp": int((datetime.now() + timedelta(days=1)).timestamp()),
+    }
+
+
 @pytest.fixture
 def empty_auth_header_request() -> Request:
     """
@@ -86,19 +90,19 @@ def incorrect_format_auth_header_request() -> list[Request]:
 
 
 @pytest.fixture
-def jwt_request_with_nonexistent_user() -> Request:
+def jwt_request_with_nonexistent_user(fake_payload) -> Request:
     """
     Create a request object with a JWT token for a nonexistent user.
 
     Returns:
         Request: A request object with a JWT token in the Authorization header.
     """
-    token = jwt.encode(FAKE_PAYLOAD, FAKE_SECRET)
+    token = jwt.encode(fake_payload, FAKE_SECRET)
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 @pytest.fixture
-def expired_jwt_request() -> Request:
+def expired_jwt_request(fake_payload) -> Request:
     """
     Create a request object with an expired JWT token.
 
@@ -107,22 +111,22 @@ def expired_jwt_request() -> Request:
     """
     # Create a expired date
     exp_expired = int((datetime.now() - timedelta(seconds=10)).timestamp())
-    FAKE_PAYLOAD["exp"] = exp_expired
+    fake_payload["exp"] = exp_expired
 
-    token = jwt.encode(FAKE_PAYLOAD, FAKE_SECRET)
+    token = jwt.encode(fake_payload, FAKE_SECRET)
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 @pytest.fixture
-def jwt_request_with_invalid_secret() -> Request:
+def jwt_request_with_invalid_secret(fake_payload) -> Request:
     """
     Create a request object with a JWT token signed with an incorrect secret.
 
     Returns:
         Request: A request object with a JWT token signed with an incorrect secret in the Authorization header.
     """
-    token = jwt.encode(FAKE_PAYLOAD, "invalid_secret")
+    token = jwt.encode(fake_payload, "invalid_secret")
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
@@ -139,7 +143,7 @@ def malformed_jwt_request() -> Request:
 
 
 @pytest.fixture
-def jwt_request_with_invalid_algorithm() -> Request:
+def jwt_request_with_invalid_algorithm(fake_payload) -> Request:
     """
     Create a request object with a JWT token that has an invalid algorithm.
 
@@ -147,7 +151,7 @@ def jwt_request_with_invalid_algorithm() -> Request:
         Request: A request object with a JWT token that specifies an invalid algorithm in the header.
     """
     # Encode the payload into a JWT token with the correct secret
-    token = jwt.encode(FAKE_PAYLOAD, FAKE_SECRET)
+    token = jwt.encode(fake_payload, FAKE_SECRET)
 
     # Split the token into its components: header, payload, and signature
     header, payload, signature = token.split(".")
@@ -175,7 +179,7 @@ def jwt_request_with_invalid_algorithm() -> Request:
 
 
 @pytest.fixture
-def request_with_blacklisted_jwt() -> Request:
+def request_with_blacklisted_jwt(fake_payload) -> Request:
     """
     Create a request object with a JWT token that is blacklisted.
 
@@ -183,15 +187,15 @@ def request_with_blacklisted_jwt() -> Request:
         Request: A request object with a JWT token that has a JTI in the blacklist.
     """
     # Set the JTI of the payload to a value that is known to be in the blacklist
-    FAKE_PAYLOAD["jti"] = FAKE_JTI_IN_BLACKLIST
+    fake_payload["jti"] = FAKE_JTI_IN_BLACKLIST
 
-    token = jwt.encode(FAKE_PAYLOAD, FAKE_SECRET)
+    token = jwt.encode(fake_payload, FAKE_SECRET)
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 @pytest.fixture
-def valid_jwt_request_and_token() -> list:
+def valid_jwt_request_and_token(fake_payload) -> list:
     """
     Create a JWT token and a request object with the valid token.
 
@@ -202,8 +206,8 @@ def valid_jwt_request_and_token() -> list:
     """
 
     # set id of a user that exists
-    FAKE_PAYLOAD["uid"] = FAKE_UID_EXIST_IN_DATABASE
-    token = jwt.encode(FAKE_PAYLOAD, FAKE_SECRET)
+    fake_payload["uid"] = FAKE_UID_EXIST_IN_DATABASE
+    token = jwt.encode(fake_payload, FAKE_SECRET)
 
     request_and_token = [
         token,
@@ -326,10 +330,17 @@ def test_authentication_fails_when_malformed_jwt(
 
 
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
-def test_authentication_fails_when_blacklisted_jwt(
+def test_authentication_fails_when_invalid_algorithm_jwt(
     mock_jwt_secret,
     jwt_request_with_invalid_algorithm: Request,
 ):
+    """
+    Test to ensure that authentication fails when the JWT uses an invalid algorithm.
+
+    Args:
+        mock_jwt_secret: Mocked environment variable for JWT secret.
+        jwt_request_with_invalid_algorithm (Request): Request object containing a JWT with an invalid algorithm.
+    """
     expected_error_message = jwt_error_messages.INVALID_ALGORITHM
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(jwt_request_with_invalid_algorithm)
@@ -340,8 +351,7 @@ def test_authentication_fails_when_blacklisted_jwt(
 @pytest.mark.django_db
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_fails_when_blacklisted_jwt(
-    mock_jwt_secret,
-    request_with_blacklisted_jwt: Request,
+    mock_jwt_secret, request_with_blacklisted_jwt: Request, fake_payload
 ):
     """
     Test that authentication fails when the JWT is blacklisted.
@@ -352,8 +362,8 @@ def test_authentication_fails_when_blacklisted_jwt(
     """
     JWTBlackList.objects.create(
         jti=FAKE_JTI_IN_BLACKLIST,
-        exp=FAKE_PAYLOAD["exp"],
-        typ=FAKE_PAYLOAD["typ"],
+        exp=fake_payload["exp"],
+        typ=fake_payload["typ"],
     )
     expected_error_message = jwt_error_messages.JWT_IN_BLACKLIST
     with pytest.raises(AuthenticationFailed) as e:
