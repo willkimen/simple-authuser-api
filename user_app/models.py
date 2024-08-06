@@ -158,5 +158,5 @@ class JWTBlackList(models.Model):
         if it is not already a datetime object.
         """
         if isinstance(self.exp, int):
-            self.exp = datetime.fromtimestamp(self.exp, tz=ZoneInfo(settings.TIMEZONE))
+            self.exp = datetime.fromtimestamp(self.exp, tz=ZoneInfo(settings.TIME_ZONE))
         super().save(*args, **kwargs)
