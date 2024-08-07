@@ -3,6 +3,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
+from user_app.constants import validation_error_messages
+
 # Get the custom user model
 User = get_user_model()
 
@@ -58,7 +60,9 @@ class UserSerializer(serializers.ModelSerializer):
         # Check if the password and confirmation_password match
         if data.get("password") != data.get("confirmation_password"):
             raise serializers.ValidationError(
-                detail={"confirmation_password": "Passwords do not match"}
+                detail={
+                    "confirmation_password": validation_error_messages.PASSWORD_DO_NOT_MATCH
+                }
             )
         return data
 
