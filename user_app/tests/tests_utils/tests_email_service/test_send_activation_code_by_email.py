@@ -1,5 +1,9 @@
+"""
+This module tests the function for sending an email with an account confirmation code.
+"""
+
 from textwrap import dedent
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -7,9 +11,12 @@ from django.contrib.auth import get_user_model
 from user_app.constants import confirmation_type_code
 from user_app.utils.email_service import send_activation_code_by_email
 
+# ========== Objects and constants ============
 User = get_user_model()
+FAKE_USER_EMAIL = "fake@email.com"
 
 
+# =============== Fixture =================
 @pytest.fixture
 def expected_email_body():
     return dedent(
@@ -23,6 +30,7 @@ def expected_email_body():
     )
 
 
+# =============== Tests ================
 @pytest.mark.django_db
 @patch("user_app.utils.email_service.EmailMessage")
 @patch("user_app.utils.email_service.generate_random_code", return_value="mocked-code")
@@ -31,13 +39,14 @@ def expected_email_body():
     "user_app.utils.email_service.ConfirmationCode.objects.exists", return_value=False
 )
 def test_success_send_email(
-    mock_exists,
-    mock_create,
-    mock_generate_random_code,
-    MockEmailMessage,
-    expected_email_body,
+    mock_exists: MagicMock,
+    mock_create: MagicMock,
+    mock_generate_random_code: MagicMock,
+    MockEmailMessage: MagicMock,
+    expected_email_body: str,
 ):
-    user_email = "johndoe@email.com"
+    user_email = FAKE_USER_EMAIL
+    # Returns a mocked instance of the EmailMessage class
     mock_email_message_instance = MockEmailMessage.return_value
     email_subject_expected = "Confirm your email address"
 

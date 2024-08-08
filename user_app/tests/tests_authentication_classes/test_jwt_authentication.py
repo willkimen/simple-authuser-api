@@ -15,7 +15,7 @@ It uses the `pytest` and `unittest.mock` libraries.
 import base64
 import json
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
@@ -274,7 +274,7 @@ def test_authentication_fails_when_incorrect_format_auth_header(
 
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_fails_when_expired_jwt(
-    mock_jwt_secret,
+    mock_jwt_secret: MagicMock,
     expired_jwt_request: Request,
 ):
     """
@@ -293,7 +293,7 @@ def test_authentication_fails_when_expired_jwt(
 
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_fails_when_invalid_secret_jwt(
-    mock_jwt_secret,
+    mock_jwt_secret: MagicMock,
     jwt_request_with_invalid_secret: Request,
 ):
     """
@@ -312,7 +312,7 @@ def test_authentication_fails_when_invalid_secret_jwt(
 
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_fails_when_malformed_jwt(
-    mock_jwt_secret,
+    mock_jwt_secret: MagicMock,
     malformed_jwt_request: Request,
 ):
     """
@@ -331,7 +331,7 @@ def test_authentication_fails_when_malformed_jwt(
 
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_fails_when_invalid_algorithm_jwt(
-    mock_jwt_secret,
+    mock_jwt_secret: MagicMock,
     jwt_request_with_invalid_algorithm: Request,
 ):
     """
@@ -351,7 +351,7 @@ def test_authentication_fails_when_invalid_algorithm_jwt(
 @pytest.mark.django_db
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_fails_when_blacklisted_jwt(
-    mock_jwt_secret, request_with_blacklisted_jwt: Request, fake_payload
+    mock_jwt_secret: MagicMock, request_with_blacklisted_jwt: Request, fake_payload
 ):
     """
     Test that authentication fails when the JWT is blacklisted.
@@ -375,7 +375,7 @@ def test_authentication_fails_when_blacklisted_jwt(
 @pytest.mark.django_db
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_fails_when_nonexistent_user(
-    mock_jwt_secret,
+    mock_jwt_secret: MagicMock,
     jwt_request_with_nonexistent_user: Request,
 ):
     """
@@ -395,7 +395,7 @@ def test_authentication_fails_when_nonexistent_user(
 @pytest.mark.django_db
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_success(
-    mock_jwt_secret,
+    mock_jwt_secret: MagicMock,
     valid_jwt_request_and_token: list,
 ):
     """

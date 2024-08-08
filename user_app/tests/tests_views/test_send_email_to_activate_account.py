@@ -1,3 +1,8 @@
+"""
+Test the send_email_to_activate_account() view, which expects a user's email in a POST request and 
+sends a confirmation code to the user's email address.
+"""
+
 import smtplib
 from unittest.mock import MagicMock, patch
 
@@ -9,11 +14,19 @@ from rest_framework.test import APIClient
 
 from user_app.constants import response_messages
 
+# ========== Objects and constants ============
 User = get_user_model()
-
 url: str = reverse("send_email_to_activate_account")
+FAKE_USER_DATA = {
+    "first_name": "fake_first_name",
+    "last_name": "fake_last_name",
+    "email": "fake@email.com",
+    "password": "FAKEpassowrd1234!",
+}
+EMAIL_NONEXISTENT = "nonexistent@email.com"
 
 
+# ================= Fixtures ===============
 @pytest.fixture
 def client() -> APIClient:
     """Returns an API client to make requests."""
@@ -22,7 +35,7 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def email_of_user_with_activated_account() -> str:
+def active_user_email() -> str:
     """
     Fixture that creates a user with an activated account for testing purposes.
 
@@ -32,20 +45,15 @@ def email_of_user_with_activated_account() -> str:
     Returns:
         str: The email address of the user with the activated account.
     """
-    email = "johndoe@email.com"
-    User.objects.create_user(
-        first_name="John",
-        last_name="Doe",
-        email=email,
-        password="Pass1234!",
-        is_active=True,
-    )
 
-    return email
+    return User.objects.create_user(
+        **FAKE_USER_DATA,
+        is_active=True,
+    ).email
 
 
 @pytest.fixture
-def email_of_user_with_deactivated_account() -> str:
+def desactive_user_email() -> str:
     """
     Fixture that creates a user with a deactivated account for testing purposes.
 
@@ -55,16 +63,11 @@ def email_of_user_with_deactivated_account() -> str:
     Returns:
         str: The email address of the user with the deactivated account.
     """
-    email = "johndoe@email.com"
-    user = User.objects.create_user(
-        first_name="John",
-        last_name="Doe",
-        email=email,
-        password="Pass1234!",
-    )
-    return email
+
+    return User.objects.create_user(**FAKE_USER_DATA, is_active=False).email
 
 
+# ============= Tests ==================
 @pytest.mark.django_db
 def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
     """
@@ -83,11 +86,11 @@ def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
 
     # Simulate multiple POST requests to exceed the rate limit
     for _ in range(limit_exceeded):
-        response = client.post(url)
+        active_response = client.post(url)
 
-    assert expected_status_code == response.status_code
-    assert expected_message in response.data["message"]
-    assert expected_error_code == response.data["error_code"]
+    assert expected_status_code == active_response.status_code
+    assert expected_message in active_response.data["message"]
+    assert expected_error_code == active_response.data["error_code"]
 
 
 @pytest.mark.django_db
@@ -96,7 +99,7 @@ def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
     return_value=True,
 )
 def test_does_not_send_email_when_email_field_is_empty(
-    mock_allow_request, client: APIClient
+    mock_allow_request: MagicMock, client: APIClient
 ):
     """
     Test if the email sending request returns 400 when the email field is empty.
@@ -108,16 +111,19 @@ def test_does_not_send_email_when_email_field_is_empty(
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the email field is empty in the request.
     """
-    email_empty = {"email": ""}
+
     expected_message = "This field may not be blank."
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_field = "email"
 
-    response = client.post(url, data=email_empty, format="json")
+    actual_response = client.post(url, data={"email": ""}, format="json")
 
-    assert expected_status_code == response.status_code
-    assert expected_error_field in response.data["validation_errors"]
-    assert expected_message in response.data["validation_errors"][expected_error_field]
+    assert expected_status_code == actual_response.status_code
+    assert expected_error_field in actual_response.data["validation_errors"]
+    assert (
+        expected_message
+        in actual_response.data["validation_errors"][expected_error_field]
+    )
 
 
 @pytest.mark.django_db
@@ -126,7 +132,7 @@ def test_does_not_send_email_when_email_field_is_empty(
     return_value=True,
 )
 def test_does_not_send_email_when_email_field_is_null(
-    mock_allow_request, client: APIClient
+    mock_allow_request: MagicMock, client: APIClient
 ):
     """
     Test if the email sending request returns 400 when the email field is null.
@@ -138,12 +144,11 @@ def test_does_not_send_email_when_email_field_is_null(
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the email field is null in the request.
     """
-    email_null = {"email": None}
     expected_message = "This field may not be null."
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_field = "email"
 
-    response = client.post(url, data=email_null, format="json")
+    response = client.post(url, data={"email": None}, format="json")
 
     assert expected_status_code == response.status_code
     assert expected_error_field in response.data["validation_errors"]
@@ -173,7 +178,7 @@ def test_does_not_send_email_when_email_field_is_null(
     return_value=True,
 )
 def test_does_not_send_email_with_invalid_email_format(
-    mock_allow_request, invalid_email_format, client: APIClient
+    mock_allow_request: MagicMock, invalid_email_format, client: APIClient
 ):
     """
     Test if the email sending request returns 400 when the email format is invalid.
@@ -186,12 +191,11 @@ def test_does_not_send_email_with_invalid_email_format(
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the email field contains an invalid email format.
     """
-    email_with_invalid_format = {"email": invalid_email_format}
     expected_message = "Enter a valid email address."
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_field = "email"
 
-    response = client.post(url, data=email_with_invalid_format, format="json")
+    response = client.post(url, data={"email": invalid_email_format}, format="json")
 
     assert expected_status_code == response.status_code
     assert expected_error_field in response.data["validation_errors"]
@@ -204,7 +208,7 @@ def test_does_not_send_email_with_invalid_email_format(
     return_value=True,
 )
 def test_does_not_send_email_when_user_does_not_exists(
-    mock_allow_request, client: APIClient
+    mock_allow_request: MagicMock, client: APIClient
 ):
     """
     Test if the email sending request returns 404 when the user does not exist.
@@ -218,12 +222,11 @@ def test_does_not_send_email_when_user_does_not_exists(
     """
     expected_message = response_messages.USER_NOT_FOUND
     expected_status_code = status.HTTP_404_NOT_FOUND
-    email_not_exist = {"email": "mynameisnobody@email.com"}
 
-    response = client.post(url, data=email_not_exist, format="json")
+    actual_response = client.post(url, data={"email": EMAIL_NONEXISTENT}, format="json")
 
-    assert expected_status_code == response.status_code
-    assert expected_message == response.data["message"]
+    assert expected_status_code == actual_response.status_code
+    assert expected_message == actual_response.data["message"]
 
 
 @pytest.mark.django_db
@@ -232,7 +235,9 @@ def test_does_not_send_email_when_user_does_not_exists(
     return_value=True,
 )
 def test_does_not_send_email_when_user_has_already_activated(
-    mock_allow_request, client: APIClient, email_of_user_with_activated_account: str
+    mock_allow_request: MagicMock,
+    client: APIClient,
+    active_user_email: str,
 ):
     """
     Test if the email sending request returns 400 when the user has already activated their account.
@@ -240,16 +245,15 @@ def test_does_not_send_email_when_user_has_already_activated(
     Args:
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        email_of_user_with_activated_account (str): The email address of the user with an activated account.
+        active_user_email (str): The email address of the user with an activated account.
 
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the email field contains an email address of a user who has already activated their account.
     """
     expected_message = response_messages.USER_HAS_ALREADY_ACTIVATED
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    email_activated = {"email": email_of_user_with_activated_account}
 
-    response = client.post(url, data=email_activated, format="json")
+    response = client.post(url, data={"email": active_user_email}, format="json")
 
     assert expected_status_code == response.status_code
     assert expected_message == response.data["message"]
@@ -265,10 +269,10 @@ def test_does_not_send_email_when_user_has_already_activated(
     side_effect=smtplib.SMTPException(),
 )
 def test_failed_to_send_email(
-    mock_send_email,
-    mock_allow_request,
+    mock_send_email: MagicMock,
+    mock_allow_request: MagicMock,
     client: APIClient,
-    email_of_user_with_deactivated_account: str,
+    desactive_user_email: str,
 ):
     """
     Test if the email sending request returns 500 when there is an error sending the email.
@@ -277,7 +281,7 @@ def test_failed_to_send_email(
         mock_send_email (MagicMock): Mocked method to simulate an SMTP exception.
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        email_of_user_with_deactivated_account (str): The email address of the user with a deactivated account.
+        desactive_user_email (str): The email address of the user with a deactivated account.
 
     This test checks that the server returns a 500 Internal Server Error status code and an appropriate
     error message when there is an SMTP exception while sending the activation email.
@@ -285,9 +289,7 @@ def test_failed_to_send_email(
     expected_message = response_messages.ERROR_SENDING_EMAIL
     expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-    response = client.post(
-        url, data={"email": email_of_user_with_deactivated_account}, format="json"
-    )
+    response = client.post(url, data={"email": desactive_user_email}, format="json")
 
     assert expected_status_code == response.status_code
     assert expected_message == response.data["message"]
@@ -300,10 +302,10 @@ def test_failed_to_send_email(
 )
 @patch("user_app.views.send_activation_code_by_email")
 def test_send_email_successfully(
-    mock_send_email,
-    mock_allow_request,
+    mock_send_email: MagicMock,
+    mock_allow_request: MagicMock,
     client: APIClient,
-    email_of_user_with_deactivated_account: str,
+    desactive_user_email: str,
 ):
     """
     Test if the email sending request returns 200 when the email is sent successfully.
@@ -312,7 +314,7 @@ def test_send_email_successfully(
         mock_send_email (MagicMock): Mocked method to simulate successful email sending.
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        email_of_user_with_deactivated_account (str): The email address of the user with a deactivated account.
+        desactive_user_email (str): The email address of the user with a deactivated account.
 
     This test checks that the server returns a 200 OK status code and an appropriate
     success message when the activation email is sent successfully.
@@ -320,9 +322,7 @@ def test_send_email_successfully(
     expected_status_code = status.HTTP_200_OK
     expected_message = response_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY
 
-    response = client.post(
-        url, data={"email": email_of_user_with_deactivated_account}, format="json"
-    )
+    response = client.post(url, data={"email": desactive_user_email}, format="json")
 
     assert expected_status_code == response.status_code
     assert expected_message == response.data["message"]

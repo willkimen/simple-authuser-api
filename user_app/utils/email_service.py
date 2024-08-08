@@ -1,7 +1,6 @@
 import smtplib
 from textwrap import dedent
 
-from django.contrib.auth.models import AbstractBaseUser
 from django.core.mail import EmailMessage
 
 from user_app.constants import confirmation_type_code
