@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     activate_account,
     login,
+    logout,
     register,
     send_email_to_activate_account,
     update,
@@ -22,4 +23,5 @@ urlpatterns = [
         name="send_email_to_activate_account",
     ),
     path("users/login/", login, name="login"),
+    path("users/logout/", logout, name="logout"),
 ]

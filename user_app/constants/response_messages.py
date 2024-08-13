@@ -38,3 +38,6 @@ EMAIL_SEND_TO_USER_SUCCESSFULLY = "Email sent to user successfully."
 
 # Message displayed when the user does not have their account activated.
 USER_ACCOUNT_NOT_ACTIVATED = "User does not have the account activated."
+
+# Message displayed when user is successfully logged out
+LOGOUT_SUCCESSFUL = "Logout successful."

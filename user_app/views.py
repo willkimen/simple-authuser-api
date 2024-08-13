@@ -4,19 +4,19 @@ from datetime import datetime, timedelta
 from django.contrib.auth import get_user_model
 from django.utils.timezone import make_aware
 from rest_framework import status
-from rest_framework.decorators import api_view, throttle_classes
+from rest_framework.decorators import api_view, authentication_classes, throttle_classes
 from rest_framework.response import Response
 
-from user_app.utils.jwt_token import create_pair_jwt
-
-from .constants import confirmation_type_code, response_messages
-from .models import ConfirmationCode
-from .serializers import EmailSerializer, UserSerializer
-from .throttlings import (
+from user_app.authentication_classes import JWTAuthentication
+from user_app.constants import confirmation_type_code, response_messages
+from user_app.models import ConfirmationCode, JWTBlackList
+from user_app.serializers import EmailSerializer, UserSerializer
+from user_app.throttlings import (
     AccountActivationRequestRateLimit,
     SendEmailActivateAccountRequestRateLimit,
 )
-from .utils.email_service import send_activation_code_by_email
+from user_app.utils.email_service import send_activation_code_by_email
+from user_app.utils.jwt_token import create_pair_jwt
 
 User = get_user_model()
 
@@ -95,6 +95,20 @@ def login(request):
     pair_jwt: dict[str:str] = create_pair_jwt(user.id)
 
     return Response(pair_jwt, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+def logout(request):
+    JWTBlackList.objects.create(
+        jti=request.auth["jti"],
+        exp=request.auth["exp"],
+        typ=request.auth["typ"],
+    )
+
+    return Response(
+        {"message": response_messages.LOGOUT_SUCCESSFUL}, status=status.HTTP_200_OK
+    )
 
 
 @api_view(["PATCH"])
