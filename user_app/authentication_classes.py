@@ -69,7 +69,7 @@ class JWTAuthentication(BaseAuthentication):
         except User.DoesNotExist:
             raise AuthenticationFailed(response_messages.USER_NOT_FOUND)
 
-        return (user, token)
+        return (user, payload)
 
     def authenticate_header(self, request: Request) -> str:
         """

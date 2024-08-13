@@ -195,13 +195,13 @@ def request_with_blacklisted_jwt(fake_payload) -> Request:
 
 
 @pytest.fixture
-def valid_jwt_request_and_token(fake_payload) -> list:
+def valid_jwt_request_and_payload(fake_payload) -> list:
     """
-    Create a JWT token and a request object with the valid token.
+    Create a payload and a request object with the valid token.
 
     Returns:
         list: A list containing:
-            - A valid JWT token.
+            - A valid payload.
             - A request object with the valid JWT token in the Authorization header.
     """
 
@@ -209,12 +209,10 @@ def valid_jwt_request_and_token(fake_payload) -> list:
     fake_payload["uid"] = FAKE_UID_EXIST_IN_DATABASE
     token = jwt.encode(fake_payload, FAKE_SECRET)
 
-    request_and_token = [
-        token,
+    return [
+        fake_payload,
         Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}")),
     ]
-
-    return request_and_token
 
 
 # ================ Tests =======================
@@ -396,14 +394,14 @@ def test_authentication_fails_when_nonexistent_user(
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_success(
     mock_jwt_secret: MagicMock,
-    valid_jwt_request_and_token: list,
+    valid_jwt_request_and_payload: list,
 ):
     """
     Test that authentication succeeds with a valid JWT.
 
     Args:
         mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
-        valid_jwt_request_and_token (list): List containing a valid JWT and corresponding request object.
+        valid_jwt_request_and_payload (list): List containing a valid JWT and corresponding request object.
 
     Asserts:
         User: The user object returned by authentication matches the expected user.
@@ -417,14 +415,14 @@ def test_authentication_success(
         password="1234",
         is_active=True,
     )
-    token_expected, request = valid_jwt_request_and_token
+    payload_expected, request = valid_jwt_request_and_payload
 
-    user, token = jwt_authentication.authenticate(request)
+    user_actual, payload_actual = jwt_authentication.authenticate(request)
 
-    assert user_expected.id == user.id
-    assert user_expected.first_name == user.first_name
-    assert user_expected.last_name == user.last_name
-    assert user_expected.email == user.email
-    assert user_expected.password == user.password
-    assert user_expected.is_active == user.is_active
-    assert token_expected == token
+    assert user_expected.id == user_actual.id
+    assert user_expected.first_name == user_actual.first_name
+    assert user_expected.last_name == user_actual.last_name
+    assert user_expected.email == user_actual.email
+    assert user_expected.password == user_actual.password
+    assert user_expected.is_active == user_actual.is_active
+    assert payload_expected == payload_actual
