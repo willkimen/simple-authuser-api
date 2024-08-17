@@ -11,7 +11,7 @@ from .views import (
 
 urlpatterns = [
     path("users/", register, name="register"),
-    path("users/<int:id>/", update, name="update"),
+    path("users/", update, name="update"),
     path(
         "users/activate_account/",
         activate_account,
