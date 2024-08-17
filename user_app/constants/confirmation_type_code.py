@@ -1,5 +1,6 @@
 """
 Constants related to the ConfirmationCode model.
+This module provides names of confirmation code types for user account activation, email change, password change, and password reset.
 """
 
 ACCOUNT_ACTIVATION = "account_activation"

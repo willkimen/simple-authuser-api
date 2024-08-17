@@ -28,7 +28,7 @@ from user_app.authentication_classes import JWTAuthentication
 from user_app.constants import (
     authentication_error_messages,
     jwt_error_messages,
-    response_messages,
+    response_code_messages,
 )
 from user_app.models import JWTBlackList
 
@@ -383,7 +383,7 @@ def test_authentication_fails_when_nonexistent_user(
         mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
         jwt_request_with_nonexistent_user (Request): Request object with a JWT for a nonexistent user.
     """
-    expected_error_message = response_messages.USER_NOT_FOUND
+    expected_error_message = response_code_messages.USER_NOT_FOUND["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(jwt_request_with_nonexistent_user)
 

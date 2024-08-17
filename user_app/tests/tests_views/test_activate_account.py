@@ -14,7 +14,7 @@ from django.utils.timezone import make_aware
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import confirmation_type_code, response_messages
+from user_app.constants import confirmation_type_code, response_code_messages
 from user_app.models import ConfirmationCode
 
 # ========== Objects and constants ============
@@ -100,6 +100,7 @@ def user_with_confirmation_code() -> dict:
     return {"user_id": user.id, "code": confirmation_code.code}
 
 
+# ============ Tests ================
 @pytest.mark.django_db
 @patch(
     "user_app.views.AccountActivationRequestRateLimit.allow_request", return_value=True
@@ -115,7 +116,8 @@ def test_successful_account_activation(
         user_with_confirmation_code (dict): A dictionary with the user's ID and the confirmation code.
         client (APIClient): The API client used to make requests.
     """
-    expected_message = response_messages.ACCOUNT_ACTIVATED
+    expected_detail_message = response_code_messages.USER_ACTIVATED["detail"]
+    expected_code = response_code_messages.USER_ACTIVATED["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.post(
@@ -123,7 +125,8 @@ def test_successful_account_activation(
     )
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message == actual_response.data["message"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
     # Verify that the user's account is activated
     assert User.objects.get(id=user_with_confirmation_code["user_id"]).is_active == True
@@ -173,13 +176,15 @@ def test_not_activate_account_when_expired_code(
     This test checks that the server returns a 410 Gone status code and an appropriate
     error message when an expired activation code is provided in the request.
     """
-    expected_message = response_messages.CODE_EXPIRED
+    expected_detail_message = response_code_messages.CONFIRMATION_CODE_EXPIRED["detail"]
+    expected_code = response_code_messages.CONFIRMATION_CODE_EXPIRED["code"]
     expected_status_code = status.HTTP_410_GONE
 
     actual_response = client.post(url, data={"code": expired_code}, format="json")
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message == actual_response.data["message"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -226,13 +231,17 @@ def test_not_activate_account_when_code_field_does_not_exists(
     error message when a non-existent activation code is provided in the request.
     """
     code_not_exists = FAKE_CODE_NOT_EXISTS
-    expected_message = response_messages.ACCOUNT_ACTIVATION_CODE_NOT_FOUND
+    expected_detail_message = response_code_messages.ACCOUNT_ACTIVATION_CODE_NOT_FOUND[
+        "detail"
+    ]
+    expected_code = response_code_messages.ACCOUNT_ACTIVATION_CODE_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data={"code": code_not_exists}, format="json")
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message == actual_response.data["message"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -257,13 +266,15 @@ def test_code_field_is_required(
     error message when the 'code' field is missing or incorrectly named in the request.
     """
     code = FAKE_CODE
-    expected_message = response_messages.CODE_FIELD_IS_REQUIRED
+    expected_detail_message = response_code_messages.CODE_FIELD_IS_REQUIRED["detail"]
+    expected_code = response_code_messages.CODE_FIELD_IS_REQUIRED["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.post(url, data={"wrong_field_name": code}, format="json")
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message == actual_response.data["message"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -286,7 +297,10 @@ def test_not_activate_account_when_code_type_is_incorrect(
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the type of the provided activation code is incorrect.
     """
-    expected_message = response_messages.INVALID_CONFIRMATION_CODE_TYPE
+    expected_detail_message = response_code_messages.INVALID_CONFIRMATION_CODE_TYPE[
+        "detail"
+    ]
+    expected_code = response_code_messages.INVALID_CONFIRMATION_CODE_TYPE["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.post(
@@ -294,7 +308,8 @@ def test_not_activate_account_when_code_type_is_incorrect(
     )
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message == actual_response.data["message"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 # Leave it for last to avoid any problems regarding the request rate limit
@@ -321,5 +336,5 @@ def test_not_activate_account_when_request_limit_is_reached(client: APIClient):
         actual_response = client.post(url)
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message in actual_response.data["message"]
-    assert expected_error_code == actual_response.data["error_code"]
+    assert expected_message in actual_response.data["detail"]
+    assert expected_error_code == actual_response.data["code"]

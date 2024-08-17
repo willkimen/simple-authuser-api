@@ -21,8 +21,6 @@ def custom_exception_handler(exc, context):
     # If a response is returned, modify it
     if response is not None:
         # Add the error code to the response data
-        response.data["error_code"] = exc.default_code
-        # Rename the "detail" field to "message"
-        response.data["message"] = response.data.pop("detail")
+        response.data["code"] = exc.default_code
 
     return response

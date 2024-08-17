@@ -14,7 +14,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_messages
+from user_app.constants import response_code_messages
 from user_app.models import JWTBlackList
 
 # ============== Objects and constants ==============
@@ -63,11 +63,13 @@ def client_with_auth_header(token: str) -> APIClient:
 def test_user_logout_successful(
     mock_jwt_secret: MagicMock, client_with_auth_header: APIClient, fake_payload: str
 ):
-    message_expected = response_messages.LOGOUT_SUCCESSFUL
-    status_code_expected = status.HTTP_200_OK
+    expected_detail_message = response_code_messages.LOGOUT_SUCCESSFUL["detail"]
+    expected_code = response_code_messages.LOGOUT_SUCCESSFUL["code"]
+    expected_status_code = status.HTTP_200_OK
 
     response_actual = client_with_auth_header.post(url)
 
-    assert message_expected == response_actual.data["message"]
-    assert status_code_expected == response_actual.status_code
+    assert expected_status_code == response_actual.status_code
+    assert expected_detail_message == response_actual.data["detail"]
+    assert expected_code == response_actual.data["code"]
     assert JWTBlackList.objects.filter(jti=fake_payload["jti"]).exists()

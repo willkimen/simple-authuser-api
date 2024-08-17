@@ -1,3 +1,4 @@
+import copy
 import smtplib
 from datetime import datetime, timedelta
 
@@ -8,7 +9,24 @@ from rest_framework.decorators import api_view, authentication_classes, throttle
 from rest_framework.response import Response
 
 from user_app.authentication_classes import JWTAuthentication
-from user_app.constants import confirmation_type_code, response_messages
+from user_app.constants import confirmation_type_code
+from user_app.constants.response_code_messages import (
+    ACCOUNT_ACTIVATION_CODE_NOT_FOUND,
+    CODE_FIELD_IS_REQUIRED,
+    CONFIRMATION_CODE_EXPIRED,
+    EMAIL_SEND_TO_USER_SUCCESSFULLY,
+    ERROR_SENDING_EMAIL,
+    INVALID_CONFIRMATION_CODE_TYPE,
+    LOGIN_SUCCESSFUL,
+    LOGOUT_SUCCESSFUL,
+    USER_ACCOUNT_NOT_ACTIVATED,
+    USER_ACTIVATED,
+    USER_HAS_ALREADY_ACTIVATED,
+    USER_NOT_FOUND,
+    USER_REGISTERED_SUCCESSFULLY,
+    USER_UPDATED_SUCCESSFULLY,
+    VALIDATION_ERRORS,
+)
 from user_app.models import ConfirmationCode, JWTBlackList
 from user_app.serializers import EmailSerializer, UserSerializer
 from user_app.throttlings import (
@@ -35,7 +53,8 @@ def register(request):
     # Check if the provided data is valid
     if not serializer.is_valid():
         return Response(
-            {"validation_errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+            __merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     # Send the activation email
@@ -43,20 +62,15 @@ def register(request):
         send_activation_code_by_email(serializer.validated_data["email"])
     except smtplib.SMTPException as e:
         return Response(
-            {
-                "message": response_messages.ERROR_SENDING_EMAIL,
-                "error_send_email": str(e),
-            },
+            __merge_dict(ERROR_SENDING_EMAIL, {"error": str(e)}),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
     # Save the user to the database
     serializer.save()
+
     return Response(
-        {
-            "user": serializer.data,
-            "message": response_messages.USER_REGISTERED_SUCCESSFULLY,
-        },
+        __merge_dict(USER_REGISTERED_SUCCESSFULLY, {"user": serializer.data}),
         status=status.HTTP_201_CREATED,
     )
 
@@ -80,21 +94,21 @@ def login(request):
         user = User.objects.get(email=email, password=password)
     except User.DoesNotExist:
         return Response(
-            {"message": response_messages.USER_NOT_FOUND},
+            USER_NOT_FOUND,
             status=status.HTTP_404_NOT_FOUND,
         )
 
     # Verify if user has activated account
     if user.is_active is False:
         return Response(
-            {"message": response_messages.USER_ACCOUNT_NOT_ACTIVATED},
+            USER_ACCOUNT_NOT_ACTIVATED,
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    # Create pair jwt: access and refresh
-    pair_jwt: dict[str:str] = create_pair_jwt(user.id)
-
-    return Response(pair_jwt, status=status.HTTP_200_OK)
+    return Response(
+        __merge_dict(LOGIN_SUCCESSFUL, create_pair_jwt(user.id)),
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["POST"])
@@ -106,34 +120,23 @@ def logout(request):
         typ=request.auth["typ"],
     )
 
-    return Response(
-        {"message": response_messages.LOGOUT_SUCCESSFUL}, status=status.HTTP_200_OK
-    )
+    return Response(LOGOUT_SUCCESSFUL, status=status.HTTP_200_OK)
 
 
 @api_view(["PATCH"])
-def update(request, id: int):
-    try:
-        user = User.objects.get(id=id)
-    except User.DoesNotExist:
-        return Response(
-            {"message": response_messages.USER_NOT_FOUND},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+@authentication_classes([JWTAuthentication])
+def update(request):
 
-    serializer = UserSerializer(instance=user, data=request.data, partial=True)
+    serializer = UserSerializer(instance=request.user, data=request.data, partial=True)
     if not serializer.is_valid():
         return Response(
-            {"validation_errors": serializer.errors},
-            status=status.status.HTTP_400_BAD_REQUEST,
+            __merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     serializer.save()
     return Response(
-        {
-            "user": serializer.data,
-            "message": response_messages.USER_UPDATED_SUCCESSFULLY,
-        },
+        __merge_dict(USER_UPDATED_SUCCESSFULLY, {"user": serializer.data}),
         status=status.HTTP_200_OK,
     )
 
@@ -149,7 +152,7 @@ def activate_account(request):
     # Checks if code field was sent by the request
     if code is None:
         return Response(
-            {"message": response_messages.CODE_FIELD_IS_REQUIRED},
+            CODE_FIELD_IS_REQUIRED,
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -162,14 +165,14 @@ def activate_account(request):
         confirmation_code = ConfirmationCode.objects.get(code=code)
     except ConfirmationCode.DoesNotExist:
         return Response(
-            {"message": response_messages.ACCOUNT_ACTIVATION_CODE_NOT_FOUND},
+            ACCOUNT_ACTIVATION_CODE_NOT_FOUND,
             status=status.HTTP_404_NOT_FOUND,
         )
 
     # Checks if type code is the correct
     if confirmation_code.type_code != confirmation_type_code.ACCOUNT_ACTIVATION:
         return Response(
-            {"message": response_messages.INVALID_CONFIRMATION_CODE_TYPE},
+            INVALID_CONFIRMATION_CODE_TYPE,
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -179,7 +182,8 @@ def activate_account(request):
     if (now - confirmation_code.created_at) >= expired:
         confirmation_code.delete()
         return Response(
-            {"message": response_messages.CODE_EXPIRED}, status=status.HTTP_410_GONE
+            CONFIRMATION_CODE_EXPIRED,
+            status=status.HTTP_410_GONE,
         )
 
     # Activate user and save in the database
@@ -187,9 +191,7 @@ def activate_account(request):
     user.is_active = True
     user.save()
     confirmation_code.delete()
-    return Response(
-        {"message": response_messages.ACCOUNT_ACTIVATED}, status=status.HTTP_200_OK
-    )
+    return Response(USER_ACTIVATED, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
@@ -200,7 +202,8 @@ def send_email_to_activate_account(request):
     # Check if the provided data is valid
     if not serializer.is_valid():
         return Response(
-            {"validation_errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+            __merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     # Checks if user exists
@@ -208,30 +211,43 @@ def send_email_to_activate_account(request):
         user = User.objects.get(email=serializer.validated_data["email"])
     except User.DoesNotExist:
         return Response(
-            {"message": response_messages.USER_NOT_FOUND},
+            USER_NOT_FOUND,
             status=status.HTTP_404_NOT_FOUND,
         )
 
     # Checks if the user already has the account activated
     if user.is_active == True:
         return Response(
-            {"message": response_messages.USER_HAS_ALREADY_ACTIVATED},
+            USER_HAS_ALREADY_ACTIVATED,
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Send email
+    # Send code to user email
     try:
         send_activation_code_by_email(serializer.validated_data["email"])
     except smtplib.SMTPException as e:
         return Response(
-            {
-                "message": response_messages.ERROR_SENDING_EMAIL,
-                "error_send_email": str(e),
-            },
+            __merge_dict(ERROR_SENDING_EMAIL, {"error": str(e)}),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
     return Response(
-        {"message": response_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY},
+        EMAIL_SEND_TO_USER_SUCCESSFULLY,
         status=status.HTTP_200_OK,
     )
+
+
+def __merge_dict(original_dict, update_data):
+    """
+    Creates a deep copy of the original dictionary, updates it with new data, and returns the updated dictionary.
+
+    Args:
+        original_dict (dict): The original dictionary to be copied and updated.
+        update_data (dict): The dictionary containing data to update the original dictionary with.
+
+    Returns:
+        dict: The updated dictionary with new data.
+    """
+    updated_dict = copy.deepcopy(original_dict)
+    updated_dict.update(update_data)
+    return updated_dict

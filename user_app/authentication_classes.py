@@ -4,7 +4,7 @@ from rest_framework.authentication import BaseAuthentication, get_authorization_
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
-from user_app.constants import authentication_error_messages, response_messages
+from user_app.constants import authentication_error_messages, response_code_messages
 from user_app.exceptions import JWTBlackListException
 from user_app.utils.jwt_token import check_token
 
@@ -67,7 +67,7 @@ class JWTAuthentication(BaseAuthentication):
         try:
             user = User.objects.get(id=payload["uid"])
         except User.DoesNotExist:
-            raise AuthenticationFailed(response_messages.USER_NOT_FOUND)
+            raise AuthenticationFailed(response_code_messages.USER_NOT_FOUND["detail"])
 
         return (user, payload)
 

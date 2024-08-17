@@ -12,7 +12,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_messages
+from user_app.constants import response_code_messages, validation_error_messages
 
 # ========== Objects and constants ============
 User = get_user_model()
@@ -80,17 +80,17 @@ def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
     and the appropriate error message when the rate limit requests is exceeded.
     """
     expected_status_code = status.HTTP_429_TOO_MANY_REQUESTS
-    expected_message = "Request was throttled."
-    expected_error_code = "throttled"
+    expected_detail_message = "Request was throttled."
+    expected_code = "throttled"
     limit_exceeded = 6
 
     # Simulate multiple POST requests to exceed the rate limit
     for _ in range(limit_exceeded):
-        active_response = client.post(url)
+        actual_response = client.post(url)
 
-    assert expected_status_code == active_response.status_code
-    assert expected_message in active_response.data["message"]
-    assert expected_error_code == active_response.data["error_code"]
+    assert expected_status_code == actual_response.status_code
+    assert expected_detail_message in actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -112,18 +112,17 @@ def test_does_not_send_email_when_email_field_is_empty(
     error message when the email field is empty in the request.
     """
 
-    expected_message = "This field may not be blank."
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "email"
+    expected_error_message_field = validation_error_messages.BLANK_FIELD
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
 
     actual_response = client.post(url, data={"email": ""}, format="json")
 
     assert expected_status_code == actual_response.status_code
-    assert expected_error_field in actual_response.data["validation_errors"]
-    assert (
-        expected_message
-        in actual_response.data["validation_errors"][expected_error_field]
-    )
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_error_message_field in actual_response.data["field_errors"]["email"]
 
 
 @pytest.mark.django_db
@@ -144,15 +143,17 @@ def test_does_not_send_email_when_email_field_is_null(
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the email field is null in the request.
     """
-    expected_message = "This field may not be null."
+    expected_error_message_field = validation_error_messages.NULL_FIELD
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "email"
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
 
-    response = client.post(url, data={"email": None}, format="json")
+    actual_response = client.post(url, data={"email": None}, format="json")
 
-    assert expected_status_code == response.status_code
-    assert expected_error_field in response.data["validation_errors"]
-    assert expected_message in response.data["validation_errors"][expected_error_field]
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_error_message_field in actual_response.data["field_errors"]["email"]
 
 
 @pytest.mark.parametrize(
@@ -191,15 +192,19 @@ def test_does_not_send_email_with_invalid_email_format(
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the email field contains an invalid email format.
     """
-    expected_message = "Enter a valid email address."
+    expected_error_message_filed = validation_error_messages.INVALID_FORMAT_EMAIL
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "email"
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
 
-    response = client.post(url, data={"email": invalid_email_format}, format="json")
+    actual_response = client.post(
+        url, data={"email": invalid_email_format}, format="json"
+    )
 
-    assert expected_status_code == response.status_code
-    assert expected_error_field in response.data["validation_errors"]
-    assert expected_message in response.data["validation_errors"][expected_error_field]
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_error_message_filed in actual_response.data["field_errors"]["email"]
 
 
 @pytest.mark.django_db
@@ -220,13 +225,15 @@ def test_does_not_send_email_when_user_does_not_exists(
     This test checks that the server returns a 404 Not Found status code and an appropriate
     error message when the email field contains an email address that does not belong to any user.
     """
-    expected_message = response_messages.USER_NOT_FOUND
+    expected_detail_message = response_code_messages.USER_NOT_FOUND["detail"]
+    expected_code = response_code_messages.USER_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data={"email": EMAIL_NONEXISTENT}, format="json")
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message == actual_response.data["message"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -250,13 +257,17 @@ def test_does_not_send_email_when_user_has_already_activated(
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the email field contains an email address of a user who has already activated their account.
     """
-    expected_message = response_messages.USER_HAS_ALREADY_ACTIVATED
+    expected_detail_message = response_code_messages.USER_HAS_ALREADY_ACTIVATED[
+        "detail"
+    ]
+    expected_code = response_code_messages.USER_HAS_ALREADY_ACTIVATED["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
-    response = client.post(url, data={"email": active_user_email}, format="json")
+    actual_response = client.post(url, data={"email": active_user_email}, format="json")
 
-    assert expected_status_code == response.status_code
-    assert expected_message == response.data["message"]
+    assert expected_status_code == actual_response.status_code
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -286,13 +297,17 @@ def test_failed_to_send_email(
     This test checks that the server returns a 500 Internal Server Error status code and an appropriate
     error message when there is an SMTP exception while sending the activation email.
     """
-    expected_message = response_messages.ERROR_SENDING_EMAIL
+    expected_detail_message = response_code_messages.ERROR_SENDING_EMAIL["detail"]
+    expected_code = response_code_messages.ERROR_SENDING_EMAIL["code"]
     expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-    response = client.post(url, data={"email": desactive_user_email}, format="json")
+    actual_response = client.post(
+        url, data={"email": desactive_user_email}, format="json"
+    )
 
-    assert expected_status_code == response.status_code
-    assert expected_message == response.data["message"]
+    assert expected_status_code == actual_response.status_code
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -320,9 +335,15 @@ def test_send_email_successfully(
     success message when the activation email is sent successfully.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_message = response_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY
+    expected_detail_message = response_code_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY[
+        "detail"
+    ]
+    expected_code = response_code_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
 
-    response = client.post(url, data={"email": desactive_user_email}, format="json")
+    actual_response = client.post(
+        url, data={"email": desactive_user_email}, format="json"
+    )
 
-    assert expected_status_code == response.status_code
-    assert expected_message == response.data["message"]
+    assert expected_status_code == actual_response.status_code
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]

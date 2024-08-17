@@ -7,11 +7,10 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_messages, validation_error_messages
+from user_app.constants import response_code_messages, validation_error_messages
 
 # ============== Objects and constants ==============
 User = get_user_model()
-
 url: str = reverse("register")
 
 
@@ -34,16 +33,6 @@ def user_data() -> dict[str:str]:
     }
 
 
-@pytest.fixture
-def expected_user_data() -> dict[str:str]:
-    """Returns the expected user data in the database after creation."""
-    return {
-        "first_name": "John",
-        "last_name": "Doe",
-        "email": "johndoe@example.com",
-    }
-
-
 # ================ Tests ==================
 @pytest.mark.django_db
 @patch("user_app.views.send_activation_code_by_email")
@@ -51,7 +40,6 @@ def test_creates_user_with_valid_data(
     mock_send_activation_code_by_email: MagicMock,
     client: APIClient,
     user_data: dict[str:str],
-    expected_user_data: dict[str:str],
 ):
     """
     Tests if a new user is correctly created with valid data.
@@ -60,27 +48,22 @@ def test_creates_user_with_valid_data(
         mock_send_activation_code_by_email (Mock): Mock of the activation email sending function.
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
-        expected_user_data (dict): Expected user data in the database after creation.
     """
 
-    # Define variables for expected status code and expected message
     expected_status_code = status.HTTP_201_CREATED
-    expected_message = response_messages.USER_REGISTERED_SUCCESSFULLY
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    expected_detail_message = response_code_messages.USER_REGISTERED_SUCCESSFULLY[
+        "detail"
+    ]
+    expected_code = response_code_messages.USER_REGISTERED_SUCCESSFULLY["code"]
 
-    # Add the created user's ID to the expected data and set the is_active field to False
-    expected_user_data["id"] = response.data["user"]["id"]
-    expected_user_data["is_active"] = False
+    actual_response = client.post(url, data=user_data, format="json")
+    actual_response.data["user"].update({"is_active": False})
 
     # Check if the user was created in the database with the expected data
-    assert User.objects.filter(**expected_user_data).exists()
-
-    # Check the response status code
-    assert expected_status_code == response.status_code
-
-    # Check the success message in the response
-    assert expected_message == response.data["message"]
+    assert User.objects.filter(**actual_response.data["user"]).exists()
+    assert expected_status_code == actual_response.status_code
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
     # Check if the email sending function was called
     mock_send_activation_code_by_email.assert_called_once()
@@ -105,15 +88,20 @@ def test_does_not_create_user_when_email_sending_fails(
         user_data (dict): User registration data for the request.
     """
 
-    expected_message = response_messages.ERROR_SENDING_EMAIL
-    expected_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    expected_detail_message = response_code_messages.ERROR_SENDING_EMAIL["detail"]
+    expected_code = response_code_messages.ERROR_SENDING_EMAIL["code"]
+    expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    assert expected_message == response.data["message"]
-    assert expected_code == response.status_code
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
     # Verify if user was not created
     assert not User.objects.filter(email=user_data["email"]).exists()
+
+    # Check if the email sending function was called
+    mock_send_activation_code_by_email.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -147,25 +135,21 @@ def test_does_not_create_user_with_invalid_email_format(
     """
     # Define variables for expected status code, expected field, and expected message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "email"
-    expected_error_message = validation_error_messages.INVALID_FORMAT_EMAIL
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
+    expected_error_message_field = validation_error_messages.INVALID_FORMAT_EMAIL
 
     # Change the email field value to invalid formats
     user_data["email"] = invalid_email_format
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'email' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["email"].__str__()
     )
 
 
@@ -184,27 +168,21 @@ def test_does_not_create_user_with_duplicate_email(
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "email"
-    expected_error_message = validation_error_messages.EMAIL_ALREADY_EXISTS
+    expected_error_message_field = validation_error_messages.EMAIL_ALREADY_EXISTS
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Create a user with the provided email
     client.post(url, data=user_data, format="json")
-
     # Try to create a second user with the same email
     response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
     assert expected_status_code == response.status_code
-
-    # Check if the 'email' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_code == response.data["code"]
+    assert expected_detail_message == response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field in response.data["field_errors"]["email"].__str__()
     )
 
 
@@ -219,27 +197,22 @@ def test_does_not_create_user_with_blank_email(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "email"
-    expected_error_message = validation_error_messages.REQUIRED_FIELD
+    expected_error_message_field = validation_error_messages.REQUIRED_FIELD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Remove the email field
     del user_data["email"]
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'email' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["email"].__str__()
     )
 
 
@@ -254,27 +227,22 @@ def test_does_not_create_user_with_null_email(
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "email"
-    expected_error_message = validation_error_messages.NULL_FIELD
+    expected_error_message_field = validation_error_messages.NULL_FIELD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Set the email field to None
     user_data["email"] = None
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'email' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["email"].__str__()
     )
 
 
@@ -293,15 +261,14 @@ def test_passwords_not_in_response(
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
     # Define variables for expected fields
     expected_absent_fields = ["password", "confirmation_password"]
 
     # Check if these fields are not in the response
     for field in expected_absent_fields:
-        assert field not in response.data["user"]
+        assert field not in actual_response.data["user"]
 
 
 @pytest.mark.django_db
@@ -315,27 +282,22 @@ def test_does_not_create_user_with_different_passwords(
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "confirmation_password"
-    expected_error_message = validation_error_messages.PASSWORD_DO_NOT_MATCH
+    expected_error_message_field = validation_error_messages.PASSWORD_DO_NOT_MATCH
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the 'confirmation_password' field to a different password
     user_data["confirmation_password"] = "DifferentPassword123!*"
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'confirmation_password' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["confirmation_password"].__str__()
     )
 
 
@@ -350,29 +312,24 @@ def test_does_not_create_user_with_short_password(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "password"
-    expected_error_message = validation_error_messages.SHORT_PASSWORD
+    expected_error_message_field = validation_error_messages.SHORT_PASSWORD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the 'password' field to a password shorter than 8 characters
     short_password = "abc!100"
     user_data["password"] = short_password
     user_data["confirmation_password"] = short_password
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'password' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field].__str__()
+        expected_error_message_field
+        in actual_response.data["field_errors"]["password"].__str__()
     )
 
 
@@ -387,29 +344,24 @@ def test_does_not_create_user_with_numeric_password(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "password"
-    expected_error_message = validation_error_messages.NUMERIC_PASSWORD
+    expected_error_message_field = validation_error_messages.NUMERIC_PASSWORD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the 'password' field to an entirely numeric password
     numeric_password = "12345678910"
     user_data["password"] = numeric_password
     user_data["confirmation_password"] = numeric_password
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'password' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field].__str__()
+        expected_error_message_field
+        in actual_response.data["field_errors"]["password"].__str__()
     )
 
 
@@ -424,29 +376,24 @@ def test_does_not_create_user_with_common_password(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "password"
-    expected_error_message = validation_error_messages.COMMON_PASSWORD
+    expected_error_message_field = validation_error_messages.COMMON_PASSWORD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the 'password' field to a common password
     common_password = "password123"
     user_data["password"] = common_password
     user_data["confirmation_password"] = common_password
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'password' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field].__str__()
+        expected_error_message_field
+        in actual_response.data["field_errors"]["password"].__str__()
     )
 
 
@@ -461,27 +408,22 @@ def test_does_not_create_user_with_blank_first_name(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "first_name"
-    expected_error_message = validation_error_messages.BLANK_FIELD
+    expected_error_message_field = validation_error_messages.BLANK_FIELD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the first_name field to an empty value
     user_data["first_name"] = ""
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'first_name' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["first_name"].__str__()
     )
 
 
@@ -496,26 +438,22 @@ def test_does_not_create_user_with_null_first_name(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "first_name"
-    expected_error_message = validation_error_messages.NULL_FIELD
+    expected_error_message_field = validation_error_messages.NULL_FIELD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the first_name field to None
     user_data["first_name"] = None
 
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'first_name' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["first_name"].__str__()
     )
 
 
@@ -530,26 +468,22 @@ def test_does_not_create_user_with_too_long_first_name(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "first_name"
-    expected_error_message = validation_error_messages.LONG_FIELD
+    expected_error_message_field = validation_error_messages.LONG_FIELD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the first_name field to a very long value
     user_data["first_name"] = "my_name" * 15
 
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'first_name' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["first_name"].__str__()
     )
 
 
@@ -564,27 +498,21 @@ def test_does_not_create_user_with_blank_last_name(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "last_name"
-    expected_error_message = validation_error_messages.BLANK_FIELD
+    expected_error_message_field = validation_error_messages.BLANK_FIELD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
-    # Change the last_name field to an empty value
     user_data["last_name"] = ""
 
-    # Make the POST request to register the user
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'last_name' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["last_name"].__str__()
     )
 
 
@@ -599,26 +527,22 @@ def test_does_not_create_user_with_null_last_name(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "last_name"
-    expected_error_message = validation_error_messages.NULL_FIELD
+    expected_error_message_field = validation_error_messages.NULL_FIELD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the last_name field to None
     user_data["last_name"] = None
 
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'last_name' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["last_name"].__str__()
     )
 
 
@@ -633,24 +557,20 @@ def test_does_not_create_user_with_too_long_last_name(
         client (APIClient): API client to make requests.
         user_data (dict[str, str]): User registration data for the request.
     """
-    # Define variables for expected status code, field, and error message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_error_field = "last_name"
-    expected_error_message = validation_error_messages.LONG_FIELD
+    expected_error_message_field = validation_error_messages.LONG_FIELD
+    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
     # Change the last_name field to a very long value
     user_data["last_name"] = "my_name" * 15
 
-    response = client.post(url, data=user_data, format="json")
+    actual_response = client.post(url, data=user_data, format="json")
 
-    # Check if the response status code is 400 BAD REQUEST
-    assert expected_status_code == response.status_code
-
-    # Check if the 'last_name' field is present in the validation errors
-    assert expected_error_field in response.data["validation_errors"]
-
-    # Check the error message
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message
-        in response.data["validation_errors"][expected_error_field]
+        expected_error_message_field
+        in actual_response.data["field_errors"]["last_name"].__str__()
     )

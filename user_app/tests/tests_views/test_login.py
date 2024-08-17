@@ -10,7 +10,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_messages
+from user_app.constants import response_code_messages
 
 # ========== Objects and constants ============
 User = get_user_model()
@@ -55,13 +55,15 @@ def user_with_activated_account() -> User:
 def test_nonexistent_user_is_not_logged_in(
     client: APIClient, data_user_nonexistent: dict[str, str]
 ):
-    expected_message = response_messages.USER_NOT_FOUND
+    expected_detail_message = response_code_messages.USER_NOT_FOUND["detail"]
+    expected_code = response_code_messages.USER_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data=data_user_nonexistent, format="json")
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message == actual_response.data["message"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -69,7 +71,10 @@ def test_user_with_not_activated_account_is_not_logged_in(
     user_with_not_activated_account: User,
     client: APIClient,
 ):
-    expected_message = response_messages.USER_ACCOUNT_NOT_ACTIVATED
+    expected_detail_message = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED[
+        "detail"
+    ]
+    expected_code = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
@@ -82,7 +87,8 @@ def test_user_with_not_activated_account_is_not_logged_in(
     )
 
     assert expected_status_code == actual_response.status_code
-    assert expected_message == actual_response.data["message"]
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
 
 
 @pytest.mark.django_db
@@ -93,6 +99,8 @@ def test_user_is_successfully_logged_in(
     client: APIClient,
 ):
     expected_status_code = status.HTTP_200_OK
+    expected_detail_message = response_code_messages.LOGIN_SUCCESSFUL["detail"]
+    expected_code = response_code_messages.LOGIN_SUCCESSFUL["code"]
 
     actual_response = client.post(
         url,
@@ -104,5 +112,6 @@ def test_user_is_successfully_logged_in(
     )
 
     assert expected_status_code == actual_response.status_code
-    assert "access" in actual_response.data
-    assert "refresh" in actual_response.data
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert "access" and "refresh" in actual_response.data.keys()
