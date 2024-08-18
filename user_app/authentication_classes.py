@@ -66,6 +66,10 @@ class JWTAuthentication(BaseAuthentication):
         # Get the user from the payload
         try:
             user = User.objects.get(id=payload["uid"])
+            if user.is_active is False:
+                raise AuthenticationFailed(
+                    response_code_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
+                )
         except User.DoesNotExist:
             raise AuthenticationFailed(response_code_messages.USER_NOT_FOUND["detail"])
 
