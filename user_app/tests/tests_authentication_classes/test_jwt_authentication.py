@@ -38,18 +38,139 @@ factory = RequestFactory()
 jwt_authentication = JWTAuthentication()
 FAKE_SECRET = "fake_secret"
 FAKE_JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
-FAKE_UID_EXIST_IN_DATABASE = 1
 FAKE_UID = 10
+FAKE_TYP = "fake_type"
+FAKE_JTI = "fake_jti"
+FAKE_EXP = int((datetime.now() + timedelta(days=1)).timestamp())
 
 
 # ================== Fixtures ===================
 @pytest.fixture
-def fake_payload() -> dict:
+def user_activated() -> User:
+    """
+    Fixture to create and return an active user for testing.
+
+    Returns:
+        User: A Django User instance with the specified attributes, including
+        an active status (is_active=True).
+    """
+    return User.objects.create_user(
+        id=FAKE_UID,
+        first_name="John",
+        last_name="Doe",
+        email="johndoe@email.com",
+        password="1234",
+        is_active=True,
+    )
+
+
+@pytest.fixture
+def payload_with_user_activated(user_activated) -> dict:
+    """
+    Fixture to create a JWT payload for an activated user.
+
+    Args:
+        user_activated (User): The activated user instance.
+
+    Returns:
+        dict: A dictionary representing the JWT payload.
+    """
+    return {
+        "uid": user_activated.id,
+        "typ": FAKE_TYP,
+        "jti": FAKE_JTI,
+        "exp": FAKE_EXP,
+    }
+
+
+@pytest.fixture
+def jwt_request_with_user_activated(payload_with_user_activated) -> Request:
+    """
+    Fixture to create a Django Request object with a valid JWT for an activated user.
+
+    Args:
+        payload_with_user_activated (dict): The JWT payload for the activated user.
+
+    Returns:
+        Request: A Django Request object with an Authorization header containing a valid JWT.
+    """
+    return Request(
+        factory.get(
+            "/",
+            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload_with_user_activated, FAKE_SECRET)}",
+        )
+    )
+
+
+@pytest.fixture
+def user_desactivated() -> User:
+    """
+    Fixture to create a deactivated user.
+
+    Returns:
+        User: A Django User object that is deactivated (is_active=False).
+    """
+    return User.objects.create_user(
+        id=FAKE_UID,
+        first_name="John",
+        last_name="Doe",
+        email="johndoe@email.com",
+        password="1234",
+        is_active=False,
+    )
+
+
+@pytest.fixture
+def payload_user_desactivated(user_desactivated) -> dict:
+    """
+    Fixture to create a JWT payload for a deactivated user.
+
+    Args:
+        user_desactivated (User): The deactivated user instance.
+
+    Returns:
+        dict: A dictionary representing the JWT payload.
+    """
+    return {
+        "uid": user_desactivated.id,
+        "typ": FAKE_TYP,
+        "jti": FAKE_JTI,
+        "exp": FAKE_EXP,
+    }
+
+
+@pytest.fixture
+def jwt_request_with_user_desactivated(payload_user_desactivated) -> Request:
+    """
+    Fixture to create a Django Request object with a JWT for a deactivated user.
+
+    Args:
+        payload_user_desactivated (dict): The JWT payload for the deactivated user.
+
+    Returns:
+        Request: A Django Request object with an Authorization header containing a JWT.
+    """
+    return Request(
+        factory.get(
+            "/",
+            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload_user_desactivated, FAKE_SECRET)}",
+        )
+    )
+
+
+@pytest.fixture
+def payload() -> dict:
+    """
+    Fixture to create a generic JWT payload.
+
+    Returns:
+        dict: A dictionary representing the JWT payload.
+    """
     return {
         "uid": FAKE_UID,
-        "typ": "fake_typ",
-        "jti": "fake_jti",
-        "exp": int((datetime.now() + timedelta(days=1)).timestamp()),
+        "typ": FAKE_TYP,
+        "jti": FAKE_JTI,
+        "exp": FAKE_EXP,
     }
 
 
@@ -90,19 +211,19 @@ def incorrect_format_auth_header_request() -> list[Request]:
 
 
 @pytest.fixture
-def jwt_request_with_nonexistent_user(fake_payload) -> Request:
+def jwt_request_with_nonexistent_user(payload) -> Request:
     """
     Create a request object with a JWT token for a nonexistent user.
 
     Returns:
         Request: A request object with a JWT token in the Authorization header.
     """
-    token = jwt.encode(fake_payload, FAKE_SECRET)
+    token = jwt.encode(payload, FAKE_SECRET)
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 @pytest.fixture
-def expired_jwt_request(fake_payload) -> Request:
+def expired_jwt_request(payload) -> Request:
     """
     Create a request object with an expired JWT token.
 
@@ -111,22 +232,22 @@ def expired_jwt_request(fake_payload) -> Request:
     """
     # Create a expired date
     exp_expired = int((datetime.now() - timedelta(seconds=10)).timestamp())
-    fake_payload["exp"] = exp_expired
+    payload["exp"] = exp_expired
 
-    token = jwt.encode(fake_payload, FAKE_SECRET)
+    token = jwt.encode(payload, FAKE_SECRET)
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 @pytest.fixture
-def jwt_request_with_invalid_secret(fake_payload) -> Request:
+def jwt_request_with_invalid_secret(payload) -> Request:
     """
     Create a request object with a JWT token signed with an incorrect secret.
 
     Returns:
         Request: A request object with a JWT token signed with an incorrect secret in the Authorization header.
     """
-    token = jwt.encode(fake_payload, "invalid_secret")
+    token = jwt.encode(payload, "invalid_secret")
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
@@ -143,7 +264,7 @@ def malformed_jwt_request() -> Request:
 
 
 @pytest.fixture
-def jwt_request_with_invalid_algorithm(fake_payload) -> Request:
+def jwt_request_with_invalid_algorithm(payload) -> Request:
     """
     Create a request object with a JWT token that has an invalid algorithm.
 
@@ -151,7 +272,7 @@ def jwt_request_with_invalid_algorithm(fake_payload) -> Request:
         Request: A request object with a JWT token that specifies an invalid algorithm in the header.
     """
     # Encode the payload into a JWT token with the correct secret
-    token = jwt.encode(fake_payload, FAKE_SECRET)
+    token = jwt.encode(payload, FAKE_SECRET)
 
     # Split the token into its components: header, payload, and signature
     header, payload, signature = token.split(".")
@@ -179,7 +300,7 @@ def jwt_request_with_invalid_algorithm(fake_payload) -> Request:
 
 
 @pytest.fixture
-def request_with_blacklisted_jwt(fake_payload) -> Request:
+def request_with_blacklisted_jwt(payload) -> Request:
     """
     Create a request object with a JWT token that is blacklisted.
 
@@ -187,32 +308,11 @@ def request_with_blacklisted_jwt(fake_payload) -> Request:
         Request: A request object with a JWT token that has a JTI in the blacklist.
     """
     # Set the JTI of the payload to a value that is known to be in the blacklist
-    fake_payload["jti"] = FAKE_JTI_IN_BLACKLIST
+    payload["jti"] = FAKE_JTI_IN_BLACKLIST
 
-    token = jwt.encode(fake_payload, FAKE_SECRET)
+    token = jwt.encode(payload, FAKE_SECRET)
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
-
-
-@pytest.fixture
-def valid_jwt_request_and_payload(fake_payload) -> list:
-    """
-    Create a payload and a request object with the valid token.
-
-    Returns:
-        list: A list containing:
-            - A valid payload.
-            - A request object with the valid JWT token in the Authorization header.
-    """
-
-    # set id of a user that exists
-    fake_payload["uid"] = FAKE_UID_EXIST_IN_DATABASE
-    token = jwt.encode(fake_payload, FAKE_SECRET)
-
-    return [
-        fake_payload,
-        Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}")),
-    ]
 
 
 # ================ Tests =======================
@@ -349,7 +449,7 @@ def test_authentication_fails_when_invalid_algorithm_jwt(
 @pytest.mark.django_db
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_fails_when_blacklisted_jwt(
-    mock_jwt_secret: MagicMock, request_with_blacklisted_jwt: Request, fake_payload
+    mock_jwt_secret: MagicMock, request_with_blacklisted_jwt: Request, payload
 ):
     """
     Test that authentication fails when the JWT is blacklisted.
@@ -360,8 +460,8 @@ def test_authentication_fails_when_blacklisted_jwt(
     """
     JWTBlackList.objects.create(
         jti=FAKE_JTI_IN_BLACKLIST,
-        exp=fake_payload["exp"],
-        typ=fake_payload["typ"],
+        exp=payload["exp"],
+        typ=payload["typ"],
     )
     expected_error_message = jwt_error_messages.JWT_IN_BLACKLIST
     with pytest.raises(AuthenticationFailed) as e:
@@ -394,35 +494,53 @@ def test_authentication_fails_when_nonexistent_user(
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
 def test_authentication_success(
     mock_jwt_secret: MagicMock,
-    valid_jwt_request_and_payload: list,
+    jwt_request_with_user_activated: Request,
+    user_activated: User,
+    payload_with_user_activated: dict,
 ):
     """
-    Test that authentication succeeds with a valid JWT.
+    Test that the authentication succeeds for an activated user.
 
     Args:
-        mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
-        valid_jwt_request_and_payload (list): List containing a valid JWT and corresponding request object.
+        mock_jwt_secret (MagicMock): Mock for the environment variable holding the JWT secret.
+        jwt_request_with_user_activated (Request): The request containing a JWT for an activated user.
+        user_activated (User): The activated user instance.
+        payload_with_user_activated (dict): The expected payload of the JWT for the activated user.
 
     Asserts:
-        User: The user object returned by authentication matches the expected user.
-        str: The JWT returned by authentication matches the expected JWT.
+        The authenticated user's details match the expected user, and the JWT payload is correct.
     """
-    user_expected = User.objects.create_user(
-        id=FAKE_UID_EXIST_IN_DATABASE,
-        first_name="John",
-        last_name="Doe",
-        email="johndoe@email.com",
-        password="1234",
-        is_active=True,
+    user_actual, payload_actual = jwt_authentication.authenticate(
+        jwt_request_with_user_activated
     )
-    payload_expected, request = valid_jwt_request_and_payload
 
-    user_actual, payload_actual = jwt_authentication.authenticate(request)
+    assert user_activated.id == user_actual.id
+    assert user_activated.first_name == user_actual.first_name
+    assert user_activated.last_name == user_actual.last_name
+    assert user_activated.email == user_actual.email
+    assert user_activated.password == user_actual.password
+    assert user_activated.is_active == user_actual.is_active
+    assert payload_with_user_activated == payload_actual
 
-    assert user_expected.id == user_actual.id
-    assert user_expected.first_name == user_actual.first_name
-    assert user_expected.last_name == user_actual.last_name
-    assert user_expected.email == user_actual.email
-    assert user_expected.password == user_actual.password
-    assert user_expected.is_active == user_actual.is_active
-    assert payload_expected == payload_actual
+
+@pytest.mark.django_db
+@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+def test_authentication_fails_when_user_with_account_desactivated(
+    mock_jwt_secret: MagicMock,
+    jwt_request_with_user_desactivated: Request,
+):
+    """
+    Test that authentication fails when the user account is deactivated.
+
+    Args:
+        mock_jwt_secret (MagicMock): Mock for the environment variable holding the JWT secret.
+        jwt_request_with_user_desactivated (Request): The request containing a JWT for a deactivated user.
+
+    Asserts:
+        The authentication fails with the appropriate error message indicating the user's account is not activated.
+    """
+    expected_error_message = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
+    with pytest.raises(AuthenticationFailed) as e:
+        jwt_authentication.authenticate(jwt_request_with_user_desactivated)
+
+    assert expected_error_message == str(e.value)
