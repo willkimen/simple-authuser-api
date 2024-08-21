@@ -14,7 +14,7 @@ from user_app.constants import response_code_messages
 
 # ========== Objects and constants ============
 User = get_user_model()
-url: str = reverse("login")
+url: str = reverse("obtain_jwt_pair")
 JWT_SECRET_FOR_TESTS = "jwt_secret"
 FAKE_NONEXISTENT_EMAIL = "nonexistent@email.com"
 FAKE_USER_DATA = {
@@ -52,9 +52,16 @@ def user_with_activated_account() -> User:
 
 # =========== Tests ===================
 @pytest.mark.django_db
-def test_nonexistent_user_is_not_logged_in(
+def test_nonexistent_user_does_not_return_jwt_pair(
     client: APIClient, data_user_nonexistent: dict[str, str]
 ):
+    """
+    Test that attempting to log in with a nonexistent user does not return a JWT pair.
+
+    Args:
+        client (APIClient): The test client used to make HTTP requests.
+        data_user_nonexistent (dict[str, str]): Dictionary containing login data for a user that does not exist.
+    """
     expected_detail_message = response_code_messages.USER_NOT_FOUND["detail"]
     expected_code = response_code_messages.USER_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
@@ -67,10 +74,17 @@ def test_nonexistent_user_is_not_logged_in(
 
 
 @pytest.mark.django_db
-def test_user_with_not_activated_account_is_not_logged_in(
+def test_user_with_not_activated_account_does_not_return_jwt_pair(
     user_with_not_activated_account: User,
     client: APIClient,
 ):
+    """
+    Test that attempting to log in with an account that has not been activated does not return a JWT pair.
+
+    Args:
+        user_with_not_activated_account (User): A user instance with an account that is not activated.
+        client (APIClient): The test client used to make HTTP requests.
+    """
     expected_detail_message = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED[
         "detail"
     ]
@@ -93,11 +107,19 @@ def test_user_with_not_activated_account_is_not_logged_in(
 
 @pytest.mark.django_db
 @patch("user_app.utils.jwt_token.os.environ.get", return_value=JWT_SECRET_FOR_TESTS)
-def test_user_is_successfully_logged_in(
+def test_returns_jwt_pair_successfully(
     mock_get: MagicMock,
     user_with_activated_account: User,
     client: APIClient,
 ):
+    """
+    Test that logging in with valid credentials for an activated account returns a JWT pair successfully.
+
+    Args:
+        mock_get (MagicMock): Mock object for environment variable retrieval.
+        user_with_activated_account (User): A user instance with an activated account.
+        client (APIClient): The test client used to make HTTP requests.
+    """
     expected_status_code = status.HTTP_200_OK
     expected_detail_message = response_code_messages.LOGIN_SUCCESSFUL["detail"]
     expected_code = response_code_messages.LOGIN_SUCCESSFUL["code"]
