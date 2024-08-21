@@ -76,7 +76,7 @@ def register(request):
 
 
 @api_view(["POST"])
-def login(request):
+def obtain_jwt_pair(request):
     """
     Handle user login by email and password.
 
@@ -112,8 +112,19 @@ def login(request):
 
 
 @api_view(["POST"])
-@authentication_classes([JWTAuthentication])
-def logout(request):
+def refresh_jwt_access(request): ...
+
+
+@api_view(["POST"])
+def blacklist_jwt_pair(request): ...
+
+
+@api_view(["POST"])
+def blacklist_jwt_access(request): ...
+
+
+@api_view(["POST"])
+def blacklist_jwt_refresh(request):
     JWTBlackList.objects.create(
         jti=request.auth["jti"],
         exp=request.auth["exp"],
