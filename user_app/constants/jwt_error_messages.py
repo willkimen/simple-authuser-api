@@ -2,11 +2,28 @@
 Constants used in JWT related errors.
 """
 
-DECODE_ERROR = (
-    "Failed to decode the JWT token. Please ensure the token is properly formatted."
-)
-INVALID_TOKEN = "The JWT token is invalid."
-INVALID_SIGNATURE = "The JWT token signature is invalid."
-EXPIRED_SIGNATURE = "The JWT token signature has expired."
-INVALID_ALGORITHM = "The algorithm specified is not supported or invalid. Please check the algorithm and try again."
-JWT_IN_BLACKLIST = "JWT is blacklisted and therefore invalid"
+DECODE_ERROR = {
+    "code": "DECODE_ERROR",
+    "detail": "Failed to decode the JWT token. Please ensure the token is properly formatted.",
+}
+
+INVALID_TOKEN = {"code": "INVALID_TOKEN", "detail": "The JWT token is invalid."}
+
+INVALID_SIGNATURE = {
+    "code": "INVALID_SIGNATURE",
+    "detail": "The JWT token signature is invalid.",
+}
+EXPIRED_SIGNATURE = {
+    "code": "EXPIRED_SIGNATURE",
+    "detail": "The JWT token signature has expired.",
+}
+
+INVALID_ALGORITHM = {
+    "code": "INVALID_ALGORITHM",
+    "detail": "The algorithm specified is not supported or invalid. Please check the algorithm and try again.",
+}
+
+JWT_IN_BLACKLIST = {
+    "code": "JWT_BLACKLISTED",
+    "detail": "JWT is blacklisted and therefore invalid",
+}

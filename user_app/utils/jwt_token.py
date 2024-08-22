@@ -5,8 +5,14 @@ from datetime import datetime, timedelta
 
 import jwt
 
-from user_app.constants import jwt_error_messages
-from user_app.exceptions import JWTBlackListException
+from user_app.exceptions import (
+    DecodeException,
+    ExpiredSignatureException,
+    InvalidAlgorithmException,
+    InvalidSignatureException,
+    InvalidTokenException,
+    JWTBlackListException,
+)
 from user_app.models import JWTBlackList
 
 
@@ -114,11 +120,11 @@ def check_token(token: str) -> dict:
         dict: The decoded JWT payload if the token is valid.
 
     Raises:
-        jwt.exceptions.ExpiredSignatureError: If the token has expired.
-        jwt.exceptions.InvalidAlgorithmError: If the token's algorithm is invalid.
-        jwt.exceptions.InvalidSignatureError: If the token signature is invalid.
-        jwt.exceptions.DecodeError: If the token cannot be decoded.
-        jwt.exceptions.InvalidTokenError: If the token is invalid.
+        ExpiredSignatureException: If the token has expired.
+        InvalidAlgorithmException: If the token's algorithm is invalid.
+        InvalidSignatureException: If the token signature is invalid.
+        DecodeException: If the token cannot be decoded.
+        InvalidTokenException: If the token is invalid.
         JWTBlackListException: If the token is found in the blacklist.
     """
     try:
@@ -128,15 +134,15 @@ def check_token(token: str) -> dict:
             algorithms=["HS256"],
         )
     except jwt.exceptions.ExpiredSignatureError:
-        raise jwt.exceptions.ExpiredSignatureError(jwt_error_messages.EXPIRED_SIGNATURE)
+        raise ExpiredSignatureException()
     except jwt.exceptions.InvalidAlgorithmError:
-        raise jwt.exceptions.InvalidAlgorithmError(jwt_error_messages.INVALID_ALGORITHM)
+        raise InvalidAlgorithmException()
     except jwt.exceptions.InvalidSignatureError:
-        raise jwt.exceptions.InvalidSignatureError(jwt_error_messages.INVALID_SIGNATURE)
+        raise InvalidSignatureException()
     except jwt.exceptions.DecodeError:
-        raise jwt.exceptions.DecodeError(jwt_error_messages.DECODE_ERROR)
+        raise DecodeException()
     except jwt.exceptions.InvalidTokenError:
-        raise jwt.exceptions.InvalidTokenError(jwt_error_messages.INVALID_TOKEN)
+        raise InvalidTokenException()
 
     if JWTBlackList.objects.filter(jti=payload["jti"]).exists():
         raise JWTBlackListException()

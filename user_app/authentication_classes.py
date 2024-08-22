@@ -5,7 +5,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
 from user_app.constants import authentication_error_messages, response_code_messages
-from user_app.exceptions import JWTBlackListException
+from user_app.exceptions import JWTException
 from user_app.utils.jwt_token import check_token
 
 User = get_user_model()
@@ -58,9 +58,7 @@ class JWTAuthentication(BaseAuthentication):
         # Validate the token and get the payload
         try:
             payload = check_token(token)
-        except jwt.exceptions.InvalidTokenError as e:
-            raise AuthenticationFailed(str(e))
-        except JWTBlackListException as e:
+        except JWTException as e:
             raise AuthenticationFailed(str(e))
 
         # Get the user from the payload

@@ -382,7 +382,7 @@ def test_authentication_fails_when_expired_jwt(
         mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
         expired_jwt_request (Request): Request object with an expired JWT in the Authorization header.
     """
-    expected_error_message = jwt_error_messages.EXPIRED_SIGNATURE
+    expected_error_message = jwt_error_messages.EXPIRED_SIGNATURE["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(expired_jwt_request)
 
@@ -401,7 +401,7 @@ def test_authentication_fails_when_invalid_secret_jwt(
         mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
         jwt_request_with_invalid_secret (Request): Request object with a JWT encoded using an incorrect secret.
     """
-    expected_error_message = jwt_error_messages.INVALID_SIGNATURE
+    expected_error_message = jwt_error_messages.INVALID_SIGNATURE["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(jwt_request_with_invalid_secret)
 
@@ -420,7 +420,7 @@ def test_authentication_fails_when_malformed_jwt(
         mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
         malformed_jwt_request (Request): Request object with a malformed JWT.
     """
-    expected_error_message = jwt_error_messages.DECODE_ERROR
+    expected_error_message = jwt_error_messages.DECODE_ERROR["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(malformed_jwt_request)
 
@@ -439,7 +439,7 @@ def test_authentication_fails_when_invalid_algorithm_jwt(
         mock_jwt_secret: Mocked environment variable for JWT secret.
         jwt_request_with_invalid_algorithm (Request): Request object containing a JWT with an invalid algorithm.
     """
-    expected_error_message = jwt_error_messages.INVALID_ALGORITHM
+    expected_error_message = jwt_error_messages.INVALID_ALGORITHM["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(jwt_request_with_invalid_algorithm)
 
@@ -463,7 +463,7 @@ def test_authentication_fails_when_blacklisted_jwt(
         exp=payload["exp"],
         typ=payload["typ"],
     )
-    expected_error_message = jwt_error_messages.JWT_IN_BLACKLIST
+    expected_error_message = jwt_error_messages.JWT_IN_BLACKLIST["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(request_with_blacklisted_jwt)
 

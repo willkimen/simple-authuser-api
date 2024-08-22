@@ -1,29 +1,182 @@
 from user_app.constants import jwt_error_messages
 
 
-class JWTBlackListException(Exception):
+class JWTException(Exception):
+    """
+    Base class for JWT-related errors.
+
+    This class serves as the parent for all custom JWT exceptions. It stores
+    the error message (detail) and the associated error code (code) and
+    provides methods to represent the error as a string or dictionary.
+
+    Attributes:
+        detail (str): The error message.
+        code (str): The specific error code related to the JWT issue.
+    """
+
+    def __init__(self, detail: str = None, code: str = None):
+        """
+        Initializes the JWTError with an optional detail message and error code.
+
+        Args:
+            detail (str, optional): The error message.
+            code (str, optional): The error code.
+        """
+        self.detail = detail
+        self.code = code
+        super().__init__(self.detail, self.code)
+
+    def __str__(self) -> str:
+        """
+        Returns the error message as the string representation of the exception.
+        """
+        return self.detail
+
+    def dict_repr(self) -> dict:
+        """
+        Returns a dictionary representation of the error.
+
+        Returns:
+            dict: A dictionary with 'code' and 'detail' keys.
+        """
+        return {"code": self.code, "detail": self.detail}
+
+
+class ExpiredSignatureException(JWTException):
+    """
+    Exception raised when a JWT's signature has expired.
+
+    This exception is raised when a token's 'exp' claim indicates that it has
+    exceeded its valid time period.
+
+    Attributes:
+        detail (str): The error message indicating expiration.
+        code (str): The specific error code related to expired signature.
+    """
+
+    def __init__(self):
+        """
+        Initializes the ExpiredSignatureError with default message and code.
+        """
+        self.detail = jwt_error_messages.EXPIRED_SIGNATURE["detail"]
+        self.code = jwt_error_messages.EXPIRED_SIGNATURE["code"]
+        super().__init__(self.detail, self.code)
+
+
+class InvalidAlgorithmException(JWTException):
+    """
+    Exception raised when an invalid algorithm is used in the JWT.
+
+    This error occurs when the algorithm used to sign or verify the JWT is
+    not supported or expected.
+
+    Attributes:
+        detail (str): The error message indicating invalid algorithm.
+        code (str): The specific error code related to invalid algorithm.
+    """
+
+    def __init__(self):
+        """
+        Initializes the InvalidAlgorithmError with default message and code.
+        """
+        self.detail = jwt_error_messages.INVALID_ALGORITHM["detail"]
+        self.code = jwt_error_messages.INVALID_ALGORITHM["code"]
+        super().__init__(self.detail, self.code)
+
+
+class InvalidSignatureException(JWTException):
+    """
+    Exception raised when the JWT's signature is invalid.
+
+    This error occurs if the token's signature does not match the expected
+    value, indicating potential tampering.
+
+    Attributes:
+        detail (str): The error message indicating invalid signature.
+        code (str): The specific error code related to invalid signature.
+    """
+
+    def __init__(self):
+        """
+        Initializes the InvalidSignatureError with default message and code.
+        """
+        self.detail = jwt_error_messages.INVALID_SIGNATURE["detail"]
+        self.code = jwt_error_messages.INVALID_SIGNATURE["code"]
+        super().__init__(self.detail, self.code)
+
+
+class DecodeException(JWTException):
+    """
+    Exception raised when there is an error decoding the JWT.
+
+    This error occurs when the token's structure or content is invalid,
+    preventing successful decoding.
+
+    Attributes:
+        detail (str): The error message indicating decode failure.
+        code (str): The specific error code related to decode error.
+    """
+
+    def __init__(self):
+        """
+        Initializes the DecodeError with default message and code.
+        """
+        self.detail = jwt_error_messages.DECODE_ERROR["detail"]
+        self.code = jwt_error_messages.DECODE_ERROR["code"]
+        super().__init__(self.detail, self.code)
+
+
+class InvalidTokenException(JWTException):
+    """
+    Exception raised when the JWT is invalid.
+
+    This error covers generic cases where a token is found to be invalid,
+    such as malformed tokens, missing claims, etc.
+
+    Attributes:
+        detail (str): The error message indicating an invalid token.
+        code (str): The specific error code related to invalid tokens.
+    """
+
+    def __init__(self):
+        """
+        Initializes the InvalidTokenError with default message and code.
+        """
+        self.detail = jwt_error_messages.INVALID_TOKEN["detail"]
+        self.code = jwt_error_messages.INVALID_TOKEN["code"]
+        super().__init__(self.detail, self.code)
+
+
+class JWTBlackListException(JWTException):
     """
     Exception raised when a JWT is found in the blacklist.
 
-    This exception is used to indicate that a token, identified by its
-    'jti' (JWT ID), is present in the blacklist and therefore should
-    not be accepted as valid.
+    This exception is used to signal that a token, identified by its
+    'jti' (JWT ID), is present in the blacklist and is therefore invalid.
+    The presence of a token in the blacklist means it has been revoked or
+    is otherwise unauthorized for further use.
 
     Attributes:
-        message (str): The error message to be reported. If not provided,
-                       a default message is used indicating that the JWT
-                       is in the blacklist.
+        detail (str): The default error message indicating the token is blacklisted,
+                      fetched from `jwt_error_messages.JWT_IN_BLACKLIST["detail"]`.
+        code (str): A specific error code related to the blacklist violation,
+                    fetched from `jwt_error_messages.JWT_IN_BLACKLIST["code"]`.
     """
 
-    def __init__(self, message=None):
+    def __init__(self):
         """
-        Initialize the JWTBlackListException with a specific message.
+        Initialize the JWTBlackListException with a default message and code.
 
-        Args:
-            message (str, optional): The error message to be used. If None,
-                                     a default message from jwt_error_messages
-                                     will be used. Defaults to None.
+        The exception uses a default message indicating that the token has been blacklisted.
+        It also sets an error code to represent this specific violation, both of which are
+        retrieved from the `jwt_error_messages` dictionary.
+
+        Attributes:
+            detail (str): The error message explaining that the token is blacklisted,
+                          fetched from `jwt_error_messages.JWT_IN_BLACKLIST["detail"]`.
+            code (str): The error code representing this blacklist violation,
+                        fetched from `jwt_error_messages.JWT_IN_BLACKLIST["code"]`.
         """
-        if message is None:
-            message = jwt_error_messages.JWT_IN_BLACKLIST
-        super().__init__(message)
+        self.detail = jwt_error_messages.JWT_IN_BLACKLIST["detail"]
+        self.code = jwt_error_messages.JWT_IN_BLACKLIST["code"]
+        super().__init__(self.detail, self.code)
