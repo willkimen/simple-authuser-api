@@ -45,11 +45,24 @@ User = get_user_model()
 @api_view(["POST"])
 def register(request):
     """
-    Registers a new user.
+    Registers a new user in the system.
 
-    This endpoint registers a new user in the system. If the provided data is valid,
-    the user is created and an activation email is sent to the provided email address.
-    The user is initially marked as inactive until they activate their account through the activation email.
+    This endpoint handles user registration. It performs the following steps:
+    1. **Validate Input Data:** Uses the `UserSerializer` to validate the provided user data. If the data is invalid, it returns a detailed validation error response.
+    2. **Send Activation Email:** Attempts to send an activation email to the provided email address. If email sending fails, it returns an error response.
+    3. **Save User:** If the data is valid and the email is successfully sent, the user is created in the database with an inactive status.
+    4. **Return Success Response:** Returns a success message along with the user data if the registration is successful.
+
+    Args:
+        request (Request): The HTTP request object containing user registration data.
+
+    Returns:
+        Response: The HTTP response object containing either a success message or error details.
+
+    Response Codes:
+        - 201 Created: Successfully registered the user and sent an activation email.
+        - 400 Bad Request: The provided data is invalid, with detailed field errors.
+        - 500 Internal Server Error: Failed to send the activation email.
     """
     serializer = UserSerializer(data=request.data)
 
@@ -81,13 +94,22 @@ def register(request):
 @api_view(["POST"])
 def obtain_jwt_pair(request):
     """
-    Handle user login by email and password.
+    Handles user login and returns JWT tokens upon successful authentication.
+
+    This endpoint is used for user login by validating the provided email and password.
+    Upon successful authentication, it generates and returns a pair of JWT tokens (access and refresh).
+    If the authentication fails or the user is not activated, appropriate error messages are returned.
 
     Args:
-        request (Request): The request object containing email and password.
+        request (Request): The HTTP request object containing the user's email and password.
 
     Returns:
-        Response: A response object containing JWT tokens if successful or an error message if failed.
+        Response: An HTTP response object containing either the JWT tokens and success message or an error message.
+
+    Response Codes:
+        - 200 OK: Successfully authenticated the user and returned the JWT tokens.
+        - 403 Forbidden: The user account is not activated.
+        - 404 Not Found: The user with the provided email and password does not exist.
     """
     email = request.data.get("email", None)
     password = request.data.get("password", None)
@@ -214,7 +236,26 @@ def update(request):
 @throttle_classes([AccountActivationRequestRateLimit])
 def activate_account(request):
     """
-    Verify code and activates the user account.
+    Activates a user account based on the provided activation code.
+
+    This endpoint verifies the activation code provided by the user and activates their account if the code is valid.
+    The code must be of the correct type, not expired, and present in the database. Upon successful activation,
+    the user's account is updated to active status, and the activation code is deleted.
+
+    Args:
+        request (Request): The HTTP request object containing the activation code.
+
+    Returns:
+        Response: An HTTP response object indicating the result of the activation process.
+
+    Response Codes:
+        - 200 OK: The user account was successfully activated.
+        - 400 Bad Request: The provided code field is missing or the code type is invalid.
+        - 404 Not Found: The provided activation code does not exist in the database.
+        - 410 Gone: The provided activation code has expired.
+
+    Throttling:
+        - Applies `AccountActivationRequestRateLimit` throttle class to limit the rate of activation requests.
     """
     code = request.data.get("code", None)
 
@@ -266,6 +307,28 @@ def activate_account(request):
 @api_view(["POST"])
 @throttle_classes([SendEmailActivateAccountRequestRateLimit])
 def send_email_to_activate_account(request):
+    """
+    Sends an activation email to the user if their account is not already activated.
+
+    This endpoint handles the process of sending an activation email to the user. It first validates the provided
+    email address and checks whether the user exists and if their account is already activated. If the user is valid
+    and their account is not activated, an activation code is sent to their email address.
+
+    Args:
+        request (Request): The HTTP request object containing the email address.
+
+    Returns:
+        Response: An HTTP response object indicating the result of the email sending process.
+
+    Response Codes:
+        - 200 OK: The activation email was successfully sent to the user.
+        - 400 Bad Request: The user account is already activated, or the provided data is invalid.
+        - 404 Not Found: The user with the provided email does not exist.
+        - 500 Internal Server Error: An error occurred while sending the activation email.
+
+    Throttling:
+        - Applies `SendEmailActivateAccountRequestRateLimit` throttle class to limit the rate of email requests.
+    """
     serializer = EmailSerializer(data=request.data)
 
     # Check if the provided data is valid

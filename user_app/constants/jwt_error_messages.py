@@ -1,5 +1,5 @@
 """
-Constants used in JWT related errors.
+Constants for JWTExceptions.
 """
 
 DECODE_ERROR = {

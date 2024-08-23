@@ -10,19 +10,34 @@ from .constants import confirmation_type_code
 
 class UserProfileManager(BaseUserManager):
     """
-    Custom user profile manager to handle the creation of
-    regular users and superusers.
+    Custom manager for the UserProfile model to handle user creation and management.
+
+    This manager provides methods for creating regular users and superusers with proper
+    validation and configuration.
+
+    Methods:
+        create_user(email, password, is_active=False, **extra_fields):
+            Creates a regular user with the given email and password.
+
+        create_superuser(email, password, **extra_fields):
+            Creates a superuser with the given email and password.
     """
 
     def create_user(self, email, password, is_active=False, **extra_fields):
-        """Creates a regular user with with account not activated by default.
+        """
+        Creates and returns a regular user with the specified email and password.
+
+        Args:
+            email (str): The email address for the user.
+            password (str): The password for the user.
+            is_active (bool, optional): Specifies whether the user account is active. Defaults to False.
+            **extra_fields: Additional fields for the user.
 
         Raises:
-            ValueError: If the email address is not provided.
-            ValueError: If the password is not provided.
+            ValueError: If the email or password is not provided.
 
         Returns:
-            UserProfile: The created and persisted user in the database.
+            UserProfile: The created user instance.
         """
         if not email:
             raise ValueError("The email address must be entered")
@@ -40,14 +55,19 @@ class UserProfileManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password, **extra_fields):
-        """Creates a superuser
+        """
+        Creates and returns a superuser with the specified email and password.
+
+        Args:
+            email (str): The email address for the superuser.
+            password (str): The password for the superuser.
+            **extra_fields: Additional fields for the superuser.
 
         Raises:
-            ValueError: If the is_staff field is not True.
-            ValueError: If the is_superuser field is not True.
+            ValueError: If the is_staff or is_superuser fields are not set to True.
 
         Returns:
-            UserProfile: The created superuser.
+            UserProfile: The created superuser instance.
         """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
@@ -67,8 +87,27 @@ class UserProfileManager(BaseUserManager):
 
 class UserProfile(AbstractUser):
     """
-    User profile model that replaces the 'username' field with 'email' for
-    authentication.
+    Extends the built-in AbstractUser model to use 'email' instead of 'username' for authentication.
+
+    This model replaces the default 'username' field with 'email' for user identification and authentication.
+    It also defines additional user profile fields such as 'first_name' and 'last_name'.
+
+    Attributes:
+        username (NoneType): This field is set to None to remove the 'username' field inherited from AbstractUser.
+
+        first_name (CharField): Stores the user's first name. This field is required.
+
+        last_name (CharField): Stores the user's last name. This field is required.
+
+        email (EmailField): Stores the user's email address. This field is unique and required.
+
+    Configuration:
+        USERNAME_FIELD (str): Specifies that 'email' should be used as the unique identifier for authentication.
+
+        REQUIRED_FIELDS (list[str]): List of fields that are required when creating a superuser. This list is empty
+                                      as 'email' is used for authentication.
+
+        objects (UserProfileManager): Specifies a custom manager for this model to handle user-related queries.
     """
 
     username = None  # Remove the username field
@@ -91,15 +130,22 @@ class UserProfile(AbstractUser):
 
 class ConfirmationCode(models.Model):
     """
-    Model representing a confirmation code for various user actions.
+    Represents a confirmation code used for various user actions, such as account activation, email changes,
+    password changes, and password resets.
 
     Attributes:
-        TYPE_CODE_OPTIONS (list): List of tuples containing the available types of confirmation codes.
+        TYPE_CODE_OPTIONS (list): List of tuples specifying the types of confirmation codes available.
 
-        user_email (EmailField): The email associated with the confirmation code.
-        code (CharField): The unique confirmation code.
-        created_at (DateTimeField): The date and time when the confirmation code was created.
-        type_code (CharField): The type of confirmation code, chosen from TYPE_CODE_OPTIONS.
+        user_email (EmailField): The email address associated with this confirmation code. It is not unique,
+                                  meaning multiple codes can be associated with the same email address.
+
+        code (CharField): The unique confirmation code itself. It must be unique across all records.
+
+        created_at (DateTimeField): The timestamp when the confirmation code was created. This field is automatically
+                                    set to the current date and time when the record is created.
+
+        type_code (CharField): The type of confirmation code, chosen from `TYPE_CODE_OPTIONS`. This indicates
+                               the purpose of the confirmation code, such as account activation or password reset.
     """
 
     TYPE_CODE_OPTIONS = [
@@ -132,13 +178,18 @@ class ConfirmationCode(models.Model):
 
 class JWTBlackList(models.Model):
     """
-    Model to store blacklisted JWTs.
+    Represents a model for storing blacklisted JWTs (JSON Web Tokens). This is used to keep track of tokens
+    that should no longer be accepted by the system.
 
     Attributes:
-        TYPE_TOKEN_CHOICES (list): List of token type choices.
-        jti (str): The JWT ID.
-        exp (datetime): The expiration date and time of the token.
-        typ (str): The type of the token, either 'access' or 'refresh'.
+        TYPE_TOKEN_CHOICES (list): Choices for the type of token.
+
+        jti (CharField): The JWT ID (Unique Identifier). This field stores the unique identifier for the JWT.
+
+        exp (DateTimeField): The expiration date and time of the token. This field indicates when the token expires.
+
+        typ (CharField): The type of the token, which can be either 'access' or 'refresh'. This field is limited
+                         to the choices defined in `TYPE_TOKEN_CHOICES`.
     """
 
     TYPE_TOKEN_CHOICES = [
@@ -152,10 +203,16 @@ class JWTBlackList(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Override the save method to handle the expiration field.
+        Override the default save method to handle the expiration field.
 
-        Converts the expiration field from an integer timestamp to a datetime object
-        if it is not already a datetime object.
+        If the expiration field (`exp`) is provided as an integer timestamp, it is converted to a datetime object
+        before saving to the database. This ensures that the expiration time is correctly stored as a `DateTimeField`.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Keyworded variable length argument list.
+
+        Calls the parent class's save method to perform the actual save operation.
         """
         if isinstance(self.exp, int):
             self.exp = datetime.fromtimestamp(self.exp, tz=ZoneInfo(settings.TIME_ZONE))

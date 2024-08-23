@@ -10,10 +10,7 @@ def custom_exception_handler(exc, context):
         context (dict): Additional context about the request.
 
     Returns:
-        Response: The modified response object with added error code and message.
-
-    This function extends the default exception handler provided by Django REST framework.
-    It adds an "error_code" field to the response data and renames the "detail" field to "message".
+        Response: The modified response object with added error code.
     """
     # Call the default exception handler to get the standard error response
     response = exception_handler(exc, context)

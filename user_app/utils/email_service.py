@@ -12,8 +12,22 @@ from .random_code import generate_random_code
 def send_activation_code_by_email(user_email: str) -> None:
     """
     Sends an activation email to the user.
-    This function creates content with a random code to confirm the user's email address.
-    The code will be persisted in the database, along with the user's email.
+
+    This function creates a random confirmation code, sends an email with the code to the user's email address,
+    and persists the code in the database along with the user's email. The email contains instructions for
+    confirming the user's email address.
+
+    Args:
+        user_email (str): The email address of the user to whom the activation code will be sent.
+
+    Raises:
+        smtplib.SMTPConnectError: If the connection to the SMTP server fails.
+        smtplib.SMTPAuthenticationError: If there is an authentication error with the SMTP server.
+        smtplib.SMTPSenderRefused: If the sender address is refused by the SMTP server.
+        smtplib.SMTPRecipientsRefused: If all recipient addresses are refused by the SMTP server.
+        smtplib.SMTPDataError: If the SMTP server refuses to accept the message data.
+        smtplib.SMTPResponseException: If the SMTP server returns an error response.
+        smtplib.SMTPException: For any other SMTP-related errors.
     """
     email_subject = "Confirm your email address"
 

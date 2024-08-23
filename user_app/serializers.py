@@ -12,6 +12,9 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for registering new users. Validates and creates a new user in the system.
+
+    Attributes:
+        confirmation_password (CharField): Additional field to confirm the password.
     """
 
     # Additional field to confirm the password, should always be write_only
@@ -51,6 +54,9 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Validates the data provided during registration.
 
+        Args:
+            data (dict): Data to be validated.
+
         Raises:
             serializers.ValidationError: If the passwords do not match.
 
@@ -70,6 +76,9 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Validates the password strength using Django's standard validations.
 
+        Args:
+            password (str): The password to be validated.
+
         Raises:
             serializers.ValidationError: If the password does not meet the validation requirements.
 
@@ -86,4 +95,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class EmailSerializer(serializers.Serializer):
+    """
+    Serializer for handling email input.
+    """
+
     email = serializers.EmailField()
