@@ -17,6 +17,8 @@ from user_app.constants.response_code_messages import (
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
     INVALID_CONFIRMATION_CODE_TYPE,
+    IS_NOT_REFRESH_JWT,
+    JWT_ACCESS_CREATED,
     LOGIN_SUCCESSFUL,
     LOGOUT_SUCCESSFUL,
     USER_ACCOUNT_NOT_ACTIVATED,
@@ -27,6 +29,7 @@ from user_app.constants.response_code_messages import (
     USER_UPDATED_SUCCESSFULLY,
     VALIDATION_ERRORS,
 )
+from user_app.exceptions import JWTBlackListException, JWTException
 from user_app.models import ConfirmationCode, JWTBlackList
 from user_app.serializers import EmailSerializer, UserSerializer
 from user_app.throttlings import (
@@ -34,7 +37,7 @@ from user_app.throttlings import (
     SendEmailActivateAccountRequestRateLimit,
 )
 from user_app.utils.email_service import send_activation_code_by_email
-from user_app.utils.jwt_token import create_pair_jwt
+from user_app.utils.jwt_token import check_token, create_access_jwt, create_pair_jwt
 
 User = get_user_model()
 
@@ -112,7 +115,62 @@ def obtain_jwt_pair(request):
 
 
 @api_view(["POST"])
-def refresh_jwt_access(request): ...
+def refresh_jwt_access(request):
+    """
+    Refreshes the JWT access token using a valid refresh token.
+
+    This endpoint accepts a POST request with a refresh token and performs the following actions:
+    1. **Check Token Validity:** Verifies the provided refresh token. If the token is blacklisted or invalid, it returns an appropriate error response.
+    2. **Validate Token Type:** Ensures that the token type is "refresh". If not, it returns a bad request error.
+    3. **Verify User Existence:** Checks if the user associated with the token exists. If the user does not exist, it returns a not found error.
+    4. **Check Account Activation:** Validates that the user's account is activated. If the account is not activated, it returns a forbidden error.
+    5. **Generate New Access Token:** If all validations pass, it generates a new access token and returns it in the response along with a success message.
+
+    Args:
+        request (Request): The HTTP request object containing the refresh token.
+
+    Returns:
+        Response: The HTTP response object containing either the new access token or an error message.
+
+    Response Codes:
+        - 201 Created: Successfully generated a new access token.
+        - 400 Bad Request: The token is not a refresh token or the token is invalid.
+        - 403 Forbidden: The token is blacklisted or the user account is not activated.
+        - 404 Not Found: The user associated with the token does not exist.
+    """
+    refresh = request.data.get("refresh", None)
+
+    try:
+        payload = check_token(refresh)
+    except JWTBlackListException as e:
+        return Response(e.dict_repr(), status=status.HTTP_403_FORBIDDEN)
+    except JWTException as e:
+        return Response(e.dict_repr(), status=status.HTTP_400_BAD_REQUEST)
+
+    # Verify if token is a refresh type
+    if payload["typ"] != "refresh":
+        return Response(IS_NOT_REFRESH_JWT, status=status.HTTP_400_BAD_REQUEST)
+
+    # Verify if user exists
+    try:
+        user = User.objects.get(id=payload["uid"])
+    except User.DoesNotExist:
+        return Response(
+            USER_NOT_FOUND,
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Verify if user has activated account
+    if user.is_active is False:
+        return Response(
+            USER_ACCOUNT_NOT_ACTIVATED,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    return Response(
+        __merge_dict(JWT_ACCESS_CREATED, {"access": create_access_jwt(payload["uid"])}),
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(["POST"])

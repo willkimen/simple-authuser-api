@@ -77,3 +77,13 @@ LOGIN_SUCCESSFUL = {
     "code": "LOGIN_SUCCESSFUL",
     "detail": "User was successfully logged in. An access and refresh was returned.",
 }
+
+JWT_ACCESS_CREATED = {
+    "code": "JWT_ACCESS_CREATED",
+    "detail": "Access token was created successfully.",
+}
+
+IS_NOT_REFRESH_JWT = {
+    "code": "IS_NOT_REFRESH_JWT",
+    "detail": "The token sent is not a refresh type.",
+}
