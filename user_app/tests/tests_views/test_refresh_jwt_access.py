@@ -1,0 +1,298 @@
+"""
+This module contains tests for the JWT refresh functionality.
+
+It verifies the behavior of the JWT refresh endpoint (`refresh_jwt_access`). The endpoint expects a refresh token and returns a new access token if the provided refresh token is valid. It handles various scenarios including blacklisted tokens, non-existent users, and inactive users.
+
+"""
+
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import jwt
+import pytest
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from user_app.constants import jwt_error_messages, response_code_messages
+from user_app.models import JWTBlackList
+
+# =========== Objects and constants ==============
+User = get_user_model()
+url: str = reverse("refresh_jwt_access")
+FAKE_SECRET = "jwt_secret"
+UID_NON_EXIST = 1
+INCORRECT_TYP = "access"
+FAKE_TYP = "refresh"
+FAKE_JTI = "fake_jti"
+FAKE_UID = 1
+FAKE_EXP = int((datetime.now() + timedelta(seconds=60)).timestamp())
+FAKE_USER_DATA = {
+    "id": FAKE_UID,
+    "first_name": "fake_first_name",
+    "last_name": "fake_last_name",
+    "email": "fake@email.com",
+    "password": "FAKEpassword10!",
+}
+
+
+# ============ Fixtures ================
+@pytest.fixture
+def client() -> APIClient:
+    """
+    Provides an API client for making HTTP requests.
+
+    Returns:
+        APIClient: An instance of the Django REST Framework APIClient.
+    """
+    return APIClient()
+
+
+@pytest.fixture
+def blacklisted_refresh_token() -> str:
+    """
+    Provides a refresh token that is blacklisted.
+
+    This fixture creates a user and adds their refresh token to the blacklist.
+
+    Returns:
+        str: An encoded JWT refresh token that is in the blacklist.
+    """
+    user = User.objects.create_user(**FAKE_USER_DATA, is_active=True)
+    payload = {
+        "uid": user.id,
+        "typ": FAKE_TYP,
+        "jti": FAKE_JTI,
+        "exp": FAKE_EXP,
+    }
+
+    JWTBlackList.objects.create(
+        jti=payload["jti"],
+        typ=payload["typ"],
+        exp=payload["exp"],
+    )
+
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def incorrect_type_token() -> str:
+    """
+    Provides a valid access token with an incorrect token type.
+
+    This fixture creates a user and generates a token with a type that is not expected by the refresh token endpoint. The token has a valid structure but uses an incorrect 'typ' field.
+
+    Returns:
+        str: An encoded JWT token with an incorrect type.
+    """
+    user = User.objects.create_user(**FAKE_USER_DATA, is_active=True)
+    payload = {
+        "uid": user.id,
+        "typ": INCORRECT_TYP,  # This is an incorrect token type for the refresh endpoint
+        "jti": FAKE_JTI,
+        "exp": FAKE_EXP,
+    }
+
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def refresh_token_for_nonexistent_user() -> str:
+    """
+    Provides a refresh token for a non-existent user.
+
+    Returns:
+        str: An encoded JWT refresh token for a non-existent user.
+    """
+    payload = {
+        "uid": UID_NON_EXIST,
+        "typ": FAKE_TYP,
+        "jti": FAKE_JTI,
+        "exp": FAKE_EXP,
+    }
+
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def refresh_token_for_inactive_user() -> str:
+    """
+    Provides a refresh token for an inactive user.
+
+    This fixture creates an inactive user and generates a refresh token for that user.
+
+    Returns:
+        str: An encoded JWT refresh token for an inactive user.
+    """
+    inactive_user = User.objects.create_user(**FAKE_USER_DATA, is_active=False)
+    payload = {
+        "uid": inactive_user.id,
+        "typ": FAKE_TYP,
+        "jti": FAKE_JTI,
+        "exp": FAKE_EXP,
+    }
+
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def valid_refresh_token() -> str:
+    """
+    Provides a valid refresh token.
+
+    This fixture creates a user and generates a valid refresh token.
+
+    Returns:
+        str: An encoded JWT refresh token for an active user.
+    """
+    user = User.objects.create_user(**FAKE_USER_DATA, is_active=True)
+    payload = {
+        "uid": user.id,
+        "typ": "refresh",
+        "jti": "valid_jti",
+        "exp": FAKE_EXP,
+    }
+
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+# ========== Tests ================
+@pytest.mark.django_db
+@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+def test_blacklisted_refresh_token_not_generate_new_access_token(
+    mock_secret: MagicMock, client: APIClient, blacklisted_refresh_token: str
+):
+    """
+    Tests that a blacklisted refresh token does not generate a new access token.
+
+    Args:
+        mock_secret (MagicMock): Mocked JWT secret environment variable.
+        client (APIClient): The test client used to make HTTP requests.
+        blacklisted_refresh_token (str): The refresh token that is blacklisted.
+    """
+    expected_detail_message = jwt_error_messages.JWT_IN_BLACKLIST["detail"]
+    expected_code = jwt_error_messages.JWT_IN_BLACKLIST["code"]
+    expected_status_code = status.HTTP_403_FORBIDDEN
+
+    actual_response = client.post(
+        url, data={"refresh": blacklisted_refresh_token}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+def test_non_refresh_token_not_generate_new_access_token(
+    mock_secret: MagicMock, client: APIClient, incorrect_type_token: str
+):
+    """
+    Tests that a non-refresh token does not generate a new access token.
+
+    Args:
+        mock_secret (MagicMock): Mocked JWT secret environment variable.
+        client (APIClient): The test client used to make HTTP requests.
+        incorrect_type_token (str): The JWT access token provided as a refresh token.
+    """
+    expected_detail_message = response_code_messages.IS_NOT_REFRESH_JWT["detail"]
+    expected_code = response_code_messages.IS_NOT_REFRESH_JWT["code"]
+    expected_status_code = status.HTTP_400_BAD_REQUEST
+
+    actual_response = client.post(
+        url, data={"refresh": incorrect_type_token}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+def test_nonexistent_user_not_generate_access_token(
+    mock_secret: MagicMock, client: APIClient, refresh_token_for_nonexistent_user: str
+):
+    """
+    Tests that a refresh token for a non-existent user does not generate an access token.
+
+    Args:
+        mock_secret (MagicMock): Mocked JWT secret environment variable.
+        client (APIClient): The test client used to make HTTP requests.
+        refresh_token_for_nonexistent_user (str): The refresh token for a non-existent user.
+    """
+    expected_detail_message = response_code_messages.USER_NOT_FOUND["detail"]
+    expected_code = response_code_messages.USER_NOT_FOUND["code"]
+    expected_status_code = status.HTTP_404_NOT_FOUND
+
+    actual_response = client.post(
+        url, data={"refresh": refresh_token_for_nonexistent_user}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+def test_inactive_user_not_generate_access_token(
+    mock_secret: MagicMock, client: APIClient, refresh_token_for_inactive_user: str
+):
+    """
+    Tests that a refresh token for an inactive user does not generate an access token.
+
+    Args:
+        mock_secret (MagicMock): Mocked JWT secret environment variable.
+        client (APIClient): The test client used to make HTTP requests.
+        refresh_token_for_inactive_user (str): The refresh token for an inactive user.
+    """
+    expected_detail_message = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED[
+        "detail"
+    ]
+    expected_code = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED["code"]
+    expected_status_code = status.HTTP_403_FORBIDDEN
+
+    actual_response = client.post(
+        url, data={"refresh": refresh_token_for_inactive_user}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+def test_valid_refresh_token_creates_access_token(
+    mock_secret: MagicMock, client: APIClient, valid_refresh_token: str
+):
+    """
+    Tests that a valid refresh token successfully generates a new access token.
+
+    Args:
+        mock_secret (MagicMock): Mocked JWT secret environment variable.
+        client (APIClient): The test client used to make HTTP requests.
+        valid_refresh_token (str): The valid refresh token.
+    """
+    expected_detail_message = response_code_messages.JWT_ACCESS_CREATED["detail"]
+    expected_code = response_code_messages.JWT_ACCESS_CREATED["code"]
+    expected_status_code = status.HTTP_201_CREATED
+    expected_typ_payload = "access"
+    expected_uid_payload = FAKE_UID
+
+    actual_response = client.post(
+        url, data={"refresh": valid_refresh_token}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+    actual_payload = jwt.decode(
+        actual_response.data["access"], FAKE_SECRET, algorithms="HS256"
+    )
+    assert expected_typ_payload == actual_payload["typ"]
+    assert expected_uid_payload == actual_payload["uid"]
