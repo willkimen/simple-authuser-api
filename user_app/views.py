@@ -17,7 +17,7 @@ from user_app.constants.response_code_messages import (
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
     INVALID_CONFIRMATION_CODE_TYPE,
-    IS_NOT_REFRESH_JWT,
+    IS_NOT_REFRESH_TOKEN,
     JWT_ACCESS_CREATED,
     LOGIN_SUCCESSFUL,
     LOGOUT_SUCCESSFUL,
@@ -171,7 +171,7 @@ def refresh_jwt_access(request):
 
     # Verify if token is a refresh type
     if payload["typ"] != "refresh":
-        return Response(IS_NOT_REFRESH_JWT, status=status.HTTP_400_BAD_REQUEST)
+        return Response(IS_NOT_REFRESH_TOKEN, status=status.HTTP_400_BAD_REQUEST)
 
     # Verify if user exists
     try:

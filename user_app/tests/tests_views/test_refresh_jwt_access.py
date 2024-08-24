@@ -197,8 +197,8 @@ def test_non_refresh_token_not_generate_new_access_token(
         client (APIClient): The test client used to make HTTP requests.
         incorrect_type_token (str): The JWT access token provided as a refresh token.
     """
-    expected_detail_message = response_code_messages.IS_NOT_REFRESH_JWT["detail"]
-    expected_code = response_code_messages.IS_NOT_REFRESH_JWT["code"]
+    expected_detail_message = response_code_messages.IS_NOT_REFRESH_TOKEN["detail"]
+    expected_code = response_code_messages.IS_NOT_REFRESH_TOKEN["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.post(

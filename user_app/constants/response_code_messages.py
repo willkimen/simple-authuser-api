@@ -83,7 +83,12 @@ JWT_ACCESS_CREATED = {
     "detail": "Access token was created successfully.",
 }
 
-IS_NOT_REFRESH_JWT = {
-    "code": "IS_NOT_REFRESH_JWT",
+IS_NOT_REFRESH_TOKEN = {
+    "code": "IS_NOT_REFRESH_TOKEN",
     "detail": "The token sent is not a refresh type.",
+}
+
+IS_NOT_ACCESS_TOKEN = {
+    "code": "IS_NOT_ACCESS_TOKEN",
+    "detail": "The token sent is not a access type.",
 }
