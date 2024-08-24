@@ -66,6 +66,12 @@ class JWTAuthentication(BaseAuthentication):
         except JWTException as e:
             raise AuthenticationFailed(str(e))
 
+        # Verify is token is access type
+        if payload["typ"] != "access":
+            raise AuthenticationFailed(
+                response_code_messages.IS_NOT_ACCESS_TOKEN["detail"]
+            )
+
         # Get the user from the payload
         try:
             user = User.objects.get(id=payload["uid"])
