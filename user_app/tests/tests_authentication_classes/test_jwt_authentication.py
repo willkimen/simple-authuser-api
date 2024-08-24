@@ -36,10 +36,11 @@ from user_app.models import JWTBlackList
 User = get_user_model()
 factory = RequestFactory()
 jwt_authentication = JWTAuthentication()
+INCORRECT_TYP = "refresh"
 FAKE_SECRET = "fake_secret"
 FAKE_JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 FAKE_UID = 10
-FAKE_TYP = "fake_type"
+FAKE_TYP = "access"
 FAKE_JTI = "fake_jti"
 FAKE_EXP = int((datetime.now() + timedelta(days=1)).timestamp())
 
@@ -315,7 +316,40 @@ def request_with_blacklisted_jwt(payload) -> Request:
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
+@pytest.fixture
+def request_with_incorrect_type_jwt(payload) -> Request:
+    """
+    Create a request object with a JWT token with incorrect type token.
+    """
+    # Set incorrect type
+    payload["typ"] = INCORRECT_TYP
+
+    token = jwt.encode(payload, FAKE_SECRET)
+
+    return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
+
+
 # ================ Tests =======================
+@pytest.mark.django_db
+@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+def test_authentication_fails_when_token_type_is_incorrect(
+    mock_jwt_secret: MagicMock,
+    request_with_incorrect_type_jwt: Request,
+):
+    """
+    Test that authentication fails when the JWT token type ("typ") is incorrect.
+
+    Args:
+        mock_jwt_secret (MagicMock): Mock object for retrieving the JWT secret from environment variables.
+        request_with_incorrect_type_jwt (Request): The request fixture containing a JWT token with an incorrect type.
+    """
+    expected_error_message = response_code_messages.IS_NOT_ACCESS_TOKEN["detail"]
+    with pytest.raises(AuthenticationFailed) as e:
+        jwt_authentication.authenticate(request_with_incorrect_type_jwt)
+
+    assert expected_error_message == str(e.value)
+
+
 def test_authentication_fails_when_empty_auth_header(
     empty_auth_header_request: Request,
 ):
