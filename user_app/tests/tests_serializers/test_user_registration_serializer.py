@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ErrorDetail
 
 from user_app.constants import validation_error_messages
-from user_app.serializers import UserSerializer
+from user_app.serializers import UserRequestSerializer
 
 # ========== Objects and constants ============
 User = get_user_model()
@@ -63,7 +63,7 @@ def test_user_persisted_successfully(valid_user_data: dict):
     Tests if a user with valid data is correctly created and persisted in the database.
     """
     # Initialize the serializer with the user data
-    actual_serializer = UserSerializer(data=valid_user_data)
+    actual_serializer = UserRequestSerializer(data=valid_user_data)
 
     # Check if the serializer is valid and the user is persisted in the database
     assert actual_serializer.is_valid()
@@ -79,7 +79,7 @@ def test_invalid_when_passwords_differ(user_data_with_mismatched_passwords: dict
     expected_error_message = validation_error_messages.PASSWORD_DO_NOT_MATCH
 
     # Initialize the serializer with the user data
-    actual_serializer = UserSerializer(data=user_data_with_mismatched_passwords)
+    actual_serializer = UserRequestSerializer(data=user_data_with_mismatched_passwords)
 
     # Check if the serializer is invalid and the error message is as expected
     assert not actual_serializer.is_valid()
@@ -101,7 +101,7 @@ def test_confirmation_password_field_not_persisted(valid_user_data: dict):
     Tests if the confirmation_password field is not persisted in the user model.
     """
     # Initialize the serializer with the user data
-    actual_serializer = UserSerializer(data=valid_user_data)
+    actual_serializer = UserRequestSerializer(data=valid_user_data)
 
     # Check if the serializer is valid and the confirmation_password field is not present in the saved object
     assert actual_serializer.is_valid()
@@ -120,7 +120,7 @@ def test_invalid_password_validation(user_data_with_invalid_passwords: dict):
     ]
 
     # Initialize the serializer with the user data
-    actual_serializer = UserSerializer(data=user_data_with_invalid_passwords)
+    actual_serializer = UserRequestSerializer(data=user_data_with_invalid_passwords)
 
     # Check if the serializer is invalid
     assert not actual_serializer.is_valid()

@@ -33,7 +33,11 @@ from user_app.constants.response_code_messages import (
 )
 from user_app.exceptions import JWTBlackListException, JWTException
 from user_app.models import ConfirmationCode, JWTBlackList
-from user_app.serializers import EmailSerializer, UserSerializer
+from user_app.serializers import (
+    EmailSerializer,
+    UserRequestSerializer,
+    UserResponseSerializer,
+)
 from user_app.throttlings import (
     AccountActivationRequestRateLimit,
     SendEmailActivateAccountRequestRateLimit,
@@ -49,35 +53,42 @@ def register(request):
     """
     Registers a new user in the system.
 
-    This endpoint handles user registration. It performs the following steps:
-    1. **Validate Input Data:** Uses the `UserSerializer` to validate the provided user data. If the data is invalid, it returns a detailed validation error response.
-    2. **Send Activation Email:** Attempts to send an activation email to the provided email address. If email sending fails, it returns an error response.
-    3. **Save User:** If the data is valid and the email is successfully sent, the user is created in the database with an inactive status.
-    4. **Return Success Response:** Returns a success message along with the user data if the registration is successful.
+    This endpoint handles user registration with the following steps:
+
+    1. **Validate Input Data:** The user data is validated using the `UserRequestSerializer`. If the data is invalid, it returns a detailed error response with field-specific validation messages.
+    2. **Send Activation Email:** Upon successful validation, an activation email is sent to the provided email address. If there is an issue sending the email, an error response is returned.
+    3. **Create User:** If the email is successfully sent, the user is created in the database with the provided data but remains inactive until email activation.
+    4. **Return Success Response:** Upon successful registration, a success message along with the user’s data (serialized by `UserResponseSerializer`) is returned.
 
     Args:
-        request (Request): The HTTP request object containing user registration data.
+        request (Request): The HTTP request containing the user registration data in JSON format.
 
     Returns:
-        Response: The HTTP response object containing either a success message or error details.
+        Response: The HTTP response containing either a success message with user data or detailed error messages in case of failure.
 
     Response Codes:
-        - 201 Created: Successfully registered the user and sent an activation email.
-        - 400 Bad Request: The provided data is invalid, with detailed field errors.
-        - 500 Internal Server Error: Failed to send the activation email.
+        - **201 Created:** Registration was successful, and an activation email was sent.
+        - **400 Bad Request:** The data provided was invalid. The response contains detailed validation errors for each field.
+        - **500 Internal Server Error:** There was an issue sending the activation email.
+
+    Serializers:
+        - **UserRequestSerializer:** Used for validating incoming user registration data.
+        - **UserResponseSerializer:** Used for serializing the user data upon successful registration.
     """
-    serializer = UserSerializer(data=request.data)
+    request_serializer = UserRequestSerializer(data=request.data)
 
     # Check if the provided data is valid
-    if not serializer.is_valid():
+    if not request_serializer.is_valid():
         return Response(
-            __merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
+            __merge_dict(
+                VALIDATION_ERRORS, {"field_errors": request_serializer.errors}
+            ),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     # Send the activation email
     try:
-        send_activation_code_by_email(serializer.validated_data["email"])
+        send_activation_code_by_email(request_serializer.validated_data["email"])
     except smtplib.SMTPException as e:
         return Response(
             __merge_dict(ERROR_SENDING_EMAIL, {"error": str(e)}),
@@ -85,10 +96,13 @@ def register(request):
         )
 
     # Save the user to the database
-    serializer.save()
+    user = request_serializer.save()
+
+    # Serialize the created user data using the response serializer
+    response_serializer = UserResponseSerializer(user)
 
     return Response(
-        __merge_dict(USER_REGISTERED_SUCCESSFULLY, {"user": serializer.data}),
+        __merge_dict(USER_REGISTERED_SUCCESSFULLY, {"user": response_serializer.data}),
         status=status.HTTP_201_CREATED,
     )
 
@@ -248,16 +262,21 @@ def blacklist_token(request):
 @authentication_classes([JWTAuthentication])
 def update(request):
 
-    serializer = UserSerializer(instance=request.user, data=request.data, partial=True)
-    if not serializer.is_valid():
+    request_serializer = UserRequestSerializer(
+        instance=request.user, data=request.data, partial=True
+    )
+    if not request_serializer.is_valid():
         return Response(
-            __merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
+            __merge_dict(
+                VALIDATION_ERRORS, {"field_errors": request_serializer.errors}
+            ),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    serializer.save()
+    user = request_serializer.save()
+    response_serializer = UserResponseSerializer(user)
     return Response(
-        __merge_dict(USER_UPDATED_SUCCESSFULLY, {"user": serializer.data}),
+        __merge_dict(USER_UPDATED_SUCCESSFULLY, {"user": response_serializer.data}),
         status=status.HTTP_200_OK,
     )
 

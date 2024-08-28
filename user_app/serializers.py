@@ -9,7 +9,7 @@ from user_app.constants import validation_error_messages
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserRequestSerializer(serializers.ModelSerializer):
     """
     Serializer for registering new users. Validates and creates a new user in the system.
 
@@ -23,7 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "id",
             "first_name",
             "last_name",
             "email",
@@ -92,6 +91,19 @@ class UserSerializer(serializers.ModelSerializer):
             # Raise a validation error with the details of the error
             raise serializers.ValidationError(detail=e)
         return password
+
+
+class UserResponseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for returning user data in the response.
+
+    This serializer is used for formatting the user data in the response
+    after a successful registration. It excludes sensitive fields like the password.
+    """
+
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "last_name", "email", "is_active"]
 
 
 class EmailSerializer(serializers.Serializer):
