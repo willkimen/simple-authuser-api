@@ -17,6 +17,7 @@ from user_app.constants.response_code_messages import (
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
     INVALID_CONFIRMATION_CODE_TYPE,
+    IS_NOT_ACCESS_OR_REFRESH_TOKEN,
     IS_NOT_REFRESH_TOKEN,
     JWT_ACCESS_CREATED,
     LOGIN_SUCCESSFUL,
@@ -26,6 +27,7 @@ from user_app.constants.response_code_messages import (
     USER_HAS_ALREADY_ACTIVATED,
     USER_NOT_FOUND,
     USER_REGISTERED_SUCCESSFULLY,
+    USER_TOKEN_MISMATCH,
     USER_UPDATED_SUCCESSFULLY,
     VALIDATION_ERRORS,
 )
@@ -196,19 +198,47 @@ def refresh_jwt_access(request):
 
 
 @api_view(["POST"])
-def blacklist_jwt_pair(request): ...
+@authentication_classes([JWTAuthentication])
+def blacklist_token(request):
+    """
+    Handles the blacklisting of a JWT token, preventing future use.
 
+    This view performs the following actions:
+    1. Validates the token by decoding its payload.
+    2. Verifies if the token is of type 'access' or 'refresh'.
+    3. Ensures that the authenticated user matches the token's owner.
+    4. Blacklists the token by saving its 'jti' (JWT ID), 'exp' (expiration time), and 'typ' (type) in the database.
 
-@api_view(["POST"])
-def blacklist_jwt_access(request): ...
+    Args:
+        request (Request): The HTTP request, expected to contain a JWT token in the body.
 
+    Returns:
+        Response: A JSON response with the appropriate success or error message, and the corresponding HTTP status code.
+    """
+    token = request.data.get("token", None)
 
-@api_view(["POST"])
-def blacklist_jwt_refresh(request):
+    try:
+        payload = check_token(token)
+    except JWTBlackListException as e:
+        return Response(e.dict_repr(), status=status.HTTP_403_FORBIDDEN)
+    except JWTException as e:
+        return Response(e.dict_repr(), status=status.HTTP_400_BAD_REQUEST)
+
+    # Verify if token is a refresh or access type
+    if payload["typ"] not in ["access", "refresh"]:
+        return Response(
+            IS_NOT_ACCESS_OR_REFRESH_TOKEN, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Verify that the authenticated user matches the token's owner.
+    if request.user.id != payload["uid"]:
+        return Response(USER_TOKEN_MISMATCH, status=status.HTTP_403_FORBIDDEN)
+
+    # Insert the JTI token in blacklist
     JWTBlackList.objects.create(
-        jti=request.auth["jti"],
-        exp=request.auth["exp"],
-        typ=request.auth["typ"],
+        jti=payload["jti"],
+        exp=payload["exp"],
+        typ=payload["typ"],
     )
 
     return Response(LOGOUT_SUCCESSFUL, status=status.HTTP_200_OK)

@@ -92,3 +92,13 @@ IS_NOT_ACCESS_TOKEN = {
     "code": "IS_NOT_ACCESS_TOKEN",
     "detail": "The token sent is not a access type.",
 }
+
+IS_NOT_ACCESS_OR_REFRESH_TOKEN = {
+    "code": "IS_NOT_ACCESS_OR_REFRESH_TOKEN",
+    "detail": "The token sent is not a access or refresh type.",
+}
+
+USER_TOKEN_MISMATCH = {
+    "code": "USER_TOKEN_MISMATCH",
+    "detail": "The logged-in user is different from the user associated with the token.",
+}
