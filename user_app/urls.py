@@ -13,9 +13,9 @@ from .views import (
 urlpatterns = [
     # ============= User Endpoints ====================
     # Endpoint to register a new user. Accepts a POST request with user data.
-    path("users/", register, name="register"),
+    path("users/register/", register, name="register"),
     # Endpoint to update an existing user. Accepts PATCH requests to modify user data.
-    path("users/", update, name="update"),
+    path("users/update/", update, name="update"),
     # Endpoint to activate a user's account with a confirmation code sent via email. Accepts a POST request.
     path(
         "users/activate_account/",
