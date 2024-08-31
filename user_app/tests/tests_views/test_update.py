@@ -138,8 +138,8 @@ def test_update_first_and_last_name_successfully(
     actual_response = client_auth_header.patch(
         url,
         data={
-            "first_name": expected_new_last_name,
-            "last_name": expected_new_first_name,
+            "first_name": expected_new_first_name,
+            "last_name": expected_new_last_name,
         },
         format="json",
     )
