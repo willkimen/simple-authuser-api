@@ -37,6 +37,7 @@ from user_app.serializers import (
     EmailSerializer,
     UserRequestSerializer,
     UserResponseSerializer,
+    UserUpdateSerializer,
 )
 from user_app.throttlings import (
     AccountActivationRequestRateLimit,
@@ -261,20 +262,34 @@ def blacklist_token(request):
 @api_view(["PATCH"])
 @authentication_classes([JWTAuthentication])
 def update(request):
+    """
+    Handle partial update of user information for the authenticated user.
 
-    request_serializer = UserRequestSerializer(
+    Uses the `UserUpdateSerializer` to validate the provided data and update the user instance.
+    If the data is invalid, it returns a detailed error response with field-specific validation errors.
+    """
+
+    # Initialize the serializer with the current user instance and the provided data.
+    # 'partial=True' allows partial updates (only fields provided in the request will be updated).
+    update_serializer = UserUpdateSerializer(
         instance=request.user, data=request.data, partial=True
     )
-    if not request_serializer.is_valid():
+
+    # Check if the provided data is valid according to the serializer.
+    if not update_serializer.is_valid():
+        # If data is invalid, return a response with validation errors.
         return Response(
-            __merge_dict(
-                VALIDATION_ERRORS, {"field_errors": request_serializer.errors}
-            ),
+            __merge_dict(VALIDATION_ERRORS, {"field_errors": update_serializer.errors}),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    user = request_serializer.save()
+    # Save the updated user data to the database.
+    user = update_serializer.save()
+
+    # Serialize the updated user data to include in the response.
     response_serializer = UserResponseSerializer(user)
+
+    # Return a success response with the updated user data.
     return Response(
         __merge_dict(USER_UPDATED_SUCCESSFULLY, {"user": response_serializer.data}),
         status=status.HTTP_200_OK,

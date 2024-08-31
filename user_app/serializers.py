@@ -106,6 +106,12 @@ class UserResponseSerializer(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name", "email", "is_active"]
 
 
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name"]
+
+
 class EmailSerializer(serializers.Serializer):
     """
     Serializer for handling email input.
