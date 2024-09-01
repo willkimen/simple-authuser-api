@@ -14,7 +14,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from user_app.constants import response_code_messages
-from user_app.constants.path_for_mock import jwt_token_module_path
+from user_app.constants.path_for_mock import token_utils_module_path
 
 # =========== Objects and constants ==============
 User = get_user_model()
@@ -56,7 +56,8 @@ def client_auth_header() -> APIClient:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_update_first_name_successfully(
     jwt_secret_mock: MagicMock, client_auth_header: APIClient
@@ -89,7 +90,8 @@ def test_update_first_name_successfully(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_update_last_name_successfully(
     jwt_secret_mock: MagicMock, client_auth_header: APIClient
@@ -122,7 +124,8 @@ def test_update_last_name_successfully(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_update_first_and_last_name_successfully(
     jwt_secret_mock: MagicMock, client_auth_header: APIClient

@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 import jwt
 import pytest
 
-from user_app.constants import jwt_error_messages
-from user_app.constants.path_for_mock import jwt_token_module_path
+from user_app.constants import token_exception_messages
+from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.exceptions import (
     DecodeException,
     ExpiredSignatureException,
@@ -20,7 +20,7 @@ from user_app.exceptions import (
     JWTBlackListException,
 )
 from user_app.models import JWTBlackList
-from user_app.utils.jwt_token import check_token
+from user_app.utils.token_utils import check_token
 
 # ========== Objects and constants ============
 FAKE_SECRET = "fake_secret"
@@ -119,7 +119,8 @@ def token_with_invalid_algorithm(fake_payload: dict) -> str:
 
 # ============= Tests ======================
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_expired_jwt(jwt_secret_mock: MagicMock, token_expired: str):
     """
@@ -129,7 +130,7 @@ def test_expired_jwt(jwt_secret_mock: MagicMock, token_expired: str):
         jwt_secret_mock: Mocked environment variable for JWT secret.
         token_expired (str): The expired JWT.
     """
-    expected_dict_with_code_and_detail = jwt_error_messages.EXPIRED_SIGNATURE
+    expected_dict_with_code_and_detail = token_exception_messages.EXPIRED_SIGNATURE
     with pytest.raises(ExpiredSignatureException) as e:
         check_token(token_expired)
 
@@ -137,7 +138,8 @@ def test_expired_jwt(jwt_secret_mock: MagicMock, token_expired: str):
 
 
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_invalid_signature(jwt_secret_mock: MagicMock, token_with_invalid_secret: str):
     """
@@ -147,7 +149,7 @@ def test_invalid_signature(jwt_secret_mock: MagicMock, token_with_invalid_secret
         jwt_secret_mock: Mocked environment variable for JWT secret.
         token_with_invalid_secret (str): The JWT with an incorrect secret.
     """
-    expected_dict_with_code_and_detail = jwt_error_messages.INVALID_SIGNATURE
+    expected_dict_with_code_and_detail = token_exception_messages.INVALID_SIGNATURE
     with pytest.raises(InvalidSignatureException) as e:
         check_token(token_with_invalid_secret)
 
@@ -155,7 +157,8 @@ def test_invalid_signature(jwt_secret_mock: MagicMock, token_with_invalid_secret
 
 
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_decode_error(jwt_secret_mock: MagicMock, token_malformed: str):
     """
@@ -165,7 +168,7 @@ def test_decode_error(jwt_secret_mock: MagicMock, token_malformed: str):
         jwt_secret_mock: Mocked environment variable for JWT secret.
         token_malformed (str): The malformed JWT.
     """
-    expected_dict_with_code_and_detail = jwt_error_messages.DECODE_ERROR
+    expected_dict_with_code_and_detail = token_exception_messages.DECODE_ERROR
     with pytest.raises(DecodeException) as e:
         check_token(token_malformed)
 
@@ -173,7 +176,8 @@ def test_decode_error(jwt_secret_mock: MagicMock, token_malformed: str):
 
 
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_invalid_algorithm(
     jwt_secret_mock: MagicMock, token_with_invalid_algorithm: str
@@ -185,7 +189,7 @@ def test_invalid_algorithm(
         jwt_secret_mock: Mocked environment variable for JWT secret.
         token_with_invalid_algorithm (str): The JWT with an invalid algorithm.
     """
-    expected_dict_with_code_and_detail = jwt_error_messages.INVALID_ALGORITHM
+    expected_dict_with_code_and_detail = token_exception_messages.INVALID_ALGORITHM
     with pytest.raises(InvalidAlgorithmException) as e:
         check_token(token_with_invalid_algorithm)
 
@@ -194,7 +198,8 @@ def test_invalid_algorithm(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_jwt_in_black_list(jwt_secret_mock: MagicMock, token: str):
     """
@@ -204,7 +209,7 @@ def test_jwt_in_black_list(jwt_secret_mock: MagicMock, token: str):
         jwt_secret_mock: Mocked environment variable for JWT secret.
         token (str): The JWT.
     """
-    expected_dict_with_code_and_detail = jwt_error_messages.JWT_IN_BLACKLIST
+    expected_dict_with_code_and_detail = token_exception_messages.JWT_IN_BLACKLIST
     payload: dict = jwt.decode(token, FAKE_SECRET, algorithms="HS256")
 
     JWTBlackList.objects.create(
@@ -220,7 +225,8 @@ def test_jwt_in_black_list(jwt_secret_mock: MagicMock, token: str):
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_success_create_jwt(jwt_secret_mock: MagicMock, token: str, fake_payload: dict):
     """

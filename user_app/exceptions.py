@@ -1,4 +1,4 @@
-from user_app.constants import jwt_error_messages
+from user_app.constants import token_exception_messages
 
 
 class JWTException(Exception):
@@ -58,8 +58,8 @@ class ExpiredSignatureException(JWTException):
         """
         Initializes the ExpiredSignatureError with default message and code.
         """
-        self.detail = jwt_error_messages.EXPIRED_SIGNATURE["detail"]
-        self.code = jwt_error_messages.EXPIRED_SIGNATURE["code"]
+        self.detail = token_exception_messages.EXPIRED_SIGNATURE["detail"]
+        self.code = token_exception_messages.EXPIRED_SIGNATURE["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -79,8 +79,8 @@ class InvalidAlgorithmException(JWTException):
         """
         Initializes the InvalidAlgorithmError with default message and code.
         """
-        self.detail = jwt_error_messages.INVALID_ALGORITHM["detail"]
-        self.code = jwt_error_messages.INVALID_ALGORITHM["code"]
+        self.detail = token_exception_messages.INVALID_ALGORITHM["detail"]
+        self.code = token_exception_messages.INVALID_ALGORITHM["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -100,8 +100,8 @@ class InvalidSignatureException(JWTException):
         """
         Initializes the InvalidSignatureError with default message and code.
         """
-        self.detail = jwt_error_messages.INVALID_SIGNATURE["detail"]
-        self.code = jwt_error_messages.INVALID_SIGNATURE["code"]
+        self.detail = token_exception_messages.INVALID_SIGNATURE["detail"]
+        self.code = token_exception_messages.INVALID_SIGNATURE["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -121,8 +121,8 @@ class DecodeException(JWTException):
         """
         Initializes the DecodeError with default message and code.
         """
-        self.detail = jwt_error_messages.DECODE_ERROR["detail"]
-        self.code = jwt_error_messages.DECODE_ERROR["code"]
+        self.detail = token_exception_messages.DECODE_ERROR["detail"]
+        self.code = token_exception_messages.DECODE_ERROR["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -142,8 +142,8 @@ class InvalidTokenException(JWTException):
         """
         Initializes the InvalidTokenError with default message and code.
         """
-        self.detail = jwt_error_messages.INVALID_TOKEN["detail"]
-        self.code = jwt_error_messages.INVALID_TOKEN["code"]
+        self.detail = token_exception_messages.INVALID_TOKEN["detail"]
+        self.code = token_exception_messages.INVALID_TOKEN["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -158,9 +158,9 @@ class JWTBlackListException(JWTException):
 
     Attributes:
         detail (str): The default error message indicating the token is blacklisted,
-                      fetched from `jwt_error_messages.JWT_IN_BLACKLIST["detail"]`.
+                      fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["detail"]`.
         code (str): A specific error code related to the blacklist violation,
-                    fetched from `jwt_error_messages.JWT_IN_BLACKLIST["code"]`.
+                    fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["code"]`.
     """
 
     def __init__(self):
@@ -169,14 +169,14 @@ class JWTBlackListException(JWTException):
 
         The exception uses a default message indicating that the token has been blacklisted.
         It also sets an error code to represent this specific violation, both of which are
-        retrieved from the `jwt_error_messages` dictionary.
+        retrieved from the `token_exceptions_messages` dictionary.
 
         Attributes:
             detail (str): The error message explaining that the token is blacklisted,
-                          fetched from `jwt_error_messages.JWT_IN_BLACKLIST["detail"]`.
+                          fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["detail"]`.
             code (str): The error code representing this blacklist violation,
-                        fetched from `jwt_error_messages.JWT_IN_BLACKLIST["code"]`.
+                        fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["code"]`.
         """
-        self.detail = jwt_error_messages.JWT_IN_BLACKLIST["detail"]
-        self.code = jwt_error_messages.JWT_IN_BLACKLIST["code"]
+        self.detail = token_exception_messages.JWT_IN_BLACKLIST["detail"]
+        self.code = token_exception_messages.JWT_IN_BLACKLIST["code"]
         super().__init__(self.detail, self.code)

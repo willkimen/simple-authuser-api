@@ -15,8 +15,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import jwt_error_messages, response_code_messages
-from user_app.constants.path_for_mock import jwt_token_module_path
+from user_app.constants import response_code_messages, token_exception_messages
+from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import JWTBlackList
 
 # =========== Objects and constants ==============
@@ -162,7 +162,8 @@ def valid_refresh_token() -> str:
 # ========== Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_blacklisted_refresh_token_not_generate_new_access_token(
     mock_secret: MagicMock, client: APIClient, blacklisted_refresh_token: str
@@ -175,8 +176,8 @@ def test_blacklisted_refresh_token_not_generate_new_access_token(
         client (APIClient): The test client used to make HTTP requests.
         blacklisted_refresh_token (str): The refresh token that is blacklisted.
     """
-    expected_detail_message = jwt_error_messages.JWT_IN_BLACKLIST["detail"]
-    expected_code = jwt_error_messages.JWT_IN_BLACKLIST["code"]
+    expected_detail_message = token_exception_messages.JWT_IN_BLACKLIST["detail"]
+    expected_code = token_exception_messages.JWT_IN_BLACKLIST["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
@@ -190,7 +191,8 @@ def test_blacklisted_refresh_token_not_generate_new_access_token(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_non_refresh_token_not_generate_new_access_token(
     mock_secret: MagicMock, client: APIClient, incorrect_type_token: str
@@ -218,7 +220,8 @@ def test_non_refresh_token_not_generate_new_access_token(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_nonexistent_user_not_generate_access_token(
     mock_secret: MagicMock, client: APIClient, refresh_token_for_nonexistent_user: str
@@ -246,7 +249,8 @@ def test_nonexistent_user_not_generate_access_token(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_inactive_user_not_generate_access_token(
     mock_secret: MagicMock, client: APIClient, refresh_token_for_inactive_user: str
@@ -276,7 +280,8 @@ def test_inactive_user_not_generate_access_token(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_valid_refresh_token_creates_access_token(
     mock_secret: MagicMock, client: APIClient, valid_refresh_token: str

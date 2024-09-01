@@ -5,7 +5,7 @@ from rest_framework.request import Request
 
 from user_app.constants import authentication_error_messages, response_code_messages
 from user_app.exceptions import JWTException
-from user_app.utils.jwt_token import check_token
+from user_app.utils.token_utils import check_token
 
 User = get_user_model()
 

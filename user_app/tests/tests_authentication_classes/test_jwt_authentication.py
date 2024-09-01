@@ -27,10 +27,10 @@ from rest_framework.request import Request
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants import (
     authentication_error_messages,
-    jwt_error_messages,
     response_code_messages,
+    token_exception_messages,
 )
-from user_app.constants.path_for_mock import jwt_token_module_path
+from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import JWTBlackList
 
 # ============== Objects and constants ===============
@@ -334,7 +334,8 @@ def request_with_incorrect_type_jwt(payload) -> Request:
 # ================ Tests =======================
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_fails_when_token_type_is_incorrect(
     mock_jwt_secret: MagicMock,
@@ -409,7 +410,8 @@ def test_authentication_fails_when_incorrect_format_auth_header(
 
 
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_fails_when_expired_jwt(
     mock_jwt_secret: MagicMock,
@@ -422,7 +424,7 @@ def test_authentication_fails_when_expired_jwt(
         mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
         expired_jwt_request (Request): Request object with an expired JWT in the Authorization header.
     """
-    expected_error_message = jwt_error_messages.EXPIRED_SIGNATURE["detail"]
+    expected_error_message = token_exception_messages.EXPIRED_SIGNATURE["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(expired_jwt_request)
 
@@ -430,7 +432,8 @@ def test_authentication_fails_when_expired_jwt(
 
 
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_fails_when_invalid_secret_jwt(
     mock_jwt_secret: MagicMock,
@@ -443,7 +446,7 @@ def test_authentication_fails_when_invalid_secret_jwt(
         mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
         jwt_request_with_invalid_secret (Request): Request object with a JWT encoded using an incorrect secret.
     """
-    expected_error_message = jwt_error_messages.INVALID_SIGNATURE["detail"]
+    expected_error_message = token_exception_messages.INVALID_SIGNATURE["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(jwt_request_with_invalid_secret)
 
@@ -451,7 +454,8 @@ def test_authentication_fails_when_invalid_secret_jwt(
 
 
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_fails_when_malformed_jwt(
     mock_jwt_secret: MagicMock,
@@ -464,7 +468,7 @@ def test_authentication_fails_when_malformed_jwt(
         mock_jwt_secret (MagicMock): Mocked environment variable for JWT secret.
         malformed_jwt_request (Request): Request object with a malformed JWT.
     """
-    expected_error_message = jwt_error_messages.DECODE_ERROR["detail"]
+    expected_error_message = token_exception_messages.DECODE_ERROR["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(malformed_jwt_request)
 
@@ -472,7 +476,8 @@ def test_authentication_fails_when_malformed_jwt(
 
 
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_fails_when_invalid_algorithm_jwt(
     mock_jwt_secret: MagicMock,
@@ -485,7 +490,7 @@ def test_authentication_fails_when_invalid_algorithm_jwt(
         mock_jwt_secret: Mocked environment variable for JWT secret.
         jwt_request_with_invalid_algorithm (Request): Request object containing a JWT with an invalid algorithm.
     """
-    expected_error_message = jwt_error_messages.INVALID_ALGORITHM["detail"]
+    expected_error_message = token_exception_messages.INVALID_ALGORITHM["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(jwt_request_with_invalid_algorithm)
 
@@ -494,7 +499,8 @@ def test_authentication_fails_when_invalid_algorithm_jwt(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_fails_when_blacklisted_jwt(
     mock_jwt_secret: MagicMock, request_with_blacklisted_jwt: Request, payload
@@ -511,7 +517,7 @@ def test_authentication_fails_when_blacklisted_jwt(
         exp=payload["exp"],
         typ=payload["typ"],
     )
-    expected_error_message = jwt_error_messages.JWT_IN_BLACKLIST["detail"]
+    expected_error_message = token_exception_messages.JWT_IN_BLACKLIST["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(request_with_blacklisted_jwt)
 
@@ -520,7 +526,8 @@ def test_authentication_fails_when_blacklisted_jwt(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_fails_when_nonexistent_user(
     mock_jwt_secret: MagicMock,
@@ -542,7 +549,8 @@ def test_authentication_fails_when_nonexistent_user(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_success(
     mock_jwt_secret: MagicMock,
@@ -577,7 +585,8 @@ def test_authentication_success(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_authentication_fails_when_user_with_account_desactivated(
     mock_jwt_secret: MagicMock,

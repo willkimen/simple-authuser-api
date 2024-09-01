@@ -17,7 +17,7 @@ from user_app.constants.response_code_messages import (
 from user_app.exceptions import JWTBlackListException, JWTException
 from user_app.models import JWTBlackList
 from user_app.utils.data_utils import merge_dict
-from user_app.utils.jwt_token import check_token, create_access_jwt, create_pair_jwt
+from user_app.utils.token_utils import check_token, create_access_jwt, create_pair_jwt
 
 User = get_user_model()
 

@@ -1,6 +1,6 @@
 import importlib
 
-jwt_token_module_path = importlib.import_module("user_app.utils.jwt_token").__name__
+token_utils_module_path = importlib.import_module("user_app.utils.token_utils").__name__
 
 activate_account_view_path = importlib.import_module(
     "user_app.views.activate_account_view"

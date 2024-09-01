@@ -12,8 +12,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import jwt_error_messages, response_code_messages
-from user_app.constants.path_for_mock import jwt_token_module_path
+from user_app.constants import response_code_messages, token_exception_messages
+from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import JWTBlackList
 
 # =========== Objects and constants ==============
@@ -148,7 +148,8 @@ def valid_token() -> str:
 # ========== Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_token_already_in_blacklist(
     mock_secret: MagicMock, client_auth_header: APIClient, blacklisted_token: str
@@ -156,8 +157,8 @@ def test_token_already_in_blacklist(
     """
     Test that a JWT token already blacklisted returns the appropriate error message.
     """
-    expected_detail_message = jwt_error_messages.JWT_IN_BLACKLIST["detail"]
-    expected_code = jwt_error_messages.JWT_IN_BLACKLIST["code"]
+    expected_detail_message = token_exception_messages.JWT_IN_BLACKLIST["detail"]
+    expected_code = token_exception_messages.JWT_IN_BLACKLIST["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client_auth_header.post(
@@ -170,7 +171,8 @@ def test_token_already_in_blacklist(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_token_type_must_be_access_or_refresh(
     mock_secret: MagicMock, client_auth_header: APIClient, incorrect_typ_token: str
@@ -194,7 +196,8 @@ def test_token_type_must_be_access_or_refresh(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_user_must_match_token_owner(
     mock_secret: MagicMock,
@@ -218,7 +221,8 @@ def test_user_must_match_token_owner(
 
 @pytest.mark.django_db
 @patch(
-    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
 )
 def test_user_must_match_token_owner(
     mock_secret: MagicMock,
