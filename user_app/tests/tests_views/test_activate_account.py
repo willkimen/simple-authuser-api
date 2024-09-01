@@ -4,7 +4,7 @@ code from the user via a POST request and activate their account.
 For the user to have their account activated by the code, this code must exist in the database and be linked to the user's email.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,6 +15,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from user_app.constants import confirmation_type_code, response_code_messages
+from user_app.constants.path_for_mock import activate_account_view_path
 from user_app.models import ConfirmationCode
 
 # ========== Objects and constants ============
@@ -29,6 +30,7 @@ FAKE_USER_DATA = {
     "email": "fake_email@email.com",
     "password": "FAKEpassword10!",
 }
+allow_request_path_for_mock = "AccountActivationRequestRateLimit.allow_request"
 
 
 # ============ Fixture ================
@@ -68,7 +70,7 @@ def expired_code() -> str:
 
     # Create an expired date
     now = make_aware(datetime.now())
-    expired_date = now.replace(day=now.day - 1, second=now.second - 1)
+    expired_date = now - timedelta(hours=24, minutes=1)
 
     # Changes the code creation date to an expired date and save
     confirmation_code.created_at = expired_date
@@ -103,7 +105,8 @@ def user_with_confirmation_code() -> dict:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    "user_app.views.AccountActivationRequestRateLimit.allow_request", return_value=True
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    return_value=True,
 )
 def test_successful_account_activation(
     mock_allow_request: MagicMock, user_with_confirmation_code: dict, client: APIClient
@@ -134,7 +137,8 @@ def test_successful_account_activation(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.AccountActivationRequestRateLimit.allow_request", return_value=True
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    return_value=True,
 )
 def test_successfully_activated_account_removes_the_code_in_the_database(
     mock_allow_request: MagicMock, user_with_confirmation_code: dict, client: APIClient
@@ -158,7 +162,8 @@ def test_successfully_activated_account_removes_the_code_in_the_database(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.AccountActivationRequestRateLimit.allow_request", return_value=True
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    return_value=True,
 )
 def test_not_activate_account_when_expired_code(
     mock_allow_request: MagicMock,
@@ -189,7 +194,8 @@ def test_not_activate_account_when_expired_code(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.AccountActivationRequestRateLimit.allow_request", return_value=True
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    return_value=True,
 )
 def test_expired_code_is_removed_from_the_database(
     mock_allow_request: MagicMock,
@@ -215,7 +221,8 @@ def test_expired_code_is_removed_from_the_database(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.AccountActivationRequestRateLimit.allow_request", return_value=True
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    return_value=True,
 )
 def test_not_activate_account_when_code_field_does_not_exists(
     mock_allow_request: MagicMock, client: APIClient
@@ -246,7 +253,8 @@ def test_not_activate_account_when_code_field_does_not_exists(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.AccountActivationRequestRateLimit.allow_request", return_value=True
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    return_value=True,
 )
 @pytest.mark.parametrize("wrong_field_name", ["cod", ""])
 def test_code_field_is_required(
@@ -279,7 +287,8 @@ def test_code_field_is_required(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.AccountActivationRequestRateLimit.allow_request", return_value=True
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    return_value=True,
 )
 def test_not_activate_account_when_code_type_is_incorrect(
     mock_allow_request: MagicMock,

@@ -9,11 +9,16 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from user_app.constants import confirmation_type_code
+from user_app.constants.path_for_mock import email_service_module_path
 from user_app.utils.email_service import send_activation_code_by_email
 
 # ========== Objects and constants ============
 User = get_user_model()
 FAKE_USER_EMAIL = "fake@email.com"
+email_message_path_for_mock = "EmailMessage"
+generate_random_code_path_for_mock = "generate_random_code"
+create_path_for_mock = "ConfirmationCode.objects.create"
+exists_path_for_mock = "ConfirmationCode.objects.exists"
 
 
 # =============== Fixture =================
@@ -32,12 +37,13 @@ def expected_email_body():
 
 # =============== Tests ================
 @pytest.mark.django_db
-@patch("user_app.utils.email_service.EmailMessage")
-@patch("user_app.utils.email_service.generate_random_code", return_value="mocked-code")
-@patch("user_app.utils.email_service.ConfirmationCode.objects.create")
+@patch(f"{email_service_module_path}.{email_message_path_for_mock}")
 @patch(
-    "user_app.utils.email_service.ConfirmationCode.objects.exists", return_value=False
+    f"{email_service_module_path}.{generate_random_code_path_for_mock}",
+    return_value="mocked-code",
 )
+@patch(f"{email_service_module_path}.{create_path_for_mock}")
+@patch(f"{email_service_module_path}.{exists_path_for_mock}", return_value=False)
 def test_success_send_email(
     mock_exists: MagicMock,
     mock_create: MagicMock,

@@ -8,10 +8,12 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from user_app.constants import response_code_messages, validation_error_messages
+from user_app.constants.path_for_mock import crud_view_path
 
 # ============== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("register")
+send_email_path_for_mock = "send_activation_code_by_email"
 
 
 # ============== Fixtures ================
@@ -35,7 +37,7 @@ def user_data() -> dict[str:str]:
 
 # ================ Tests ==================
 @pytest.mark.django_db
-@patch("user_app.views.send_activation_code_by_email")
+@patch(f"{crud_view_path}.{send_email_path_for_mock}")
 def test_creates_user_with_valid_data(
     mock_send_activation_code_by_email: MagicMock,
     client: APIClient,
@@ -71,7 +73,7 @@ def test_creates_user_with_valid_data(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.send_activation_code_by_email",
+    f"{crud_view_path}.{send_email_path_for_mock}",
     side_effect=smtplib.SMTPException(),
 )
 def test_does_not_create_user_when_email_sending_fails(
@@ -154,7 +156,7 @@ def test_does_not_create_user_with_invalid_email_format(
 
 
 @pytest.mark.django_db
-@patch("user_app.views.send_activation_code_by_email")
+@patch(f"{crud_view_path}.{send_email_path_for_mock}")
 def test_does_not_create_user_with_duplicate_email(
     mock_send_activation_code_by_email: MagicMock,
     client: APIClient,
@@ -247,7 +249,7 @@ def test_does_not_create_user_with_null_email(
 
 
 @pytest.mark.django_db
-@patch("user_app.views.send_activation_code_by_email")
+@patch(f"{crud_view_path}.{send_email_path_for_mock}")
 def test_passwords_not_in_response(
     mock_send_activation_code_by_email: MagicMock,
     client: APIClient,

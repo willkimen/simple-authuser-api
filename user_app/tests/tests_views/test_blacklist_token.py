@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from user_app.constants import jwt_error_messages, response_code_messages
+from user_app.constants.path_for_mock import jwt_token_module_path
 from user_app.models import JWTBlackList
 
 # =========== Objects and constants ==============
@@ -31,6 +32,7 @@ FAKE_USER_DATA = {
     "email": "fake@email.com",
     "password": "FAKEpassword10!",
 }
+os_environ_get_path_for_mock = "os.environ.get"
 
 
 # ============ Fixtures ================
@@ -145,7 +147,9 @@ def valid_token() -> str:
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+@patch(
+    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+)
 def test_token_already_in_blacklist(
     mock_secret: MagicMock, client_auth_header: APIClient, blacklisted_token: str
 ):
@@ -165,7 +169,9 @@ def test_token_already_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+@patch(
+    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+)
 def test_token_type_must_be_access_or_refresh(
     mock_secret: MagicMock, client_auth_header: APIClient, incorrect_typ_token: str
 ):
@@ -187,7 +193,9 @@ def test_token_type_must_be_access_or_refresh(
 
 
 @pytest.mark.django_db
-@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+@patch(
+    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+)
 def test_user_must_match_token_owner(
     mock_secret: MagicMock,
     client_auth_header: APIClient,
@@ -209,7 +217,9 @@ def test_user_must_match_token_owner(
 
 
 @pytest.mark.django_db
-@patch("user_app.utils.jwt_token.os.environ.get", return_value=FAKE_SECRET)
+@patch(
+    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}", return_value=FAKE_SECRET
+)
 def test_user_must_match_token_owner(
     mock_secret: MagicMock,
     client_auth_header: APIClient,

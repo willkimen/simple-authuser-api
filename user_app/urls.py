@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import (
+from user_app.views import (
     activate_account,
     blacklist_token,
     obtain_jwt_pair,

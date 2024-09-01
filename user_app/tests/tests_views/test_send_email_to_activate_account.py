@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from user_app.constants import response_code_messages, validation_error_messages
+from user_app.constants.path_for_mock import activate_account_view_path
 
 # ========== Objects and constants ============
 User = get_user_model()
@@ -24,6 +25,8 @@ FAKE_USER_DATA = {
     "password": "FAKEpassowrd1234!",
 }
 EMAIL_NONEXISTENT = "nonexistent@email.com"
+allow_request_path_for_mock = "SendEmailActivateAccountRequestRateLimit.allow_request"
+send_email_path_for_mock = "send_activation_code_by_email"
 
 
 # ================= Fixtures ===============
@@ -95,7 +98,7 @@ def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.SendEmailActivateAccountRequestRateLimit.allow_request",
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
 def test_does_not_send_email_when_email_field_is_empty(
@@ -127,7 +130,7 @@ def test_does_not_send_email_when_email_field_is_empty(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.SendEmailActivateAccountRequestRateLimit.allow_request",
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
 def test_does_not_send_email_when_email_field_is_null(
@@ -175,7 +178,7 @@ def test_does_not_send_email_when_email_field_is_null(
 )
 @pytest.mark.django_db
 @patch(
-    "user_app.views.SendEmailActivateAccountRequestRateLimit.allow_request",
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
 def test_does_not_send_email_with_invalid_email_format(
@@ -209,7 +212,7 @@ def test_does_not_send_email_with_invalid_email_format(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.SendEmailActivateAccountRequestRateLimit.allow_request",
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
 def test_does_not_send_email_when_user_does_not_exists(
@@ -238,7 +241,7 @@ def test_does_not_send_email_when_user_does_not_exists(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.SendEmailActivateAccountRequestRateLimit.allow_request",
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
 def test_does_not_send_email_when_user_has_already_activated(
@@ -272,11 +275,11 @@ def test_does_not_send_email_when_user_has_already_activated(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.SendEmailActivateAccountRequestRateLimit.allow_request",
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
 @patch(
-    "user_app.views.send_activation_code_by_email",
+    f"{activate_account_view_path}.{send_email_path_for_mock}",
     side_effect=smtplib.SMTPException(),
 )
 def test_failed_to_send_email(
@@ -312,10 +315,10 @@ def test_failed_to_send_email(
 
 @pytest.mark.django_db
 @patch(
-    "user_app.views.SendEmailActivateAccountRequestRateLimit.allow_request",
+    f"{activate_account_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
-@patch("user_app.views.send_activation_code_by_email")
+@patch(f"{activate_account_view_path}.{send_email_path_for_mock}")
 def test_send_email_successfully(
     mock_send_email: MagicMock,
     mock_allow_request: MagicMock,

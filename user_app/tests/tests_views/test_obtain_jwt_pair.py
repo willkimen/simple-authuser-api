@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from user_app.constants import response_code_messages
+from user_app.constants.path_for_mock import jwt_token_module_path
 
 # ========== Objects and constants ============
 User = get_user_model()
@@ -23,6 +24,7 @@ FAKE_USER_DATA = {
     "email": "fake@email.com",
     "password": "FAKEpassword10!",
 }
+os_environ_get_path_for_mock = "os.environ.get"
 
 
 # ============== Fixtures ==============
@@ -106,7 +108,10 @@ def test_user_with_not_activated_account_does_not_return_jwt_pair(
 
 
 @pytest.mark.django_db
-@patch("user_app.utils.jwt_token.os.environ.get", return_value=JWT_SECRET_FOR_TESTS)
+@patch(
+    f"{jwt_token_module_path}.{os_environ_get_path_for_mock}",
+    return_value=JWT_SECRET_FOR_TESTS,
+)
 def test_returns_jwt_pair_successfully(
     mock_get: MagicMock,
     user_with_activated_account: User,
