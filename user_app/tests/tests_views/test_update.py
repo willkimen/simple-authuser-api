@@ -19,7 +19,7 @@ from user_app.constants.path_for_mock import token_utils_module_path
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("update")
-FAKE_SECRET = "jwt_secret"
+FAKE_SECRET = "token_secret"
 os_environ_get_path_for_mock = "os.environ.get"
 
 
@@ -60,7 +60,7 @@ def client_auth_header() -> APIClient:
     return_value=FAKE_SECRET,
 )
 def test_update_first_name_successfully(
-    jwt_secret_mock: MagicMock, client_auth_header: APIClient
+    token_secret_mock: MagicMock, client_auth_header: APIClient
 ):
     """
     Test that a user can successfully update their first name.
@@ -94,7 +94,7 @@ def test_update_first_name_successfully(
     return_value=FAKE_SECRET,
 )
 def test_update_last_name_successfully(
-    jwt_secret_mock: MagicMock, client_auth_header: APIClient
+    token_secret_mock: MagicMock, client_auth_header: APIClient
 ):
     """
     Test that a user can successfully update their last name.
@@ -128,7 +128,7 @@ def test_update_last_name_successfully(
     return_value=FAKE_SECRET,
 )
 def test_update_first_and_last_name_successfully(
-    jwt_secret_mock: MagicMock, client_auth_header: APIClient
+    token_secret_mock: MagicMock, client_auth_header: APIClient
 ):
     """
     Test that a user can successfully update both their first and last names.

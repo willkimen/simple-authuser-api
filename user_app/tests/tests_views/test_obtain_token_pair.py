@@ -15,8 +15,8 @@ from user_app.constants.path_for_mock import token_utils_module_path
 
 # ========== Objects and constants ============
 User = get_user_model()
-url: str = reverse("obtain_jwt_pair")
-JWT_SECRET_FOR_TESTS = "jwt_secret"
+url: str = reverse("obtain_token_pair")
+TOKEN_SECRET_FOR_TESTS = "token_secret"
 FAKE_NONEXISTENT_EMAIL = "nonexistent@email.com"
 FAKE_USER_DATA = {
     "first_name": "fake_first_name",
@@ -54,7 +54,7 @@ def user_with_activated_account() -> User:
 
 # =========== Tests ===================
 @pytest.mark.django_db
-def test_nonexistent_user_does_not_return_jwt_pair(
+def test_nonexistent_user_does_not_return_token_pair(
     client: APIClient, data_user_nonexistent: dict[str, str]
 ):
     """
@@ -76,7 +76,7 @@ def test_nonexistent_user_does_not_return_jwt_pair(
 
 
 @pytest.mark.django_db
-def test_user_with_not_activated_account_does_not_return_jwt_pair(
+def test_user_with_not_activated_account_does_not_return_token_pair(
     user_with_not_activated_account: User,
     client: APIClient,
 ):
@@ -110,9 +110,9 @@ def test_user_with_not_activated_account_does_not_return_jwt_pair(
 @pytest.mark.django_db
 @patch(
     f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=JWT_SECRET_FOR_TESTS,
+    return_value=TOKEN_SECRET_FOR_TESTS,
 )
-def test_returns_jwt_pair_successfully(
+def test_returns_token_pair_successfully(
     mock_get: MagicMock,
     user_with_activated_account: User,
     client: APIClient,

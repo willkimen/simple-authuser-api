@@ -177,6 +177,6 @@ class JWTBlackListException(JWTException):
             code (str): The error code representing this blacklist violation,
                         fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["code"]`.
         """
-        self.detail = token_exception_messages.JWT_IN_BLACKLIST["detail"]
-        self.code = token_exception_messages.JWT_IN_BLACKLIST["code"]
+        self.detail = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
+        self.code = token_exception_messages.TOKEN_IN_BLACKLIST["code"]
         super().__init__(self.detail, self.code)

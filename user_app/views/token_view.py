@@ -7,9 +7,9 @@ from user_app.authentication_classes import JWTAuthentication
 from user_app.constants.response_code_messages import (
     IS_NOT_ACCESS_OR_REFRESH_TOKEN,
     IS_NOT_REFRESH_TOKEN,
-    JWT_ACCESS_CREATED,
     LOGIN_SUCCESSFUL,
     LOGOUT_SUCCESSFUL,
+    TOKEN_ACCESS_CREATED,
     USER_ACCOUNT_NOT_ACTIVATED,
     USER_NOT_FOUND,
     USER_TOKEN_MISMATCH,
@@ -23,7 +23,7 @@ User = get_user_model()
 
 
 @api_view(["POST"])
-def obtain_jwt_pair(request):
+def obtain_token_pair(request):
     """
     Handles user login and returns JWT tokens upon successful authentication.
 
@@ -68,7 +68,7 @@ def obtain_jwt_pair(request):
 
 
 @api_view(["POST"])
-def refresh_jwt_access(request):
+def refresh_token_access(request):
     """
     Refreshes the JWT access token using a valid refresh token.
 
@@ -121,7 +121,7 @@ def refresh_jwt_access(request):
         )
 
     return Response(
-        merge_dict(JWT_ACCESS_CREATED, {"access": create_access_jwt(payload["uid"])}),
+        merge_dict(TOKEN_ACCESS_CREATED, {"access": create_access_jwt(payload["uid"])}),
         status=status.HTTP_201_CREATED,
     )
 

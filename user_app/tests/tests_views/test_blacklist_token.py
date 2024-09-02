@@ -19,7 +19,7 @@ from user_app.models import JWTBlackList
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("blacklist_token")
-FAKE_SECRET = "jwt_secret"
+FAKE_SECRET = "token_secret"
 FAKE_TYP = "access"
 FAKE_JTI = "fake_jti"
 FAKE_UID = 1
@@ -157,8 +157,8 @@ def test_token_already_in_blacklist(
     """
     Test that a JWT token already blacklisted returns the appropriate error message.
     """
-    expected_detail_message = token_exception_messages.JWT_IN_BLACKLIST["detail"]
-    expected_code = token_exception_messages.JWT_IN_BLACKLIST["code"]
+    expected_detail_message = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
+    expected_code = token_exception_messages.TOKEN_IN_BLACKLIST["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client_auth_header.post(

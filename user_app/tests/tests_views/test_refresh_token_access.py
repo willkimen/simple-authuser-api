@@ -1,7 +1,7 @@
 """
 This module contains tests for the JWT refresh functionality.
 
-It verifies the behavior of the JWT refresh endpoint (`refresh_jwt_access`). The endpoint expects a refresh token and returns a new access token if the provided refresh token is valid. It handles various scenarios including blacklisted tokens, non-existent users, and inactive users.
+It verifies the behavior of the JWT refresh endpoint (`refresh_token_access`). The endpoint expects a refresh token and returns a new access token if the provided refresh token is valid. It handles various scenarios including blacklisted tokens, non-existent users, and inactive users.
 
 """
 
@@ -21,8 +21,8 @@ from user_app.models import JWTBlackList
 
 # =========== Objects and constants ==============
 User = get_user_model()
-url: str = reverse("refresh_jwt_access")
-FAKE_SECRET = "jwt_secret"
+url: str = reverse("refresh_token_access")
+FAKE_SECRET = "token_secret"
 UID_NON_EXIST = 1
 INCORRECT_TYP = "access"
 FAKE_TYP = "refresh"
@@ -176,8 +176,8 @@ def test_blacklisted_refresh_token_not_generate_new_access_token(
         client (APIClient): The test client used to make HTTP requests.
         blacklisted_refresh_token (str): The refresh token that is blacklisted.
     """
-    expected_detail_message = token_exception_messages.JWT_IN_BLACKLIST["detail"]
-    expected_code = token_exception_messages.JWT_IN_BLACKLIST["code"]
+    expected_detail_message = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
+    expected_code = token_exception_messages.TOKEN_IN_BLACKLIST["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
@@ -294,8 +294,8 @@ def test_valid_refresh_token_creates_access_token(
         client (APIClient): The test client used to make HTTP requests.
         valid_refresh_token (str): The valid refresh token.
     """
-    expected_detail_message = response_code_messages.JWT_ACCESS_CREATED["detail"]
-    expected_code = response_code_messages.JWT_ACCESS_CREATED["code"]
+    expected_detail_message = response_code_messages.TOKEN_ACCESS_CREATED["detail"]
+    expected_code = response_code_messages.TOKEN_ACCESS_CREATED["code"]
     expected_status_code = status.HTTP_201_CREATED
     expected_typ_payload = "access"
     expected_uid_payload = FAKE_UID

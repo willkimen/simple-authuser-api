@@ -69,7 +69,7 @@ USER_ACCOUNT_NOT_ACTIVATED = {
 
 LOGOUT_SUCCESSFUL = {
     "code": "LOGOUT_SUCCESSFUL",
-    "detail": "User was successfully logged out and jwt was made invalid.",
+    "detail": "User was successfully logged out and token was made invalid.",
 }
 
 
@@ -78,8 +78,8 @@ LOGIN_SUCCESSFUL = {
     "detail": "User was successfully logged in. An access and refresh was returned.",
 }
 
-JWT_ACCESS_CREATED = {
-    "code": "JWT_ACCESS_CREATED",
+TOKEN_ACCESS_CREATED = {
+    "code": "TOKEN_ACCESS_CREATED",
     "detail": "Access token was created successfully.",
 }
 
