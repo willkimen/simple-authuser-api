@@ -8,6 +8,7 @@ from .views import (
     register,
     send_email_to_activate_account,
     update,
+    user_detail,
 )
 
 urlpatterns = [
@@ -16,6 +17,7 @@ urlpatterns = [
     path("user/register/", register, name="register"),
     # Endpoint to update an existing user. Accepts PATCH requests to modify user data.
     path("user/update/", update, name="update"),
+    path("user/detail/", user_detail, name="detail"),
     # Endpoint to activate a user's account with a confirmation code sent via email. Accepts a POST request.
     path(
         "user/activate_account/",

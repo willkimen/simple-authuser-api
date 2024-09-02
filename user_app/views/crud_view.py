@@ -115,3 +115,16 @@ def update(request):
         merge_dict(USER_UPDATED_SUCCESSFULLY, {"user": response_serializer.data}),
         status=status.HTTP_200_OK,
     )
+
+
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+def user_detail(request):
+    """
+    Retrieves the details of the authenticated user.
+
+    This endpoint allows an authenticated user to retrieve their own details. It uses the
+    `UserResponseSerializer` to serialize the user data and returns it in the response.
+    """
+    response_serializer = UserResponseSerializer(request.user)
+    return Response({"user": response_serializer.data}, status=status.HTTP_200_OK)
