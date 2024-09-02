@@ -27,6 +27,11 @@ USER_UPDATED_SUCCESSFULLY = {
     "detail": "User updated successfully.",
 }
 
+USER_DELETED_SUCCESSFULLY = {
+    "code": "USER_DELETED_SUCCESSFULLY",
+    "detail": "User deleted successfully.",
+}
+
 ACCOUNT_ACTIVATION_CODE_NOT_FOUND = {
     "code": "ACCOUNT_ACTIVATION_CODE_NOT_FOUND",
     "detail": "The activation code received was not found.",

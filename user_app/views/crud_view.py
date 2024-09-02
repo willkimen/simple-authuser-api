@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants.response_code_messages import (
     ERROR_SENDING_EMAIL,
+    USER_DELETED_SUCCESSFULLY,
     USER_REGISTERED_SUCCESSFULLY,
     USER_UPDATED_SUCCESSFULLY,
     VALIDATION_ERRORS,
@@ -128,3 +129,14 @@ def user_detail(request):
     """
     response_serializer = UserResponseSerializer(request.user)
     return Response({"user": response_serializer.data}, status=status.HTTP_200_OK)
+
+
+@api_view(["DELETE"])
+@authentication_classes([JWTAuthentication])
+def delete(request):
+    """
+    Endpoint to delete the currently authenticated user.
+    This view handles the deletion of the user associated with the provided JWT token.
+    """
+    request.user.delete()
+    return Response(USER_DELETED_SUCCESSFULLY, status=status.HTTP_200_OK)

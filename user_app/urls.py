@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     activate_account,
     blacklist_token,
+    delete,
     obtain_token_pair,
     refresh_token_access,
     register,
@@ -13,11 +14,10 @@ from .views import (
 
 urlpatterns = [
     # ============= User Endpoints ====================
-    # Endpoint to register a new user. Accepts a POST request with user data.
     path("user/register/", register, name="register"),
-    # Endpoint to update an existing user. Accepts PATCH requests to modify user data.
     path("user/update/", update, name="update"),
     path("user/detail/", user_detail, name="detail"),
+    path("user/delete/", delete, name="delete"),
     # Endpoint to activate a user's account with a confirmation code sent via email. Accepts a POST request.
     path(
         "user/activate_account/",
