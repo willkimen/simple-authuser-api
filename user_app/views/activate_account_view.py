@@ -1,5 +1,5 @@
 import smtplib
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils.timezone import make_aware
@@ -7,20 +7,18 @@ from rest_framework import status
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
 
-from user_app.constants import confirmation_type_code
 from user_app.constants.response_code_messages import (
     ACCOUNT_ACTIVATION_CODE_NOT_FOUND,
     CODE_FIELD_IS_REQUIRED,
     CONFIRMATION_CODE_EXPIRED,
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
-    INVALID_CONFIRMATION_CODE_TYPE,
     USER_ACTIVATED,
     USER_HAS_ALREADY_ACTIVATED,
     USER_NOT_FOUND,
     VALIDATION_ERRORS,
 )
-from user_app.models import ConfirmationCode
+from user_app.models import AccountActivationCodeModel
 from user_app.serializers import EmailSerializer
 from user_app.throttlings import (
     AccountActivationRequestRateLimit,
@@ -50,7 +48,6 @@ def activate_account(request):
 
     Response Codes:
         - 200 OK: The user account was successfully activated.
-        - 400 Bad Request: The provided code field is missing or the code type is invalid.
         - 404 Not Found: The provided activation code does not exist in the database.
         - 410 Gone: The provided activation code has expired.
 
@@ -66,41 +63,29 @@ def activate_account(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Convert to string if the type is different
-    if not isinstance(code, str):
-        code = str(code)
-
     # Checks if code exists in the data base
     try:
-        confirmation_code = ConfirmationCode.objects.get(code=code)
-    except ConfirmationCode.DoesNotExist:
+        account_activation_code = AccountActivationCodeModel.objects.get(code=code)
+    except AccountActivationCodeModel.DoesNotExist:
         return Response(
             ACCOUNT_ACTIVATION_CODE_NOT_FOUND,
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # Checks if type code is the correct
-    if confirmation_code.type_code != confirmation_type_code.ACCOUNT_ACTIVATION:
-        return Response(
-            INVALID_CONFIRMATION_CODE_TYPE,
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
     # Checks if the code is expired
-    expired = timedelta(days=1)
     now = make_aware(datetime.now())
-    if (now - confirmation_code.created_at) >= expired:
-        confirmation_code.delete()
+    if account_activation_code.expires_at < now:
+        account_activation_code.delete()
         return Response(
             CONFIRMATION_CODE_EXPIRED,
             status=status.HTTP_410_GONE,
         )
 
     # Activate user and save in the database
-    user = User.objects.get(email=confirmation_code.user_email)
+    user = User.objects.get(email=account_activation_code.user_email)
     user.is_active = True
     user.save()
-    confirmation_code.delete()
+    account_activation_code.delete()
     return Response(USER_ACTIVATED, status=status.HTTP_200_OK)
 
 

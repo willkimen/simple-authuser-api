@@ -2,21 +2,21 @@ import random
 import string
 
 
-def generate_random_code(length=8):
+def generate_random_code(length=8, prefix=""):
     """
-    Generates a random alphanumeric code.
+    Generates a random alphanumeric code with an optional prefix.
 
     This function creates a random string of specified length consisting of
     uppercase and lowercase letters, and digits. The code is used for various
-    purposes such as activating accounts, changing passwords, resetting passwords,
-    and changing emails.
+    purposes such as activating accounts.
 
     Args:
-        length (int): The length of the generated code. Defaults to 8.
+        length (int): The length of the generated random part of the code. Defaults to 8.
+        prefix (str): An optional string to prepend to the generated code.
 
     Returns:
-        str: The generated random alphanumeric code.
+        str: The generated random alphanumeric code with the optional prefix.
     """
     characters = string.ascii_letters + string.digits
     random_code = "".join(random.choice(characters) for _ in range(length))
-    return random_code
+    return f"{prefix}{random_code}"

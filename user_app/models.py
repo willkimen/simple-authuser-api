@@ -1,11 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
-from .constants import confirmation_type_code
+from user_app.utils.random_code import generate_random_code
 
 
 class UserProfileManager(BaseUserManager):
@@ -128,52 +129,52 @@ class UserProfile(AbstractUser):
         verbose_name_plural = "Users Profile"
 
 
-class ConfirmationCode(models.Model):
+class AccountActivationCodeModel(models.Model):
     """
-    Represents a confirmation code used for various user actions, such as account activation, email changes,
-    password changes, and password resets.
+    Model for storing account activation codes.
 
-    Attributes:
-        TYPE_CODE_OPTIONS (list): List of tuples specifying the types of confirmation codes available.
+    This model represents an account activation code used for verifying user accounts. It stores the activation code, the associated user's email, and timestamps for creation and expiration.
 
-        user_email (EmailField): The email address associated with this confirmation code. It is not unique,
-                                  meaning multiple codes can be associated with the same email address.
+    Fields:
+    - `user_email` (EmailField): The email address of the user associated with the activation code. This field is required and is not unique.
+    - `code` (CharField): The activation code itself. This field is required, must be unique, and has a maximum length of 16 characters.
+    - `created_at` (DateTimeField): The timestamp when the activation code was created. It is automatically set to the current time if not provided.
+    - `expires_at` (DateTimeField): The timestamp when the activation code expires. It is automatically set to 24 hours after `created_at` if not provided.
 
-        code (CharField): The unique confirmation code itself. It must be unique across all records.
+    Methods:
+    - `save`: Overrides the default save method to set default values for `created_at`, `expires_at`, and `code` if they are not provided. The `code` is generated using a function that creates a random code with a prefix "ACT-".
 
-        created_at (DateTimeField): The timestamp when the confirmation code was created. This field is automatically
-                                    set to the current date and time when the record is created.
-
-        type_code (CharField): The type of confirmation code, chosen from `TYPE_CODE_OPTIONS`. This indicates
-                               the purpose of the confirmation code, such as account activation or password reset.
+    Meta:
+    - `db_table`: Specifies the name of the database table as "account_activation_code".
+    - `verbose_name`: Sets the human-readable name of the model as "account activation code".
     """
-
-    TYPE_CODE_OPTIONS = [
-        (
-            confirmation_type_code.ACCOUNT_ACTIVATION,
-            "Registration Email Confirmation to account activation",
-        ),
-        (confirmation_type_code.EMAIL_CHANGE, "Email Change Confirmation"),
-        (
-            confirmation_type_code.PASSWORD_CHANGE,
-            "Password Change Confirmation",
-        ),
-        (
-            confirmation_type_code.PASSWORD_RESET,
-            "Password Reset Confirmation",
-        ),
-    ]
 
     user_email = models.EmailField(unique=False, null=False, blank=False)
-    code = models.CharField(max_length=32, unique=True, null=False, blank=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    type_code = models.CharField(
-        max_length=64, unique=False, null=False, blank=False, choices=TYPE_CODE_OPTIONS
+    code = models.CharField(
+        max_length=16,
+        unique=True,
+        null=False,
+        blank=False,
     )
+    created_at = models.DateTimeField()
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            if self.created_at is None:
+                self.created_at = timezone.now()
+
+            if self.expires_at is None:
+                self.expires_at = self.created_at + timedelta(hours=24)
+
+            if not self.code:
+                self.code = generate_random_code(prefix="ACT-")
+
+        super().save(*args, **kwargs)
 
     class Meta:
-        db_table = "confirmation_code"
-        verbose_name = "Confirmation Code"
+        db_table = "account_activation_code"
+        verbose_name = "account activation code"
 
 
 class JWTBlackList(models.Model):

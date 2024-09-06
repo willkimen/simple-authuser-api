@@ -1,22 +1,21 @@
 """
-This module tests the activate_account() view, which aims to receive a confirmation 
+This module tests the activate_account() view, which aims to receive a activation 
 code from the user via a POST request and activate their account.
 For the user to have their account activated by the code, this code must exist in the database and be linked to the user's email.
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.utils.timezone import make_aware
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import confirmation_type_code, response_code_messages
+from user_app.constants import response_code_messages
 from user_app.constants.path_for_mock import activate_account_view_path
-from user_app.models import ConfirmationCode
+from user_app.models import AccountActivationCodeModel
 
 # ========== Objects and constants ============
 User = get_user_model()
@@ -42,64 +41,45 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def incorrect_type_code() -> str:
-    """
-    This fixture creates a ConfirmationCode instance with a type code that does not match
-     the type expected for account activation.
-    """
-
-    return ConfirmationCode.objects.create(
-        user_email=FAKE_USER_DATA["email"],
-        code=FAKE_CODE,
-        type_code=confirmation_type_code.PASSWORD_RESET,  # Set a different type than the account confirmation type
-    ).code
-
-
-@pytest.fixture
 def expired_code() -> str:
     """
-    Creates a ConfirmationCode instance with an expired date (24h + 1 minute ago compared to now)
+    Creates a AccountActivationCodeModel instance with an expired date (24h + 1 minute ago compared to now)
     """
 
-    # Create a confirmation_code instance
-    confirmation_code = ConfirmationCode.objects.create(
+    account_activation_code = AccountActivationCodeModel.objects.create(
         user_email=FAKE_USER_DATA["email"],
         code=FAKE_CODE,
-        type_code=confirmation_type_code.ACCOUNT_ACTIVATION,
     )
 
     # Create an expired date
-    now = make_aware(datetime.now())
-    expired_date = now - timedelta(hours=24, minutes=1)
+    expired_date = account_activation_code.created_at - timedelta(minutes=1)
 
     # Changes the code creation date to an expired date and save
-    confirmation_code.created_at = expired_date
-    confirmation_code.save()
+    account_activation_code.expires_at = expired_date
+    account_activation_code.save()
 
-    return confirmation_code.code
+    return account_activation_code.code
 
 
 @pytest.fixture
-def user_with_confirmation_code() -> dict:
+def user_with_activation_code() -> dict:
     """
-    This fixture creates a User instance and a related ConfirmationCode instance
+    This fixture creates a User instance and a related AccountActivationCodeModel instance
     for account activation. It returns a dictionary containing the user's ID and
-    the confirmation code.
+    the activation code.
 
     Returns:
-        dict: A dictionary with the user's ID and the confirmation code."""
+        dict: A dictionary with the user's ID and the activation code."""
     # Creates user and persisted in database
     user = User.objects.create_user(**FAKE_USER_DATA)
 
-    # Creates confirmation code and persisted in database.
-    # User email is used as argument for user_email parameter.
-    confirmation_code = ConfirmationCode.objects.create(
-        user_email=user.email,
-        type_code=confirmation_type_code.ACCOUNT_ACTIVATION,
-        code=FAKE_CODE,
-    )
-
-    return {"user_id": user.id, "code": confirmation_code.code}
+    return {
+        "user_id": user.id,
+        "code": AccountActivationCodeModel.objects.create(
+            user_email=user.email,
+            code=FAKE_CODE,
+        ).code,
+    }
 
 
 # ============ Tests ================
@@ -109,14 +89,14 @@ def user_with_confirmation_code() -> dict:
     return_value=True,
 )
 def test_successful_account_activation(
-    mock_allow_request: MagicMock, user_with_confirmation_code: dict, client: APIClient
+    mock_allow_request: MagicMock, user_with_activation_code: dict, client: APIClient
 ):
     """
     Test if the account activation request successfully activates the account.
 
     Args:
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
-        user_with_confirmation_code (dict): A dictionary with the user's ID and the confirmation code.
+        user_with_activation_code (dict): A dictionary with the user's ID and the activation code.
         client (APIClient): The API client used to make requests.
     """
     expected_detail_message = response_code_messages.USER_ACTIVATED["detail"]
@@ -124,7 +104,7 @@ def test_successful_account_activation(
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.post(
-        url, data={"code": user_with_confirmation_code["code"]}, format="json"
+        url, data={"code": user_with_activation_code["code"]}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code
@@ -132,7 +112,7 @@ def test_successful_account_activation(
     assert expected_code == actual_response.data["code"]
 
     # Verify that the user's account is activated
-    assert User.objects.get(id=user_with_confirmation_code["user_id"]).is_active == True
+    assert User.objects.get(id=user_with_activation_code["user_id"]).is_active == True
 
 
 @pytest.mark.django_db
@@ -141,22 +121,22 @@ def test_successful_account_activation(
     return_value=True,
 )
 def test_successfully_activated_account_removes_the_code_in_the_database(
-    mock_allow_request: MagicMock, user_with_confirmation_code: dict, client: APIClient
+    mock_allow_request: MagicMock, user_with_activation_code: dict, client: APIClient
 ):
     """
-    Test if the confirmation code is removed from the database after successful activation.
+    Test if the activation code is removed from the database after successful activation.
 
     Args:
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
-        user_with_confirmation_code (dict): A dictionary with the user's ID and the confirmation code.
+        user_with_activation_code (dict): A dictionary with the user's ID and the activation code.
         client (APIClient): The API client used to make requests.
     """
 
-    client.post(url, data={"code": user_with_confirmation_code["code"]}, format="json")
+    client.post(url, data={"code": user_with_activation_code["code"]}, format="json")
 
-    # Assert that the confirmation code no longer exists in the database
-    assert not ConfirmationCode.objects.filter(
-        code=user_with_confirmation_code["code"]
+    # Assert that the activation code no longer exists in the database
+    assert not AccountActivationCodeModel.objects.filter(
+        code=user_with_activation_code["code"]
     ).exists()
 
 
@@ -175,7 +155,7 @@ def test_not_activate_account_when_expired_code(
 
     Args:
         mock_throttle_classes (MagicMock): Mocked throttle classes to bypass rate limiting.
-        expired_code (str): The expired confirmation code.
+        expired_code (str): The expired activation code.
         client (APIClient): The API client used to make requests.
 
     This test checks that the server returns a 410 Gone status code and an appropriate
@@ -207,16 +187,16 @@ def test_expired_code_is_removed_from_the_database(
 
     Args:
         mock_throttle_classes (MagicMock): Mocked throttle classes to bypass rate limiting.
-        expired_code (str): The expired confirmation code.
+        expired_code (str): The expired activation code.
         client (APIClient): The API client used to make requests.
 
-    This test checks that an expired confirmation code is deleted from the database
+    This test checks that an expired activation code is deleted from the database
     after an account activation attempt with the expired code.
     """
     client.post(url, data={"code": expired_code}, format="json")
 
     # Assert that the expired code no longer exists in the database
-    assert not ConfirmationCode.objects.filter(code=expired_code).exists()
+    assert not AccountActivationCodeModel.objects.filter(code=expired_code).exists()
 
 
 @pytest.mark.django_db
@@ -279,42 +259,6 @@ def test_code_field_is_required(
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.post(url, data={"wrong_field_name": code}, format="json")
-
-    assert expected_status_code == actual_response.status_code
-    assert expected_detail_message == actual_response.data["detail"]
-    assert expected_code == actual_response.data["code"]
-
-
-@pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
-def test_not_activate_account_when_code_type_is_incorrect(
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    incorrect_type_code: str,
-):
-    """
-    Test if the account activation request returns 400 when the type of the provided code is incorrect.
-
-    Args:
-        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass rate limiting.
-        client (APIClient): The API client used to make requests.
-        incorrect_type_code (str): The confirmation code with an incorrect type.
-
-    This test checks that the server returns a 400 Bad Request status code and an appropriate
-    error message when the type of the provided activation code is incorrect.
-    """
-    expected_detail_message = response_code_messages.INVALID_CONFIRMATION_CODE_TYPE[
-        "detail"
-    ]
-    expected_code = response_code_messages.INVALID_CONFIRMATION_CODE_TYPE["code"]
-    expected_status_code = status.HTTP_400_BAD_REQUEST
-
-    actual_response = client.post(
-        url, data={"code": incorrect_type_code}, format="json"
-    )
 
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
