@@ -42,7 +42,7 @@ class UserRequestSerializer(serializers.ModelSerializer):
             validated_data (dict): Validated data of the new user.
 
         Returns:
-            UserProfile: The created user.
+            UserProfileModel: The created user.
         """
         # Remove the confirmation_password field from the validated data
         validated_data.pop("confirmation_password", None)

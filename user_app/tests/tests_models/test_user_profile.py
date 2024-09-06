@@ -5,7 +5,7 @@ This module tests the creation and persistence in the database of a user profile
 import pytest
 from django.db import IntegrityError
 
-from user_app.models import UserProfile
+from user_app.models import UserProfileModel
 
 # ========== Constants ==================
 FAKE_EMAIL_UPPERCASE_DOMAIN = "fake_email@DOMAINUPPERCASE.com"
@@ -33,7 +33,7 @@ def test_creates_user_instance(user_data):
     Tests if a user instance is correctly created with the provided data.
     """
 
-    actual_user = UserProfile.objects.create_user(**user_data)
+    actual_user = UserProfileModel.objects.create_user(**user_data)
     assert actual_user.email == user_data["email"]
     assert actual_user.check_password(user_data["password"])
     assert actual_user.first_name == user_data["first_name"]
@@ -51,7 +51,7 @@ def test_does_not_create_user_without_email(user_data):
 
     del user_data["email"]
     with pytest.raises(TypeError):
-        UserProfile.objects.create_user(**user_data)
+        UserProfileModel.objects.create_user(**user_data)
 
 
 @pytest.mark.django_db
@@ -61,8 +61,8 @@ def test_does_not_create_user_with_duplicate_email(user_data):
     """
 
     with pytest.raises(IntegrityError):
-        UserProfile.objects.create_user(**user_data)
-        UserProfile.objects.create_user(**user_data)
+        UserProfileModel.objects.create_user(**user_data)
+        UserProfileModel.objects.create_user(**user_data)
 
 
 @pytest.mark.django_db
@@ -73,7 +73,7 @@ def test_does_not_create_user_without_password(user_data):
 
     del user_data["password"]
     with pytest.raises(TypeError):
-        UserProfile.objects.create_user(**user_data)
+        UserProfileModel.objects.create_user(**user_data)
 
 
 @pytest.mark.django_db
@@ -82,7 +82,7 @@ def test_creates_superuser(user_data):
     Tests if a superuser instance is correctly created with the provided data.
     """
 
-    actual_superuser = UserProfile.objects.create_superuser(**user_data)
+    actual_superuser = UserProfileModel.objects.create_superuser(**user_data)
     assert actual_superuser.is_staff
     assert actual_superuser.is_superuser
     assert actual_superuser.is_active
@@ -95,4 +95,4 @@ def test_normalizes_email_domain(user_data):
     """
 
     user_data["email"] = FAKE_EMAIL_UPPERCASE_DOMAIN
-    assert UserProfile.objects.create_user(**user_data).email.islower()
+    assert UserProfileModel.objects.create_user(**user_data).email.islower()

@@ -11,7 +11,7 @@ from user_app.utils.random_code import generate_random_code
 
 class UserProfileManager(BaseUserManager):
     """
-    Custom manager for the UserProfile model to handle user creation and management.
+    Custom manager for the UserProfileModel to handle user creation and management.
 
     This manager provides methods for creating regular users and superusers with proper
     validation and configuration.
@@ -38,7 +38,7 @@ class UserProfileManager(BaseUserManager):
             ValueError: If the email or password is not provided.
 
         Returns:
-            UserProfile: The created user instance.
+            UserProfileModel: The created user instance.
         """
         if not email:
             raise ValueError("The email address must be entered")
@@ -68,7 +68,7 @@ class UserProfileManager(BaseUserManager):
             ValueError: If the is_staff or is_superuser fields are not set to True.
 
         Returns:
-            UserProfile: The created superuser instance.
+            UserProfileModel: The created superuser instance.
         """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
@@ -86,7 +86,7 @@ class UserProfileManager(BaseUserManager):
         return user
 
 
-class UserProfile(AbstractUser):
+class UserProfileModel(AbstractUser):
     """
     Extends the built-in AbstractUser model to use 'email' instead of 'username' for authentication.
 
