@@ -177,7 +177,7 @@ class AccountActivationCodeModel(models.Model):
         verbose_name = "account activation code"
 
 
-class JWTBlackList(models.Model):
+class JWTBlacklistModel(models.Model):
     """
     Represents a model for storing blacklisted JWTs (JSON Web Tokens). This is used to keep track of tokens
     that should no longer be accepted by the system.

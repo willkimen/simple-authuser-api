@@ -19,7 +19,7 @@ from user_app.exceptions import (
     InvalidSignatureException,
     JWTBlackListException,
 )
-from user_app.models import JWTBlackList
+from user_app.models import JWTBlacklistModel
 from user_app.utils.token_utils import check_token
 
 # ========== Objects and constants ============
@@ -214,7 +214,7 @@ def test_token_in_black_list(token_secret_mock: MagicMock, token: str):
     expected_dict_with_code_and_detail = token_exception_messages.TOKEN_IN_BLACKLIST
     payload: dict = jwt.decode(token, FAKE_SECRET, algorithms="HS256")
 
-    JWTBlackList.objects.create(
+    JWTBlacklistModel.objects.create(
         jti=payload["jti"],
         exp=payload["exp"],
         typ=payload["typ"],
