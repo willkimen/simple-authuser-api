@@ -129,27 +129,25 @@ class UserProfileModel(AbstractUser):
         verbose_name_plural = "Users Profile"
 
 
-class AccountActivationCodeModel(models.Model):
+class ConfirmationCodeBaseModel(models.Model):
     """
-    Model for storing account activation codes.
+    Abstract base model for storing confirmation codes.
 
-    This model represents an account activation code used for verifying user accounts. It stores the activation code, the associated user's email, and timestamps for creation and expiration.
+    This model is used as a base class for specific confirmation code models, providing shared fields and logic for creating and managing confirmation codes. It includes fields for storing the code, creation time, and expiration time.
 
     Fields:
-    - `user_email` (EmailField): The email address of the user associated with the activation code. This field is required and is not unique.
-    - `code` (CharField): The activation code itself. This field is required, must be unique, and has a maximum length of 16 characters.
-    - `created_at` (DateTimeField): The timestamp when the activation code was created. It is automatically set to the current time if not provided.
-    - `expires_at` (DateTimeField): The timestamp when the activation code expires. It is automatically set to 24 hours after `created_at` if not provided.
+    - `code` (CharField): The confirmation code. This field is required, must be unique, and has a maximum length of 16 characters.
+    - `created_at` (DateTimeField): The timestamp when the code was created. It is automatically set to the current time if not provided.
+    - `expires_at` (DateTimeField): The timestamp when the code expires. It is automatically set to 24 hours after `created_at` if not provided.
 
     Methods:
-    - `save`: Overrides the default save method to set default values for `created_at`, `expires_at`, and `code` if they are not provided. The `code` is generated using a function that creates a random code with a prefix "ACT-".
+    - `save`: Overrides the default save method to set default values for `created_at`, `expires_at`, and `code` if they are not provided. The code is generated using a function that allows for a customizable prefix defined in the subclass.
 
-    Meta:
-    - `db_table`: Specifies the name of the database table as "account_activation_code".
-    - `verbose_name`: Sets the human-readable name of the model as "account activation code".
+    Notes:
+    - This class is meant to be subclassed and should not be used directly.
     """
 
-    user_email = models.EmailField(unique=False, null=False, blank=False)
+    prefix = ""
     code = models.CharField(
         max_length=16,
         unique=True,
@@ -168,13 +166,66 @@ class AccountActivationCodeModel(models.Model):
                 self.expires_at = self.created_at + timedelta(hours=24)
 
             if not self.code:
-                self.code = generate_random_code(prefix="ACT-")
+                self.code = generate_random_code(prefix=self.prefix)
 
         super().save(*args, **kwargs)
 
     class Meta:
+        abstract = True
+
+
+class AccountActivationCodeModel(ConfirmationCodeBaseModel):
+    """
+    Model for storing account activation codes.
+
+    This model is used to store activation codes for verifying user accounts. It extends the `ConfirmationCodeBaseModel` and includes additional fields specific to account activation.
+
+    Fields:
+    - `user_email` (EmailField): The email address of the user associated with the activation code. This field is required.
+
+    Inherited Fields:
+    - `code` (CharField): The activation code itself. Must be unique and is automatically generated if not provided.
+    - `created_at` (DateTimeField): The timestamp when the activation code was created. Automatically set if not provided.
+    - `expires_at` (DateTimeField): The timestamp when the activation code expires. Automatically set to 24 hours after creation if not provided.
+
+    Methods:
+    - `save`: Overrides the base `save` method to provide a default prefix "ACT-" for activation codes.
+    """
+
+    prefix = "ACT-"
+    user_email = models.EmailField(unique=False, null=False, blank=False)
+
+    class Meta:
         db_table = "account_activation_code"
         verbose_name = "account activation code"
+
+
+class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
+    """
+    Model for storing email change confirmation codes.
+
+    This model stores codes used for changing a user's email address. It extends the `ConfirmationCodeBaseModel` and includes additional fields for the old and new email addresses.
+
+    Fields:
+    - `old_email` (EmailField): The user's current email address. This field is required.
+    - `new_email` (EmailField): The user's new email address. This field is required.
+
+    Inherited Fields:
+    - `code` (CharField): The confirmation code. Must be unique and is automatically generated if not provided.
+    - `created_at` (DateTimeField): The timestamp when the confirmation code was created. Automatically set if not provided.
+    - `expires_at` (DateTimeField): The timestamp when the confirmation code expires. Automatically set to 24 hours after creation if not provided.
+
+    Methods:
+    - `save`: Overrides the base `save` method to provide a default prefix "CHE-" for email change codes.
+    """
+
+    prefix = "CHE-"
+    old_email = models.EmailField(unique=False, null=False, blank=False)
+    new_email = models.EmailField(unique=False, null=False, blank=False)
+
+    class Meta:
+        db_table = "change_email_code"
+        verbose_name = "change email code"
 
 
 class JWTBlacklistModel(models.Model):
