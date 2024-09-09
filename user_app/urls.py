@@ -7,7 +7,7 @@ from .views import (
     obtain_token_pair,
     refresh_token_access,
     register,
-    send_email_to_activate_account,
+    send_code_to_activate_account,
     update,
     user_detail,
 )
@@ -20,15 +20,15 @@ urlpatterns = [
     path("user/delete/", delete, name="delete"),
     # Endpoint to activate a user's account with a confirmation code sent via email. Accepts a POST request.
     path(
-        "user/activate_account/",
+        "user/account/activate/",
         activate_account,
         name="activate_account",
     ),
     # Endpoint to send an activation email to the user. Accepts a POST request.
     path(
-        "user/email/send_email_to_activate_account/",
-        send_email_to_activate_account,
-        name="send_email_to_activate_account",
+        "user/email/send_code/activate_account/",
+        send_code_to_activate_account,
+        name="send_code_to_activate_account",
     ),
     # =============== JWT Endpoints =================
     # Endpoint to obtain a JWT pair (access and refresh tokens) after successful login.

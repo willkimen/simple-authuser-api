@@ -49,14 +49,14 @@ class SendEmailActivateAccountRequestRateLimit(SimpleRateThrottle):
     abuse of the activation system.
 
     Attributes:
-        scope (str): Defines the rate limit scope as "send_email_to_activate_account".
+        scope (str): Defines the rate limit scope as "send_code_to_activate_account".
 
     Methods:
         get_cache_key(request, view): Generates a unique cache key for the request
                                       based on the scope and client identification.
     """
 
-    scope = "send_email_to_activate_account"
+    scope = "send_code_to_activate_account"
 
     def get_cache_key(self, request, view) -> str | None:
         """

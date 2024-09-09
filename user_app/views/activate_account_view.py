@@ -91,7 +91,7 @@ def activate_account(request):
 
 @api_view(["POST"])
 @throttle_classes([SendEmailActivateAccountRequestRateLimit])
-def send_email_to_activate_account(request):
+def send_code_to_activate_account(request):
     """
     Sends an activation email to the user if their account is not already activated.
 

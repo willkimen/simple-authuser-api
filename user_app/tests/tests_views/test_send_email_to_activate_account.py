@@ -1,5 +1,5 @@
 """
-Test the send_email_to_activate_account() view, which expects a user's email in a POST request and 
+Test the send_code_to_activate_account() view, which expects a user's email in a POST request and 
 sends a confirmation code to the user's email address.
 """
 
@@ -17,7 +17,7 @@ from user_app.constants.path_for_mock import activate_account_view_path
 
 # ========== Objects and constants ============
 User = get_user_model()
-url: str = reverse("send_email_to_activate_account")
+url: str = reverse("send_code_to_activate_account")
 FAKE_USER_DATA = {
     "first_name": "fake_first_name",
     "last_name": "fake_last_name",
