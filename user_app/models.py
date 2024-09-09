@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 
+from user_app.constants import prefixes
 from user_app.utils.random_code import generate_random_code
 
 
@@ -192,7 +193,7 @@ class AccountActivationCodeModel(ConfirmationCodeBaseModel):
     - `save`: Overrides the base `save` method to provide a default prefix "ACT-" for activation codes.
     """
 
-    prefix = "ACT-"
+    prefix = prefixes.ACTIVATE_ACCOUNT_PREFIX
     user_email = models.EmailField(unique=False, null=False, blank=False)
 
     class Meta:
@@ -219,7 +220,7 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
     - `save`: Overrides the base `save` method to provide a default prefix "CHE-" for email change codes.
     """
 
-    prefix = "CHE-"
+    prefix = prefixes.CHANGE_EMAIL_PREFIX
     old_email = models.EmailField(unique=False, null=False, blank=False)
     new_email = models.EmailField(unique=False, null=False, blank=False)
 
