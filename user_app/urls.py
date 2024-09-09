@@ -8,6 +8,7 @@ from .views import (
     refresh_token_access,
     register,
     send_code_to_activate_account,
+    send_code_to_email_change,
     update,
     user_detail,
 )
@@ -29,6 +30,11 @@ urlpatterns = [
         "user/email/send_code/activate_account/",
         send_code_to_activate_account,
         name="send_code_to_activate_account",
+    ),
+    path(
+        "user/email/send_code/change_email/",
+        send_code_to_email_change,
+        name="send_code_to_email_change",
     ),
     # =============== JWT Endpoints =================
     # Endpoint to obtain a JWT pair (access and refresh tokens) after successful login.

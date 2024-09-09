@@ -22,6 +22,16 @@ USER_NOT_FOUND = {
     "detail": "User not found in our database. Please check user data.",
 }
 
+EMAIL_ALREADY_EXISTS = {
+    "code": "EMAIL_ALREADY_EXISTS",
+    "detail": "A user with this email address already exists.",
+}
+
+EMAIL_ALREADY_IN_USE = {
+    "code": "EMAIL_ALREADY_IN_USE",
+    "detail": "This is already your current email address.",
+}
+
 USER_UPDATED_SUCCESSFULLY = {
     "code": "USER_UPDATED_SUCCESSFULLY",
     "detail": "User updated successfully.",
