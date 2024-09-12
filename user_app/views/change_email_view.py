@@ -2,7 +2,7 @@ import smtplib
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.decorators import api_view, authentication_classes, throttle_classes
+from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
 
 from user_app.authentication_classes import JWTAuthentication
@@ -11,7 +11,10 @@ from user_app.constants.response_code_messages import (
     EMAIL_ALREADY_IN_USE,
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
+    VALIDATION_ERRORS,
 )
+from user_app.models import ChangeEmailCodeModel
+from user_app.serializers import EmailSerializer
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.email_service import send_change_email_code_by_email
 
@@ -32,7 +35,7 @@ def send_code_to_email_change(request):
         request (HttpRequest): The request object containing the user's authentication and the new email address.
 
     Request Data:
-        - `new_email` (str): The new email address to which the confirmation code will be sent.
+        - `email` (str): The new email address to which the confirmation code will be sent.
 
     Returns:
         Response:
@@ -41,7 +44,15 @@ def send_code_to_email_change(request):
             - 500 Internal Server Error: If there's an error while sending the email.
             - 200 OK: If the confirmation code is successfully sent to the new email.
     """
-    new_email = request.data.get("new_email", None)
+
+    email_serializer = EmailSerializer(data=request.data)
+    if not email_serializer.is_valid():
+        return Response(
+            merge_dict(VALIDATION_ERRORS, {"field_errors": email_serializer.errors}),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    new_email = email_serializer.data["email"]
 
     if request.user.email == new_email:
         return Response(EMAIL_ALREADY_IN_USE, status=status.HTTP_400_BAD_REQUEST)

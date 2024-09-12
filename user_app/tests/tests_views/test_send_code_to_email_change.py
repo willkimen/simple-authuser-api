@@ -87,7 +87,7 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
     expected_detail_message = response_code_messages.EMAIL_ALREADY_IN_USE["detail"]
 
     actual_response = client_auth_header.post(
-        url, data={"new_email": LOGGED_USER_EMAIL}, format="json"
+        url, data={"email": LOGGED_USER_EMAIL}, format="json"
     )
 
     assert expected_code == actual_response.data["code"]
@@ -128,7 +128,7 @@ def test_do_not_send_code_if_email_already_exists_in_database(
     expected_detail_message = response_code_messages.EMAIL_ALREADY_EXISTS["detail"]
 
     actual_response = client_auth_header.post(
-        url, data={"new_email": EMAIL_ALREADY_EXISTS}, format="json"
+        url, data={"email": EMAIL_ALREADY_EXISTS}, format="json"
     )
 
     assert expected_code == actual_response.data["code"]
@@ -165,7 +165,7 @@ def test_do_not_send_code_if_email_sending_fails(
     expected_detail_message = response_code_messages.ERROR_SENDING_EMAIL["detail"]
 
     actual_response = client_auth_header.post(
-        url, data={"new_email": "fake_email@email.com"}, format="json"
+        url, data={"email": "fake_email@email.com"}, format="json"
     )
 
     assert expected_code == actual_response.data["code"]
@@ -200,7 +200,7 @@ def test_send_code_successfully(
     ]
 
     actual_response = client_auth_header.post(
-        url, data={"new_email": "fake_email@email.com"}, format="json"
+        url, data={"email": "fake_email@email.com"}, format="json"
     )
 
     assert expected_code == actual_response.data["code"]
