@@ -21,14 +21,13 @@ User = get_user_model()
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
 def send_code_to_email_change(request):
-    new_email = request.POST.get("new_email", None)
+    new_email = request.data.get("new_email", None)
 
     if request.user.email == new_email:
         return Response(EMAIL_ALREADY_IN_USE, status=status.HTTP_400_BAD_REQUEST)
 
     if User.objects.filter(email=new_email).exists():
         return Response(EMAIL_ALREADY_EXISTS, status=status.HTTP_409_CONFLICT)
-
     try:
         send_change_email_code_by_email(request.user.email, new_email)
     except smtplib.SMTPException as e:
