@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     activate_account,
     blacklist_token,
+    change_user_email,
     delete,
     obtain_token_pair,
     refresh_token_access,
@@ -19,13 +20,11 @@ urlpatterns = [
     path("user/update/", update, name="update"),
     path("user/detail/", user_detail, name="detail"),
     path("user/delete/", delete, name="delete"),
-    # Endpoint to activate a user's account with a confirmation code sent via email. Accepts a POST request.
     path(
-        "user/account/activate/",
+        "user/activate/",
         activate_account,
         name="activate_account",
     ),
-    # Endpoint to send an activation email to the user. Accepts a POST request.
     path(
         "user/email/send_code/activate_account/",
         send_code_to_activate_account,
@@ -35,6 +34,11 @@ urlpatterns = [
         "user/email/send_code/change_email/",
         send_code_to_email_change,
         name="send_code_to_email_change",
+    ),
+    path(
+        "user/change_email/",
+        change_user_email,
+        name="change_user_email",
     ),
     # =============== JWT Endpoints =================
     # Endpoint to obtain a JWT pair (access and refresh tokens) after successful login.

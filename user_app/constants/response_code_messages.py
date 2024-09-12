@@ -62,6 +62,11 @@ CONFIRMATION_CODE_EXPIRED = {
     "detail": "The confirmation code has expired.",
 }
 
+USER_EMAIL_CHANGED = {
+    "code": "USER_EMAIL_CHANGED",
+    "detail": "User email was changed successfully.",
+}
+
 USER_ACTIVATED = {
     "code": "USER_ACTIVATED",
     "detail": "User account successfully activated.",
