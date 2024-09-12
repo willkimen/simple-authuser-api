@@ -21,6 +21,26 @@ User = get_user_model()
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
 def send_code_to_email_change(request):
+    """
+    Handles the process of sending a confirmation code to the user's new email address for email change.
+
+    This view checks if the new email is already in use or exists in the system. If the email is valid and not already in use, it generates a confirmation code and sends it to the new email.
+
+    The function uses JWT authentication to verify the user's identity.
+
+    Args:
+        request (HttpRequest): The request object containing the user's authentication and the new email address.
+
+    Request Data:
+        - `new_email` (str): The new email address to which the confirmation code will be sent.
+
+    Returns:
+        Response:
+            - 400 Bad Request: If the new email is the same as the current user's email.
+            - 409 Conflict: If the new email already exists in the system.
+            - 500 Internal Server Error: If there's an error while sending the email.
+            - 200 OK: If the confirmation code is successfully sent to the new email.
+    """
     new_email = request.data.get("new_email", None)
 
     if request.user.email == new_email:

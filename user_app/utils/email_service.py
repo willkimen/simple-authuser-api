@@ -9,6 +9,25 @@ from user_app.utils.random_code import generate_random_code
 
 
 def __send_email_with_error_handling(email_message):
+    """
+    Sends an email and handles any SMTP-related errors.
+
+    This function attempts to send the provided email message and catches common
+    SMTP exceptions, raising specific errors with more detailed messages for each
+    type of failure.
+
+    Args:
+        email_message (EmailMessage): The email message to be sent.
+
+    Raises:
+        smtplib.SMTPConnectError: If there is a connection issue with the SMTP server.
+        smtplib.SMTPAuthenticationError: If the authentication credentials for the SMTP server are incorrect.
+        smtplib.SMTPSenderRefused: If the sender address is refused by the server.
+        smtplib.SMTPRecipientsRefused: If all recipient addresses are refused by the server.
+        smtplib.SMTPDataError: If the SMTP server rejects the message data.
+        smtplib.SMTPResponseException: For generic SMTP response errors.
+        smtplib.SMTPException: For any other SMTP-related errors.
+    """
     try:
         email_message.send()
     except smtplib.SMTPConnectError as e:
@@ -40,6 +59,20 @@ def __send_email_with_error_handling(email_message):
 
 
 def send_change_email_code_by_email(old_email: str, new_email: str):
+    """
+    Sends an email with a confirmation code to change the user's email address.
+
+    This function generates a random confirmation code for changing the user's email,
+    sends the code to the new email address, and stores the code along with the old and
+    new email addresses in the database.
+
+    Args:
+        old_email (str): The user's current email address.
+        new_email (str): The user's new email address.
+
+    Raises:
+        smtplib.SMTPException: If there is an error sending the email.
+    """
     email_subject = "Confirm your email address change"
 
     # Creates code and verify if already exists in database
@@ -75,9 +108,17 @@ def send_change_email_code_by_email(old_email: str, new_email: str):
 
 def send_activation_code_by_email(user_email: str) -> None:
     """
-    Sends an activation email to the user.
-    This function creates content with a random code to confirm the user's email address.
-    The code will be persisted in the database, along with the user's email.
+    Sends an account activation email to the user with a confirmation code.
+
+    This function generates a random code for account activation, sends it to the
+    user's email, and saves the code and email in the database. The activation code is
+    used for verifying the user's email during the registration process.
+
+    Args:
+        user_email (str): The email address of the user receiving the activation code.
+
+    Raises:
+        smtplib.SMTPException: If there is an error sending the email.
     """
     email_subject = "Confirm your email address"
 
