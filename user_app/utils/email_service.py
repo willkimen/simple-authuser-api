@@ -44,8 +44,8 @@ def send_change_email_code_by_email(old_email: str, new_email: str):
 
     # Creates code and verify if already exists in database
     code = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
-    while ChangeEmailCodeModel.objects.exists(code=code):
-        code = generate_random_code()
+    while ChangeEmailCodeModel.objects.filter(code=code).exists():
+        code = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
 
     email_body = dedent(
         f"""
@@ -83,8 +83,8 @@ def send_activation_code_by_email(user_email: str) -> None:
 
     # Creates code and verify if already exists in database
     code = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
-    while AccountActivationCodeModel.objects.exists(code=code):
-        code = generate_random_code()
+    while AccountActivationCodeModel.objects.filter(code=code).exists():
+        code = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
 
     email_body = dedent(
         f"""
