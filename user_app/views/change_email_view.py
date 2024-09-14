@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.utils.timezone import make_aware
 from rest_framework import status
-from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.decorators import api_view, authentication_classes, throttle_classes
 from rest_framework.response import Response
 
 from user_app.authentication_classes import JWTAuthentication
@@ -21,6 +21,7 @@ from user_app.constants.response_code_messages import (
 )
 from user_app.models import ChangeEmailCodeModel
 from user_app.serializers import EmailSerializer
+from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.email_service import send_change_email_code_by_email
 
@@ -77,6 +78,7 @@ def send_code_to_email_change(request):
 
 
 @api_view(["POST"])
+@throttle_classes([FivePerMinuteRateLimit])
 def change_user_email(request):
     """
     Handles the process of changing the user's email after verifying the confirmation code.
