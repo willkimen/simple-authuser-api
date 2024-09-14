@@ -205,10 +205,10 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
     """
     Model for storing email change confirmation codes.
 
-    This model stores codes used for changing a user's email address. It extends the `ConfirmationCodeBaseModel` and includes additional fields for the old and new email addresses.
+    This model stores codes used for changing a user's email address. It extends the `ConfirmationCodeBaseModel` and includes additional fields for the actual and new email addresses.
 
     Fields:
-    - `old_email` (EmailField): The user's current email address. This field is required.
+    - `actual_email` (EmailField): The user's current email address. This field is required.
     - `new_email` (EmailField): The user's new email address. This field is required.
 
     Inherited Fields:
@@ -221,7 +221,7 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
     """
 
     prefix = prefixes.CHANGE_EMAIL_PREFIX
-    old_email = models.EmailField(unique=False, null=False, blank=False)
+    actual_email = models.EmailField(unique=False, null=False, blank=False)
     new_email = models.EmailField(unique=False, null=False, blank=False)
 
     class Meta:

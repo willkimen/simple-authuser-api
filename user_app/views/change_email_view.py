@@ -95,7 +95,7 @@ def change_user_email(request):
         Response:
             - 404 Not Found:
                 - If the provided code does not exist in the system.
-                - If the user associated with the old email is not found.
+                - If the user associated with the actual email is not found.
             - 410 Gone: If the confirmation code has expired.
             - 200 OK: If the email is successfully changed.
     """
@@ -119,7 +119,7 @@ def change_user_email(request):
         )
 
     try:
-        user = User.objects.get(email=change_email_code.old_email)
+        user = User.objects.get(email=change_email_code.actual_email)
     except User.DoesNotExist:
         return Response(
             USER_NOT_FOUND,

@@ -58,16 +58,16 @@ def __send_email_with_error_handling(email_message):
         raise smtplib.SMTPException(f"An SMTP error occurred: {e}")
 
 
-def send_change_email_code_by_email(old_email: str, new_email: str):
+def send_change_email_code_by_email(actual_email: str, new_email: str):
     """
     Sends an email with a confirmation code to change the user's email address.
 
     This function generates a random confirmation code for changing the user's email,
-    sends the code to the new email address, and stores the code along with the old and
+    sends the code to the new email address, and stores the code along with the actual and
     new email addresses in the database.
 
     Args:
-        old_email (str): The user's current email address.
+        actual_email (str): The user's current email address.
         new_email (str): The user's new email address.
 
     Raises:
@@ -82,7 +82,7 @@ def send_change_email_code_by_email(old_email: str, new_email: str):
 
     email_body = dedent(
         f"""
-    You requested to change your email from {old_email} to {new_email}.
+    You requested to change your email from {actual_email} to {new_email}.
 
     To confirm this change, please use the confirmation code below:
 
@@ -101,7 +101,7 @@ def send_change_email_code_by_email(old_email: str, new_email: str):
 
     ChangeEmailCodeModel.objects.create(
         code=code,
-        old_email=old_email,
+        actual_email=actual_email,
         new_email=new_email,
     )
 
