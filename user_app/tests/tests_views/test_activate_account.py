@@ -29,7 +29,7 @@ FAKE_USER_DATA = {
     "email": "fake_email@email.com",
     "password": "FAKEpassword10!",
 }
-allow_request_path_for_mock = "AccountActivationRequestRateLimit.allow_request"
+allow_request_path_for_mock = "FivePerMinuteRateLimit.allow_request"
 
 
 # ============ Fixture ================

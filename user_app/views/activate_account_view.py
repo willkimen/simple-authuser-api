@@ -20,10 +20,7 @@ from user_app.constants.response_code_messages import (
 )
 from user_app.models import AccountActivationCodeModel
 from user_app.serializers import EmailSerializer
-from user_app.throttlings import (
-    AccountActivationRequestRateLimit,
-    SendEmailActivateAccountRequestRateLimit,
-)
+from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.email_service import send_activation_code_by_email
 
@@ -31,7 +28,7 @@ User = get_user_model()
 
 
 @api_view(["POST"])
-@throttle_classes([AccountActivationRequestRateLimit])
+@throttle_classes([FivePerMinuteRateLimit])
 def activate_account(request):
     """
     Activates a user account based on the provided activation code.
@@ -52,7 +49,7 @@ def activate_account(request):
         - 410 Gone: The provided activation code has expired.
 
     Throttling:
-        - Applies `AccountActivationRequestRateLimit` throttle class to limit the rate of activation requests.
+        - Applies FivePerMinuteRateLimit throttle class to limit the rate of activation requests.
     """
     code = request.data.get("code", None)
 
@@ -90,7 +87,7 @@ def activate_account(request):
 
 
 @api_view(["POST"])
-@throttle_classes([SendEmailActivateAccountRequestRateLimit])
+@throttle_classes([FivePerMinuteRateLimit])
 def send_code_to_activate_account(request):
     """
     Sends an activation email to the user if their account is not already activated.
@@ -112,7 +109,7 @@ def send_code_to_activate_account(request):
         - 500 Internal Server Error: An error occurred while sending the activation email.
 
     Throttling:
-        - Applies `SendEmailActivateAccountRequestRateLimit` throttle class to limit the rate of email requests.
+        - Applies FivePerMinuteRateLimit throttle class to limit the rate of email requests.
     """
     serializer = EmailSerializer(data=request.data)
 

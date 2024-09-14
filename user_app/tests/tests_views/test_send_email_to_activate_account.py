@@ -25,7 +25,7 @@ FAKE_USER_DATA = {
     "password": "FAKEpassowrd1234!",
 }
 EMAIL_NONEXISTENT = "nonexistent@email.com"
-allow_request_path_for_mock = "SendEmailActivateAccountRequestRateLimit.allow_request"
+allow_request_path_for_mock = "FivePerMinuteRateLimit.allow_request"
 send_email_path_for_mock = "send_activation_code_by_email"
 
 
