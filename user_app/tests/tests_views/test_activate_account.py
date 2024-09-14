@@ -161,8 +161,8 @@ def test_not_activate_account_when_expired_code(
     This test checks that the server returns a 410 Gone status code and an appropriate
     error message when an expired activation code is provided in the request.
     """
-    expected_detail_message = response_code_messages.CONFIRMATION_CODE_EXPIRED["detail"]
-    expected_code = response_code_messages.CONFIRMATION_CODE_EXPIRED["code"]
+    expected_detail_message = response_code_messages.CODE_EXPIRED["detail"]
+    expected_code = response_code_messages.CODE_EXPIRED["code"]
     expected_status_code = status.HTTP_410_GONE
 
     actual_response = client.post(url, data={"code": expired_code}, format="json")
@@ -218,10 +218,8 @@ def test_not_activate_account_when_code_field_does_not_exists(
     error message when a non-existent activation code is provided in the request.
     """
     code_not_exists = FAKE_CODE_NOT_EXISTS
-    expected_detail_message = response_code_messages.ACCOUNT_ACTIVATION_CODE_NOT_FOUND[
-        "detail"
-    ]
-    expected_code = response_code_messages.ACCOUNT_ACTIVATION_CODE_NOT_FOUND["code"]
+    expected_detail_message = response_code_messages.CODE_NOT_FOUND["detail"]
+    expected_code = response_code_messages.CODE_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data={"code": code_not_exists}, format="json")

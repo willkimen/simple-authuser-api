@@ -8,9 +8,9 @@ from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
 
 from user_app.constants.response_code_messages import (
-    ACCOUNT_ACTIVATION_CODE_NOT_FOUND,
+    CODE_EXPIRED,
     CODE_FIELD_IS_REQUIRED,
-    CONFIRMATION_CODE_EXPIRED,
+    CODE_NOT_FOUND,
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
     USER_ACTIVATED,
@@ -65,7 +65,7 @@ def activate_account(request):
         account_activation_code = AccountActivationCodeModel.objects.get(code=code)
     except AccountActivationCodeModel.DoesNotExist:
         return Response(
-            ACCOUNT_ACTIVATION_CODE_NOT_FOUND,
+            CODE_NOT_FOUND,
             status=status.HTTP_404_NOT_FOUND,
         )
 
@@ -74,7 +74,7 @@ def activate_account(request):
     if account_activation_code.expires_at < now:
         account_activation_code.delete()
         return Response(
-            CONFIRMATION_CODE_EXPIRED,
+            CODE_EXPIRED,
             status=status.HTTP_410_GONE,
         )
 

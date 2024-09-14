@@ -9,8 +9,8 @@ from rest_framework.response import Response
 
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants.response_code_messages import (
-    ACCOUNT_ACTIVATION_CODE_NOT_FOUND,
-    CONFIRMATION_CODE_EXPIRED,
+    CODE_EXPIRED,
+    CODE_NOT_FOUND,
     EMAIL_ALREADY_EXISTS,
     EMAIL_ALREADY_IN_USE,
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
@@ -105,16 +105,14 @@ def change_user_email(request):
     try:
         change_email_code = ChangeEmailCodeModel.objects.get(code=code)
     except ChangeEmailCodeModel.DoesNotExist:
-        return Response(
-            ACCOUNT_ACTIVATION_CODE_NOT_FOUND, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response(CODE_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
     # Checks if the code is expired
     now = make_aware(datetime.now())
     if change_email_code.expires_at < now:
         change_email_code.delete()
         return Response(
-            CONFIRMATION_CODE_EXPIRED,
+            CODE_EXPIRED,
             status=status.HTTP_410_GONE,
         )
 

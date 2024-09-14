@@ -42,9 +42,9 @@ USER_DELETED_SUCCESSFULLY = {
     "detail": "User deleted successfully.",
 }
 
-ACCOUNT_ACTIVATION_CODE_NOT_FOUND = {
-    "code": "ACCOUNT_ACTIVATION_CODE_NOT_FOUND",
-    "detail": "The activation code received was not found.",
+CODE_NOT_FOUND = {
+    "code": "CODE_NOT_FOUND",
+    "detail": "The code received was not found.",
 }
 
 USER_HAS_ALREADY_ACTIVATED = {
@@ -52,14 +52,9 @@ USER_HAS_ALREADY_ACTIVATED = {
     "detail": "User has already confirmed email and is activated.",
 }
 
-INVALID_CONFIRMATION_CODE_TYPE = {
-    "code": "INVALID_CONFIRMATION_CODE_TYPE",
-    "detail": "The confirmation code type is incorrect for the requested action.",
-}
-
-CONFIRMATION_CODE_EXPIRED = {
-    "code": "CONFIRMATION_CODE_EXPIRED",
-    "detail": "The confirmation code has expired.",
+CODE_EXPIRED = {
+    "code": "CODE_EXPIRED",
+    "detail": "The code has expired.",
 }
 
 USER_EMAIL_CHANGED = {
