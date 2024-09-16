@@ -149,5 +149,5 @@ def send_activation_code_by_email(user_email: str) -> None:
 
     AccountActivationCodeModel.objects.create(
         code=code,
-        user_email=user_email,
+        user_id=user_email,
     )

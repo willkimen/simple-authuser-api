@@ -64,5 +64,5 @@ def test_success_send_email(
     mock_email_message_instance.send.assert_called_once()
     mock_create.assert_called_once_with(
         code=FAKE_CODE,
-        user_email=user_email,
+        user_id=user_email,
     )

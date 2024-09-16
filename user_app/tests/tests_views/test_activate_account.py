@@ -47,7 +47,7 @@ def expired_code() -> str:
     """
 
     account_activation_code = AccountActivationCodeModel.objects.create(
-        user_email=FAKE_USER_DATA["email"],
+        user_id=FAKE_USER_DATA["email"],
         code=FAKE_CODE,
     )
 
@@ -76,7 +76,7 @@ def user_with_activation_code() -> dict:
     return {
         "user_id": user.id,
         "code": AccountActivationCodeModel.objects.create(
-            user_email=user.email,
+            user_id=user.email,
             code=FAKE_CODE,
         ).code,
     }

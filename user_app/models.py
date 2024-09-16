@@ -194,7 +194,14 @@ class AccountActivationCodeModel(ConfirmationCodeBaseModel):
     """
 
     prefix = prefixes.ACTIVATE_ACCOUNT_PREFIX
-    user_email = models.EmailField(unique=False, null=False, blank=False)
+    user = models.ForeignKey(
+        "UserProfileModel",
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="account_activation_code",
+        to_field="email",
+        db_column="user_email",
+    )
 
     class Meta:
         db_table = "account_activation_code"

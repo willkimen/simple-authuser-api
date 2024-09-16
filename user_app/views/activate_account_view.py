@@ -79,7 +79,7 @@ def activate_account(request):
         )
 
     # Activate user and save in the database
-    user = User.objects.get(email=account_activation_code.user_email)
+    user = User.objects.get(email=account_activation_code.user_id)
     user.is_active = True
     user.save()
     account_activation_code.delete()
