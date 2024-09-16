@@ -117,7 +117,7 @@ def change_user_email(request):
         )
 
     try:
-        user = User.objects.get(email=change_email_code.actual_email)
+        user = User.objects.get(email=change_email_code.user.email)
     except User.DoesNotExist:
         return Response(
             USER_NOT_FOUND,

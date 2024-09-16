@@ -228,7 +228,14 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
     """
 
     prefix = prefixes.CHANGE_EMAIL_PREFIX
-    actual_email = models.EmailField(unique=False, null=False, blank=False)
+    user = models.ForeignKey(
+        "UserProfileModel",
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="change_email_code",
+        to_field="email",
+        db_column="old_user_email",
+    )
     new_email = models.EmailField(unique=False, null=False, blank=False)
 
     class Meta:

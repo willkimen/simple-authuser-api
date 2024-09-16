@@ -101,7 +101,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str):
 
     ChangeEmailCodeModel.objects.create(
         code=code,
-        actual_email=actual_email,
+        user_id=actual_email,
         new_email=new_email,
     )
 
