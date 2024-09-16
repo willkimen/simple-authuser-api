@@ -229,40 +229,6 @@ def test_not_activate_account_when_code_field_does_not_exists(
     assert expected_code == actual_response.data["code"]
 
 
-@pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
-@pytest.mark.parametrize("wrong_field_name", ["cod", ""])
-def test_code_field_is_required(
-    mock_allow_request: MagicMock,
-    wrong_field_name: str,
-    client: APIClient,
-):
-    """
-    Test if the account activation request returns 400 when the 'code' field is missing or incorrect.
-
-    Args:
-        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass rate limiting.
-        wrong_field_name (str): The incorrect or missing field name to test.
-        client (APIClient): The API client used to make requests.
-
-    This test checks that the server returns a 400 Bad Request status code and an appropriate
-    error message when the 'code' field is missing or incorrectly named in the request.
-    """
-    code = FAKE_CODE
-    expected_detail_message = response_code_messages.CODE_FIELD_IS_REQUIRED["detail"]
-    expected_code = response_code_messages.CODE_FIELD_IS_REQUIRED["code"]
-    expected_status_code = status.HTTP_400_BAD_REQUEST
-
-    actual_response = client.post(url, data={"wrong_field_name": code}, format="json")
-
-    assert expected_status_code == actual_response.status_code
-    assert expected_detail_message == actual_response.data["detail"]
-    assert expected_code == actual_response.data["code"]
-
-
 # Leave it for last to avoid any problems regarding the request rate limit
 @pytest.mark.django_db
 def test_not_activate_account_when_request_limit_is_reached(client: APIClient):

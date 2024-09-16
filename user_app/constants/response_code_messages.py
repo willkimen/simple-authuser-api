@@ -67,11 +67,6 @@ USER_ACTIVATED = {
     "detail": "User account successfully activated.",
 }
 
-CODE_FIELD_IS_REQUIRED = {
-    "code": "CODE_FIELD_IS_REQUIRED",
-    "detail": "The 'code' field is required.",
-}
-
 EMAIL_SEND_TO_USER_SUCCESSFULLY = {
     "code": "EMAIL_SEND_TO_USER_SUCCESSFULLY",
     "detail": "Email sent to user successfully.",

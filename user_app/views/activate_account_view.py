@@ -9,7 +9,6 @@ from rest_framework.response import Response
 
 from user_app.constants.response_code_messages import (
     CODE_EXPIRED,
-    CODE_FIELD_IS_REQUIRED,
     CODE_NOT_FOUND,
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
@@ -52,13 +51,6 @@ def activate_account(request):
         - Applies FivePerMinuteRateLimit throttle class to limit the rate of activation requests.
     """
     code = request.data.get("code", None)
-
-    # Checks if code field was sent by the request
-    if code is None:
-        return Response(
-            CODE_FIELD_IS_REQUIRED,
-            status=status.HTTP_400_BAD_REQUEST,
-        )
 
     # Checks if code exists in the data base
     try:
