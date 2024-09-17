@@ -1,3 +1,7 @@
+"""
+This module provides exceptions related to the JWT token.
+"""
+
 from user_app.constants import token_exception_messages
 
 
@@ -157,25 +161,13 @@ class JWTBlackListException(JWTException):
     is otherwise unauthorized for further use.
 
     Attributes:
-        detail (str): The default error message indicating the token is blacklisted,
-                      fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["detail"]`.
-        code (str): A specific error code related to the blacklist violation,
-                    fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["code"]`.
+        detail (str): The default error message indicating the token is blacklisted.
+        code (str): A specific error code related to the blacklist violation.
     """
 
     def __init__(self):
         """
         Initialize the JWTBlackListException with a default message and code.
-
-        The exception uses a default message indicating that the token has been blacklisted.
-        It also sets an error code to represent this specific violation, both of which are
-        retrieved from the `token_exceptions_messages` dictionary.
-
-        Attributes:
-            detail (str): The error message explaining that the token is blacklisted,
-                          fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["detail"]`.
-            code (str): The error code representing this blacklist violation,
-                        fetched from `token_exceptions_messages.JWT_IN_BLACKLIST["code"]`.
         """
         self.detail = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
         self.code = token_exception_messages.TOKEN_IN_BLACKLIST["code"]

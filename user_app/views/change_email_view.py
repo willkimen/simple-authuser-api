@@ -1,3 +1,7 @@
+"""
+This module provides views related to user email changes.
+"""
+
 import smtplib
 from datetime import datetime
 
@@ -32,27 +36,13 @@ User = get_user_model()
 @authentication_classes([JWTAuthentication])
 def send_code_to_email_change(request):
     """
-    Handles the process of sending a confirmation code to the user's new email address for email change.
-
-    This view checks if the new email is already in use or exists in the system. If the email is valid and not already in use, it generates a confirmation code and sends it to the new email.
-
-    The function uses JWT authentication to verify the user's identity.
-
-    Args:
-        request (HttpRequest): The request object containing the user's authentication and the new email address.
-
-    Request Data:
-        - `email` (str): The new email address to which the confirmation code will be sent.
-
-    Returns:
-        Response:
-            - 400 Bad Request: If the new email is the same as the current user's email.
-            - 409 Conflict: If the new email already exists in the system.
-            - 500 Internal Server Error: If there's an error while sending the email.
-            - 200 OK: If the confirmation code is successfully sent to the new email.
+    Sends a code to change the email address to the authenticated user.
     """
 
+    # Get email from body request.
     email_serializer = EmailSerializer(data=request.data)
+
+    # Check if the email is normalized.
     if not email_serializer.is_valid():
         return Response(
             merge_dict(VALIDATION_ERRORS, {"field_errors": email_serializer.errors}),
@@ -61,11 +51,16 @@ def send_code_to_email_change(request):
 
     new_email = email_serializer.data["email"]
 
+    # Checks whether the email received is the same as the authenticated user's,
+    # i.e., it is already the email in use.
     if request.user.email == new_email:
         return Response(EMAIL_ALREADY_IN_USE, status=status.HTTP_400_BAD_REQUEST)
 
+    # Checks whether the received email is for another user in the database.
     if User.objects.filter(email=new_email).exists():
         return Response(EMAIL_ALREADY_EXISTS, status=status.HTTP_409_CONFLICT)
+
+    # Try sending an email.
     try:
         send_change_email_code_by_email(request.user.email, new_email)
     except smtplib.SMTPException as e:
@@ -81,23 +76,7 @@ def send_code_to_email_change(request):
 @throttle_classes([FivePerMinuteRateLimit])
 def change_user_email(request):
     """
-    Handles the process of changing the user's email after verifying the confirmation code.
-
-    This view verifies if the provided confirmation code exists in the database and is not expired. If valid, it updates the user's email with the new one stored in the code entry.
-
-    Args:
-        request (HttpRequest): The request object containing the confirmation code.
-
-    Request Data:
-        - `code` (str): The confirmation code provided by the user for email change.
-
-    Returns:
-        Response:
-            - 404 Not Found:
-                - If the provided code does not exist in the system.
-                - If the user associated with the actual email is not found.
-            - 410 Gone: If the confirmation code has expired.
-            - 200 OK: If the email is successfully changed.
+    This view waits to receive the code and exchanges the user's email.
     """
     code = request.data.get("code", None)
 
@@ -116,6 +95,7 @@ def change_user_email(request):
             status=status.HTTP_410_GONE,
         )
 
+    # Checks if user exist
     try:
         user = User.objects.get(email=change_email_code.user.email)
     except User.DoesNotExist:
@@ -124,8 +104,9 @@ def change_user_email(request):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # Change email
     user.email = change_email_code.new_email
     user.save()
-    change_email_code.delete()
+    change_email_code.delete()  # Delete the code as it is no longer useful.
 
     return Response(USER_EMAIL_CHANGED, status=status.HTTP_200_OK)

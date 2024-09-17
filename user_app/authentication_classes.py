@@ -12,30 +12,32 @@ User = get_user_model()
 
 class JWTAuthentication(BaseAuthentication):
     """
-    Custom JWT authentication class for Django REST framework.
+    Custom JWT authentication class.
 
-    This class provides a custom implementation of JWT authentication, verifying tokens in the
-    Authorization header of requests. It handles token validation and user authentication.
-
-    Attributes:
-        www_authenticate_realm (str): The realm used in the WWW-Authenticate header for authentication challenges.
+    This class provides a custom implementation of JWT authentication,
+    verifying tokens in the Authorization header of requests.
+    It handles token validation and user authentication.
     """
 
     www_authenticate_realm = "api"
 
     def authenticate(self, request: Request) -> tuple | None:
         """
-        Authenticate the request based on the JWT token provided in the Authorization header.
+        Authenticate the request based on the JWT token provided
+        in the Authorization header.
 
         Args:
-            request (Request): The HTTP request object containing the Authorization header.
+            request (Request): The HTTP request object containing
+                               the Authorization header.
 
         Returns:
             tuple: A tuple of (user, payload) if authentication is successful.
 
         Raises:
-            AuthenticationFailed: If the token is missing, malformed, expired, or invalid.
+            AuthenticationFailed: If the token is missing, malformed, expired,
+                                  or invalid.
         """
+
         # Get the Authorization header and split it into parts: [Bearer, <jwt>]
         authorization_header: list[str] = get_authorization_header(request).split()
 

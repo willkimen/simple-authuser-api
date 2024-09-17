@@ -30,25 +30,8 @@ User = get_user_model()
 @throttle_classes([FivePerMinuteRateLimit])
 def activate_account(request):
     """
-    Activates a user account based on the provided activation code.
-
-    This endpoint verifies the activation code provided by the user and activates their account if the code is valid.
-    The code must be of the correct type, not expired, and present in the database. Upon successful activation,
-    the user's account is updated to active status, and the activation code is deleted.
-
-    Args:
-        request (Request): The HTTP request object containing the activation code.
-
-    Returns:
-        Response: An HTTP response object indicating the result of the activation process.
-
-    Response Codes:
-        - 200 OK: The user account was successfully activated.
-        - 404 Not Found: The provided activation code does not exist in the database.
-        - 410 Gone: The provided activation code has expired.
-
-    Throttling:
-        - Applies FivePerMinuteRateLimit throttle class to limit the rate of activation requests.
+    Activates a user account based on the provided activation code and applies
+    throttle class to limit the rate of activation requests.
     """
     code = request.data.get("code", None)
 
@@ -64,7 +47,7 @@ def activate_account(request):
     # Checks if the code is expired
     now = make_aware(datetime.now())
     if account_activation_code.expires_at < now:
-        account_activation_code.delete()
+        account_activation_code.delete()  # Delete the code as it is no longer useful.
         return Response(
             CODE_EXPIRED,
             status=status.HTTP_410_GONE,
@@ -74,7 +57,7 @@ def activate_account(request):
     user = User.objects.get(email=account_activation_code.user.email)
     user.is_active = True
     user.save()
-    account_activation_code.delete()
+    account_activation_code.delete()  # Delete the code as it is no longer useful.
     return Response(USER_ACTIVATED, status=status.HTTP_200_OK)
 
 
@@ -82,26 +65,8 @@ def activate_account(request):
 @throttle_classes([FivePerMinuteRateLimit])
 def send_code_to_activate_account(request):
     """
-    Sends an activation email to the user if their account is not already activated.
-
-    This endpoint handles the process of sending an activation email to the user. It first validates the provided
-    email address and checks whether the user exists and if their account is already activated. If the user is valid
-    and their account is not activated, an activation code is sent to their email address.
-
-    Args:
-        request (Request): The HTTP request object containing the email address.
-
-    Returns:
-        Response: An HTTP response object indicating the result of the email sending process.
-
-    Response Codes:
-        - 200 OK: The activation email was successfully sent to the user.
-        - 400 Bad Request: The user account is already activated, or the provided data is invalid.
-        - 404 Not Found: The user with the provided email does not exist.
-        - 500 Internal Server Error: An error occurred while sending the activation email.
-
-    Throttling:
-        - Applies FivePerMinuteRateLimit throttle class to limit the rate of email requests.
+    Sends an activation email to the user if their account is not already activated and
+    throttle class to limit the rate of email requests.
     """
     serializer = EmailSerializer(data=request.data)
 

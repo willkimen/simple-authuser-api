@@ -4,6 +4,7 @@ import time
 from datetime import datetime, timedelta
 
 import jwt
+from django.utils.timezone import make_aware
 
 from user_app.exceptions import (
     DecodeException,
@@ -33,13 +34,14 @@ def __create_exp(is_refresh: bool = False) -> int:
 
     Args:
         is_refresh (bool): Indicates whether the expiration is for a refresh token.
-                           If True, sets expiration to one week; otherwise, sets to 10 minutes.
+                           If True, sets expiration to one week; otherwise,
+                           sets to 10 minutes.
 
     Returns:
         int: The expiration timestamp.
     """
     if is_refresh is True:
-        exp_date = datetime.now() + timedelta(weeks=1)
+        exp_date = make_aware(datetime.now() + timedelta(weeks=1))
         return int(exp_date.timestamp())
 
     exp_date = datetime.now() + timedelta(minutes=10)
@@ -53,7 +55,8 @@ def __create_payload(user_id: int, is_refresh: bool = False) -> dict:
     Args:
         user_id (int): The ID of the user.
         is_refresh (bool): Indicates whether the payload is for a refresh token.
-                           If True, creates a refresh token payload; otherwise, creates an access token payload.
+                           If True, creates a refresh token payload; otherwise,
+                           creates an access token payload.
 
     Returns:
         dict: The generated JWT payload.

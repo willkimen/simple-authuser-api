@@ -8,7 +8,7 @@ def generate_random_code(length=8, prefix=""):
 
     This function creates a random string of specified length consisting of
     uppercase and lowercase letters, and digits. The code is used for various
-    purposes such as activating accounts.
+    purposes.
 
     Args:
         length (int): The length of the generated random part of the code. Defaults to 8.
@@ -19,4 +19,4 @@ def generate_random_code(length=8, prefix=""):
     """
     characters = string.ascii_letters + string.digits
     random_code = "".join(random.choice(characters) for _ in range(length))
-    return f"{prefix}{random_code}"
+    return f"{prefix}-{random_code}"

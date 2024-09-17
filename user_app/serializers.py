@@ -11,7 +11,7 @@ User = get_user_model()
 
 class UserRequestSerializer(serializers.ModelSerializer):
     """
-    Serializer for registering new users. Validates and creates a new user in the system.
+    Serializer to validate and register new users with data coming from the request.
 
     Attributes:
         confirmation_password (CharField): Additional field to confirm the password.
@@ -37,30 +37,16 @@ class UserRequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         Creates and returns a new user after validating the data.
-
-        Args:
-            validated_data (dict): Validated data of the new user.
-
-        Returns:
-            UserProfileModel: The created user.
         """
         # Remove the confirmation_password field from the validated data
         validated_data.pop("confirmation_password", None)
-        # Create the user with the provided data
+
+        # Create and return the user with the provided data
         return User.objects.create_user(**validated_data)
 
     def validate(self, data):
         """
         Validates the data provided during registration.
-
-        Args:
-            data (dict): Data to be validated.
-
-        Raises:
-            serializers.ValidationError: If the passwords do not match.
-
-        Returns:
-            dict: Validated data.
         """
         # Check if the password and confirmation_password match
         if data.get("password") != data.get("confirmation_password"):
@@ -74,15 +60,6 @@ class UserRequestSerializer(serializers.ModelSerializer):
     def validate_password(self, password):
         """
         Validates the password strength using Django's standard validations.
-
-        Args:
-            password (str): The password to be validated.
-
-        Raises:
-            serializers.ValidationError: If the password does not meet the validation requirements.
-
-        Returns:
-            str: The validated password.
         """
         try:
             # Use Django's standard password validation
@@ -107,9 +84,13 @@ class UserResponseSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for returning user data in the response for udpate() view.
+    """
+
     class Meta:
         model = User
-        fields = ["first_name", "last_name"]
+        fields = ["first_name", "last_name", "is_active"]
 
 
 class EmailSerializer(serializers.Serializer):

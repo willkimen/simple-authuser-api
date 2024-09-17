@@ -1,3 +1,8 @@
+"""
+This module provides views related to creating, updating, deleting and 
+returning data for a given user.
+"""
+
 import smtplib
 
 from django.contrib.auth import get_user_model
@@ -27,29 +32,8 @@ User = get_user_model()
 @api_view(["POST"])
 def register(request):
     """
-    Registers a new user in the system.
-
-    This endpoint handles user registration with the following steps:
-
-    1. **Validate Input Data:** The user data is validated using the `UserRequestSerializer`. If the data is invalid, it returns a detailed error response with field-specific validation messages.
-    2. **Send Activation Email:** Upon successful validation, an activation email is sent to the provided email address. If there is an issue sending the email, an error response is returned.
-    3. **Create User:** If the email is successfully sent, the user is created in the database with the provided data but remains inactive until email activation.
-    4. **Return Success Response:** Upon successful registration, a success message along with the user’s data (serialized by `UserResponseSerializer`) is returned.
-
-    Args:
-        request (Request): The HTTP request containing the user registration data in JSON format.
-
-    Returns:
-        Response: The HTTP response containing either a success message with user data or detailed error messages in case of failure.
-
-    Response Codes:
-        - **201 Created:** Registration was successful, and an activation email was sent.
-        - **400 Bad Request:** The data provided was invalid. The response contains detailed validation errors for each field.
-        - **500 Internal Server Error:** There was an issue sending the activation email.
-
-    Serializers:
-        - **UserRequestSerializer:** Used for validating incoming user registration data.
-        - **UserResponseSerializer:** Used for serializing the user data upon successful registration.
+    Registers a new user in the system and sends a code to the
+    user's email address to activate the account.
     """
     request_serializer = UserRequestSerializer(data=request.data)
 
@@ -85,10 +69,7 @@ def register(request):
 @authentication_classes([JWTAuthentication])
 def update(request):
     """
-    Handle partial update of user information for the authenticated user.
-
-    Uses the `UserUpdateSerializer` to validate the provided data and update the user instance.
-    If the data is invalid, it returns a detailed error response with field-specific validation errors.
+    Partially updates user data in the database. This user must be authenticated.
     """
 
     # Initialize the serializer with the current user instance and the provided data.
@@ -122,10 +103,7 @@ def update(request):
 @authentication_classes([JWTAuthentication])
 def user_detail(request):
     """
-    Retrieves the details of the authenticated user.
-
-    This endpoint allows an authenticated user to retrieve their own details. It uses the
-    `UserResponseSerializer` to serialize the user data and returns it in the response.
+    Returns authenticated user data.
     """
     response_serializer = UserResponseSerializer(request.user)
     return Response({"user": response_serializer.data}, status=status.HTTP_200_OK)
@@ -135,8 +113,7 @@ def user_detail(request):
 @authentication_classes([JWTAuthentication])
 def delete(request):
     """
-    Endpoint to delete the currently authenticated user.
-    This view handles the deletion of the user associated with the provided JWT token.
+    Deletes the authenticated user.
     """
     request.user.delete()
     return Response(USER_DELETED_SUCCESSFULLY, status=status.HTTP_200_OK)
