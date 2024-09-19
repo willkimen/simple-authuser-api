@@ -5,6 +5,7 @@ It verifies the behavior of the JWT refresh endpoint (`refresh_token_access`). T
 
 """
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import jwt
