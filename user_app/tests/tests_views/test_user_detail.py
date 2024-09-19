@@ -6,13 +6,14 @@ of an authenticated user. The tests ensure that the authenticated user receives 
 correct data in the response.
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -50,7 +51,7 @@ def client_auth_header(user) -> APIClient:
             "uid": user.id,
             "typ": "access",
             "jti": "fake_jti",
-            "exp": int((datetime.now() + timedelta(seconds=60)).timestamp()),
+            "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
         FAKE_SECRET,
     )

@@ -1,8 +1,7 @@
 import smtplib
-from datetime import datetime
 
 from django.contrib.auth import get_user_model
-from django.utils.timezone import make_aware
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
@@ -45,7 +44,7 @@ def activate_account(request):
         )
 
     # Checks if the code is expired
-    now = make_aware(datetime.now())
+    now = timezone.now()
     if account_activation_code.expires_at < now:
         account_activation_code.delete()  # Delete the code as it is no longer useful.
         return Response(

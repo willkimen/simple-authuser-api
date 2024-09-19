@@ -3,10 +3,9 @@ This module provides views related to user email changes.
 """
 
 import smtplib
-from datetime import datetime
 
 from django.contrib.auth import get_user_model
-from django.utils.timezone import make_aware
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, throttle_classes
 from rest_framework.response import Response
@@ -87,7 +86,7 @@ def change_user_email(request):
         return Response(CODE_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
     # Checks if the code is expired
-    now = make_aware(datetime.now())
+    now = timezone.now()
     if change_email_code.expires_at < now:
         change_email_code.delete()
         return Response(

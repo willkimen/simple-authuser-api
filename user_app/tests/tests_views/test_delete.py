@@ -3,13 +3,14 @@ Module for testing the user account deletion functionality.
 This module contains tests for the `delete` view of the user account API. The `delete` view allows authenticated users to delete their own accounts. 
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -51,7 +52,7 @@ def client_auth_header(persisted_user) -> APIClient:
             "uid": persisted_user.id,
             "typ": "access",
             "jti": "fake_jti",
-            "exp": int((datetime.now() + timedelta(seconds=60)).timestamp()),
+            "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
         FAKE_SECRET,
     )

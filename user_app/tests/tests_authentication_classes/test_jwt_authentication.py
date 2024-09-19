@@ -14,13 +14,14 @@ It uses the `pytest` and `unittest.mock` libraries.
 
 import base64
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
+from django.utils import timezone
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
@@ -43,7 +44,7 @@ FAKE_JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 FAKE_UID = 10
 FAKE_TYP = "access"
 FAKE_JTI = "fake_jti"
-FAKE_EXP = int((datetime.now() + timedelta(days=1)).timestamp())
+FAKE_EXP = int((timezone.now() + timedelta(days=1)).timestamp())
 os_environ_get_path_for_mock = "os.environ.get"
 
 
@@ -234,7 +235,7 @@ def expired_token_request(payload) -> Request:
         Request: A request object with an expired JWT token in the Authorization header.
     """
     # Create a expired date
-    exp_expired = int((datetime.now() - timedelta(seconds=10)).timestamp())
+    exp_expired = int((timezone.now() - timedelta(seconds=10)).timestamp())
     payload["exp"] = exp_expired
 
     token = jwt.encode(payload, FAKE_SECRET)

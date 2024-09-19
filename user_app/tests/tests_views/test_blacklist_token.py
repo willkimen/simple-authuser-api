@@ -2,13 +2,14 @@
 Tests blacklist_token() view.  
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -24,7 +25,7 @@ FAKE_TYP = "access"
 FAKE_JTI = "fake_jti"
 FAKE_UID = 1
 INCORRECT_TYP = "incorrect_type"
-FAKE_EXP = int((datetime.now() + timedelta(seconds=60)).timestamp())
+FAKE_EXP = int((timezone.now() + timedelta(seconds=60)).timestamp())
 FAKE_USER_DATA = {
     "id": FAKE_UID,
     "first_name": "fake_first_name",

@@ -4,11 +4,12 @@ This module tests the check_token() function, which takes a JWT as an argument a
 
 import base64
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
+from django.utils import timezone
 
 from user_app.constants import token_exception_messages
 from user_app.constants.path_for_mock import token_utils_module_path
@@ -36,7 +37,7 @@ def fake_payload() -> dict:
         "uid": 10,
         "typ": "fake_jti",
         "jti": "fake_jti",
-        "exp": int((datetime.now() + timedelta(seconds=60)).timestamp()),
+        "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
     }
 
 
@@ -48,7 +49,7 @@ def token_expired(fake_payload: dict) -> str:
     Returns:
         str: The expired JWT.
     """
-    fake_payload["exp"] = int((datetime.now() - timedelta(seconds=60)).timestamp())
+    fake_payload["exp"] = int((timezone.now() - timedelta(seconds=60)).timestamp())
 
     return jwt.encode(fake_payload, FAKE_SECRET)
 

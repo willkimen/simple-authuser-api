@@ -5,13 +5,13 @@ It verifies the behavior of the JWT refresh endpoint (`refresh_token_access`). T
 
 """
 
-from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -28,7 +28,7 @@ INCORRECT_TYP = "access"
 FAKE_TYP = "refresh"
 FAKE_JTI = "fake_jti"
 FAKE_UID = 1
-FAKE_EXP = int((datetime.now() + timedelta(seconds=60)).timestamp())
+FAKE_EXP = int((timezone.now() + timedelta(seconds=60)).timestamp())
 FAKE_USER_DATA = {
     "id": FAKE_UID,
     "first_name": "fake_first_name",

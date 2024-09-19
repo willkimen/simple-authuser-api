@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
@@ -270,5 +268,5 @@ class JWTBlacklistModel(models.Model):
         Calls the parent class's save method to perform the actual save operation.
         """
         if isinstance(self.exp, int):
-            self.exp = datetime.fromtimestamp(self.exp, tz=ZoneInfo(settings.TIME_ZONE))
+            self.exp = timezone.make_aware(datetime.fromtimestamp(self.exp))
         super().save(*args, **kwargs)

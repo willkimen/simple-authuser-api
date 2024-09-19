@@ -1,10 +1,10 @@
 import hashlib
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import jwt
-from django.utils.timezone import make_aware
+from django.utils import timezone
 
 from user_app.exceptions import (
     DecodeException,
@@ -41,10 +41,10 @@ def __create_exp(is_refresh: bool = False) -> int:
         int: The expiration timestamp.
     """
     if is_refresh is True:
-        exp_date = make_aware(datetime.now() + timedelta(weeks=1))
+        exp_date = timezone.now() + timedelta(weeks=1)
         return int(exp_date.timestamp())
 
-    exp_date = datetime.now() + timedelta(minutes=10)
+    exp_date = timezone.now() + timedelta(minutes=10)
     return int(exp_date.timestamp())
 
 
