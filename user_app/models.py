@@ -7,6 +7,13 @@ from django.utils import timezone
 from user_app.constants import prefixes
 from user_app.utils.random_code import generate_random_code
 
+""" 
+Insert an integer representing the number of hours to define the expiration
+time for the confirmation code, which will be used for various cases:
+user account activation, email change, password change, and password reset.
+"""
+EXPIRATION_TIME_IN_HOURS = 24
+
 
 class UserProfileManager(BaseUserManager):
     """
@@ -105,8 +112,6 @@ class ConfirmationCodeBaseModel(models.Model):
     for various scenarios such as: account activation, email change, password change,
     and password reset (in case the user has forgotten their password).
 
-    The generated code expires after 24 hours.
-
     Fields:
     - `code` (CharField): The confirmation code. This field is required, must be unique,
                           and has a maximum length of 16 characters.
@@ -116,8 +121,6 @@ class ConfirmationCodeBaseModel(models.Model):
                                     not provided.
 
     - `expires_at` (DateTimeField): The timestamp when the code expires.
-                                    It is automatically set to 24 hours after
-                                    `created_at` if not provided.
 
     Methods:
     - `save`: Overrides the default save method to set default values for `created_at`,
@@ -127,7 +130,6 @@ class ConfirmationCodeBaseModel(models.Model):
 
     Notes:
     - This class is meant to be subclassed and should not be used directly.
-    - The generated code expires after 24 hours.
     - The class attribute __prefix is private and should not be set.
     """
 
@@ -151,7 +153,9 @@ class ConfirmationCodeBaseModel(models.Model):
                 self.created_at = timezone.now()
 
             if self.expires_at is None:
-                self.expires_at = self.created_at + timedelta(hours=24)
+                self.expires_at = self.created_at + timedelta(
+                    hours=EXPIRATION_TIME_IN_HOURS
+                )
 
             if not self.code:
                 self.code = generate_random_code(prefix=self.__prefix)
