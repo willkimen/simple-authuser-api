@@ -151,7 +151,7 @@ class InvalidTokenException(JWTException):
         super().__init__(self.detail, self.code)
 
 
-class JWTBlackListException(JWTException):
+class BlacklistTokenException(JWTException):
     """
     Exception raised when a JWT is found in the blacklist.
 
@@ -167,7 +167,7 @@ class JWTBlackListException(JWTException):
 
     def __init__(self):
         """
-        Initialize the JWTBlackListException with a default message and code.
+        Initialize the BlacklistTokenException with a default message and code.
         """
         self.detail = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
         self.code = token_exception_messages.TOKEN_IN_BLACKLIST["code"]

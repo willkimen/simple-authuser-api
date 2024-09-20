@@ -7,12 +7,12 @@ import jwt
 from django.utils import timezone
 
 from user_app.exceptions import (
+    BlacklistTokenException,
     DecodeException,
     ExpiredSignatureException,
     InvalidAlgorithmException,
     InvalidSignatureException,
     InvalidTokenException,
-    JWTBlackListException,
 )
 from user_app.models import BlacklistTokenModel
 
@@ -128,7 +128,7 @@ def check_token(token: str) -> dict:
         InvalidSignatureException: If the token signature is invalid.
         DecodeException: If the token cannot be decoded.
         InvalidTokenException: If the token is invalid.
-        JWTBlackListException: If the token is found in the blacklist.
+        BlacklistTokenException: If the token is found in the blacklist.
     """
     try:
         payload = jwt.decode(
@@ -148,6 +148,6 @@ def check_token(token: str) -> dict:
         raise InvalidTokenException()
 
     if BlacklistTokenModel.objects.filter(jti=payload["jti"]).exists():
-        raise JWTBlackListException()
+        raise BlacklistTokenException()
 
     return payload

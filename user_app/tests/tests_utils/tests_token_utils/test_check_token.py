@@ -14,11 +14,11 @@ from django.utils import timezone
 from user_app.constants import token_exception_messages
 from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.exceptions import (
+    BlacklistTokenException,
     DecodeException,
     ExpiredSignatureException,
     InvalidAlgorithmException,
     InvalidSignatureException,
-    JWTBlackListException,
 )
 from user_app.models import BlacklistTokenModel
 from user_app.utils.token_utils import check_token
@@ -206,7 +206,7 @@ def test_invalid_algorithm(
 )
 def test_token_in_black_list(token_secret_mock: MagicMock, token: str):
     """
-    Test if the function raises JWTBlackListException when the token is in the blacklist.
+    Test if the function raises BlacklistTokenException when the token is in the blacklist.
 
     Args:
         token_secret_mock: Mocked environment variable for JWT secret.
@@ -220,7 +220,7 @@ def test_token_in_black_list(token_secret_mock: MagicMock, token: str):
         exp=payload["exp"],
         typ=payload["typ"],
     )
-    with pytest.raises(JWTBlackListException) as e:
+    with pytest.raises(BlacklistTokenException) as e:
         check_token(token)
 
     assert expected_dict_with_code_and_detail == e.value.dict_repr()
