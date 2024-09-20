@@ -18,7 +18,7 @@ from user_app.constants.response_code_messages import (
     USER_NOT_FOUND,
     USER_TOKEN_MISMATCH,
 )
-from user_app.exceptions import BlacklistTokenException, JWTException
+from user_app.exceptions import BlacklistTokenException, TokenException
 from user_app.models import BlacklistTokenModel
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.token_utils import check_token, create_access_jwt, create_pair_jwt
@@ -70,7 +70,7 @@ def refresh_token_access(request):
         payload = check_token(refresh)
     except BlacklistTokenException as e:
         return Response(e.dict_repr(), status=status.HTTP_403_FORBIDDEN)
-    except JWTException as e:
+    except TokenException as e:
         return Response(e.dict_repr(), status=status.HTTP_400_BAD_REQUEST)
 
     # Verify if token is a refresh type
@@ -113,7 +113,7 @@ def blacklist_token(request):
         payload = check_token(token)
     except BlacklistTokenException as e:
         return Response(e.dict_repr(), status=status.HTTP_403_FORBIDDEN)
-    except JWTException as e:
+    except TokenException as e:
         return Response(e.dict_repr(), status=status.HTTP_400_BAD_REQUEST)
 
     # Verify if token is a refresh or access type

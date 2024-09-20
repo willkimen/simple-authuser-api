@@ -5,7 +5,7 @@ This module provides exceptions related to the JWT token.
 from user_app.constants import token_exception_messages
 
 
-class JWTException(Exception):
+class TokenException(Exception):
     """
     Base class for JWT-related errors.
 
@@ -46,7 +46,7 @@ class JWTException(Exception):
         return {"code": self.code, "detail": self.detail}
 
 
-class ExpiredSignatureException(JWTException):
+class ExpiredSignatureException(TokenException):
     """
     Exception raised when a JWT's signature has expired.
 
@@ -67,7 +67,7 @@ class ExpiredSignatureException(JWTException):
         super().__init__(self.detail, self.code)
 
 
-class InvalidAlgorithmException(JWTException):
+class InvalidAlgorithmException(TokenException):
     """
     Exception raised when an invalid algorithm is used in the JWT.
 
@@ -88,7 +88,7 @@ class InvalidAlgorithmException(JWTException):
         super().__init__(self.detail, self.code)
 
 
-class InvalidSignatureException(JWTException):
+class InvalidSignatureException(TokenException):
     """
     Exception raised when the JWT's signature is invalid.
 
@@ -109,7 +109,7 @@ class InvalidSignatureException(JWTException):
         super().__init__(self.detail, self.code)
 
 
-class DecodeException(JWTException):
+class DecodeException(TokenException):
     """
     Exception raised when there is an error decoding the JWT.
 
@@ -130,7 +130,7 @@ class DecodeException(JWTException):
         super().__init__(self.detail, self.code)
 
 
-class InvalidTokenException(JWTException):
+class InvalidTokenException(TokenException):
     """
     Exception raised when the JWT is invalid.
 
@@ -151,7 +151,7 @@ class InvalidTokenException(JWTException):
         super().__init__(self.detail, self.code)
 
 
-class BlacklistTokenException(JWTException):
+class BlacklistTokenException(TokenException):
     """
     Exception raised when a JWT is found in the blacklist.
 

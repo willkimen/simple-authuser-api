@@ -4,7 +4,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
 from user_app.constants import authentication_error_messages, response_code_messages
-from user_app.exceptions import JWTException
+from user_app.exceptions import TokenException
 from user_app.utils.token_utils import check_token
 
 User = get_user_model()
@@ -65,7 +65,7 @@ class JWTAuthentication(BaseAuthentication):
         # Validate the token and get the payload
         try:
             payload = check_token(token)
-        except JWTException as e:
+        except TokenException as e:
             raise AuthenticationFailed(str(e))
 
         # Verify is token is access type

@@ -1,5 +1,5 @@
 """
-Constants for JWTExceptions.
+Constants for TokenExceptions.
 """
 
 DECODE_ERROR = {
