@@ -236,20 +236,54 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
         verbose_name = "change email code"
 
 
-class BlacklistTokenModel(models.Model):
+class TokenModel(models.Model):
     """
-    Represents a model for storing blacklisted JWTs (JSON Web Tokens). This is used to keep track of tokens
+    Abstract base model representing a JWT token.
+
+    This model stores the `jti` (JWT ID) and `exp` (expiration time) of a token.
+    The expiration field is managed to ensure it's stored as a `DateTimeField`,
+    converting from an integer timestamp if necessary.
+
+    Methods:
+        save: Overrides the default save method to handle the `exp` field conversion.
+    """
+
+    jti = models.CharField(max_length=255)
+    exp = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        """
+        Override the default save method to handle the expiration field.
+
+        If the expiration field (`exp`) is provided as an integer timestamp,
+        it is converted to a datetime object before saving to the database.
+        This ensures that the expiration time is correctly stored as a `DateTimeField`.
+
+        Calls the parent class's save method to perform the actual save operation.
+        """
+        if isinstance(self.exp, int):
+            self.exp = timezone.make_aware(datetime.fromtimestamp(self.exp))
+        super().save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+class BlacklistTokenModel(TokenModel):
+    """
+    Represents a model for storing blacklisted JWTs (JSON Web Tokens).
+    This is used to keep track of tokens
     that should no longer be accepted by the system.
 
     Attributes:
         TYPE_TOKEN_CHOICES (list): Choices for the type of token.
 
-        jti (CharField): The JWT ID (Unique Identifier). This field stores the unique identifier for the JWT.
-
-        exp (DateTimeField): The expiration date and time of the token. This field indicates when the token expires.
-
-        typ (CharField): The type of the token, which can be either 'access' or 'refresh'. This field is limited
+        typ (CharField): The type of the token, which can be
+                         either 'access' or 'refresh'. This field is limited
                          to the choices defined in `TYPE_TOKEN_CHOICES`.
+
+        user (ForeignKey): A foreign key relationship to the `UserProfileModel`,
+                           representing the user that owns this token.
     """
 
     TYPE_TOKEN_CHOICES = [
@@ -257,20 +291,40 @@ class BlacklistTokenModel(models.Model):
         ("refresh", "refresh"),
     ]
 
-    jti = models.CharField(max_length=255)
-    exp = models.DateTimeField()
+    user = models.ForeignKey(
+        "UserProfileModel",
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="blacklist_tokens",
+        db_column="uid",
+    )
     typ = models.CharField(max_length=10, choices=TYPE_TOKEN_CHOICES)
 
-    def save(self, *args, **kwargs):
-        """
-        Override the default save method to handle the expiration field.
-
-        If the expiration field (`exp`) is provided as an integer timestamp, it is converted to a datetime object
-        before saving to the database. This ensures that the expiration time is correctly stored as a `DateTimeField`.
+    class Meta:
+        db_table = "blacklist_token"
+        verbose_name = "blacklist token"
 
 
-        Calls the parent class's save method to perform the actual save operation.
-        """
-        if isinstance(self.exp, int):
-            self.exp = timezone.make_aware(datetime.fromtimestamp(self.exp))
-        super().save(*args, **kwargs)
+class RefreshTokenModel(TokenModel):
+    """
+    Represents a model for storing valid refresh tokens.
+
+    This model is used to store refresh tokens that allow a user to obtain
+    a new access token after the old one expires.
+
+    Attributes:
+        user (ForeignKey): A foreign key relationship to the `UserProfileModel`,
+                           representing the user that owns this token.
+    """
+
+    user = models.ForeignKey(
+        "UserProfileModel",
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="refresh_tokens",
+        db_column="uid",
+    )
+
+    class Meta:
+        db_table = "refresh_token"
+        verbose_name = "refresh token"
