@@ -21,7 +21,7 @@ from user_app.constants.response_code_messages import (
 from user_app.exceptions import BlacklistTokenException, TokenException
 from user_app.models import BlacklistTokenModel
 from user_app.utils.data_utils import merge_dict
-from user_app.utils.token_utils import check_token, create_access_jwt, create_pair_jwt
+from user_app.utils.token_utils import check_token, create_pair_token, create_token
 
 User = get_user_model()
 
@@ -53,7 +53,7 @@ def obtain_token_pair(request):
         )
 
     return Response(
-        merge_dict(LOGIN_SUCCESSFUL, create_pair_jwt(user.id)),
+        merge_dict(LOGIN_SUCCESSFUL, create_pair_token(user.id)),
         status=status.HTTP_200_OK,
     )
 
@@ -94,7 +94,7 @@ def refresh_token_access(request):
         )
 
     return Response(
-        merge_dict(TOKEN_ACCESS_CREATED, {"access": create_access_jwt(payload["uid"])}),
+        merge_dict(TOKEN_ACCESS_CREATED, {"access": create_token(payload["uid"])}),
         status=status.HTTP_201_CREATED,
     )
 
