@@ -32,7 +32,7 @@ from user_app.constants import (
     token_exception_messages,
 )
 from user_app.constants.path_for_mock import token_utils_module_path
-from user_app.models import JWTBlacklistModel
+from user_app.models import BlacklistTokenModel
 
 # ============== Objects and constants ===============
 User = get_user_model()
@@ -513,7 +513,7 @@ def test_authentication_fails_when_blacklisted_token(
         mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
         request_with_blacklisted_token (Request): Request object with a blacklisted JWT.
     """
-    JWTBlacklistModel.objects.create(
+    BlacklistTokenModel.objects.create(
         jti=FAKE_JTI_IN_BLACKLIST,
         exp=payload["exp"],
         typ=payload["typ"],

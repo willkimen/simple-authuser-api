@@ -236,7 +236,7 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
         verbose_name = "change email code"
 
 
-class JWTBlacklistModel(models.Model):
+class BlacklistTokenModel(models.Model):
     """
     Represents a model for storing blacklisted JWTs (JSON Web Tokens). This is used to keep track of tokens
     that should no longer be accepted by the system.

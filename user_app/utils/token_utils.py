@@ -14,7 +14,7 @@ from user_app.exceptions import (
     InvalidTokenException,
     JWTBlackListException,
 )
-from user_app.models import JWTBlacklistModel
+from user_app.models import BlacklistTokenModel
 
 
 def __create_jti(user_id: int) -> str:
@@ -147,7 +147,7 @@ def check_token(token: str) -> dict:
     except jwt.exceptions.InvalidTokenError:
         raise InvalidTokenException()
 
-    if JWTBlacklistModel.objects.filter(jti=payload["jti"]).exists():
+    if BlacklistTokenModel.objects.filter(jti=payload["jti"]).exists():
         raise JWTBlackListException()
 
     return payload

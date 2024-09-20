@@ -15,7 +15,7 @@ from rest_framework.test import APIClient
 
 from user_app.constants import response_code_messages, token_exception_messages
 from user_app.constants.path_for_mock import token_utils_module_path
-from user_app.models import JWTBlacklistModel
+from user_app.models import BlacklistTokenModel
 
 # =========== Objects and constants ==============
 User = get_user_model()
@@ -74,7 +74,7 @@ def blacklisted_token() -> str:
         "jti": FAKE_JTI,
         "exp": FAKE_EXP,
     }
-    JWTBlacklistModel.objects.create(
+    BlacklistTokenModel.objects.create(
         jti=payload["jti"],
         typ=payload["typ"],
         exp=payload["exp"],

@@ -19,7 +19,7 @@ from user_app.constants.response_code_messages import (
     USER_TOKEN_MISMATCH,
 )
 from user_app.exceptions import JWTBlackListException, JWTException
-from user_app.models import JWTBlacklistModel
+from user_app.models import BlacklistTokenModel
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.token_utils import check_token, create_access_jwt, create_pair_jwt
 
@@ -127,7 +127,7 @@ def blacklist_token(request):
         return Response(USER_TOKEN_MISMATCH, status=status.HTTP_403_FORBIDDEN)
 
     # Insert the JTI token in blacklist
-    JWTBlacklistModel.objects.create(
+    BlacklistTokenModel.objects.create(
         jti=payload["jti"],
         exp=payload["exp"],
         typ=payload["typ"],
