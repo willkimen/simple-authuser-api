@@ -1,6 +1,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+import jwt
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -9,26 +10,25 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from user_app.constants import response_code_messages
-from user_app.constants.path_for_mock import change_email_view_path
+from user_app.constants.path_for_mock import (
+    change_email_view_path,
+    token_utils_module_path,
+)
 from user_app.models import ChangeEmailCodeModel
 
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("change_user_email")
+FAKE_SECRET = "token_secret"
 allow_request_path_for_mock = "FivePerMinuteRateLimit.allow_request"
+send_email_path_for_mock = "send_change_email_code_by_email"
+os_environ_get_path_for_mock = "os.environ.get"
 NON_EXISTENT_CODE = "non_existent_code"
 OLD_EMAIL = "actual_email@email.com"
 NEW_EMAIL = "new_email@email.com"
 
 
 # ============ Fixtures ================
-@pytest.fixture
-def client() -> APIClient:
-    """Returns an API client to make requests."""
-
-    return APIClient()
-
-
 @pytest.fixture
 def user() -> User:
     """Creates and returns a User object for use in tests."""
@@ -39,6 +39,28 @@ def user() -> User:
         password="1234@!AA",
         is_active=True,
     )
+
+
+@pytest.fixture
+def client(user) -> APIClient:
+    """
+    Provides an API client with JWT authentication in the request header.
+
+    Returns:
+        APIClient: An API client with the Authorization header set to a valid JWT token.
+    """
+    token = jwt.encode(
+        {
+            "uid": user.id,
+            "typ": "access",
+            "jti": "fake_jti",
+            "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
+        },
+        FAKE_SECRET,
+    )
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    return client
 
 
 @pytest.fixture
@@ -66,8 +88,14 @@ def expired_code(user: User) -> str:
     f"{change_email_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
+@patch(
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
+)
 def test_do_not_change_email_if_code_does_not_exist(
-    mock_allow_request: MagicMock, client: APIClient
+    token_secret_mock: MagicMock,
+    mock_allow_request: MagicMock,
+    client: APIClient,
 ):
     expected_detail_message = response_code_messages.CODE_NOT_FOUND["detail"]
     expected_code = response_code_messages.CODE_NOT_FOUND["code"]
@@ -85,8 +113,15 @@ def test_do_not_change_email_if_code_does_not_exist(
     f"{change_email_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
+@patch(
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
+)
 def test_do_not_change_email_if_code_is_expired(
-    mock_allow_request: MagicMock, client: APIClient, expired_code: str
+    token_secret_mock: MagicMock,
+    mock_allow_request: MagicMock,
+    client: APIClient,
+    expired_code: str,
 ):
     expected_detail_message = response_code_messages.CODE_EXPIRED["detail"]
     expected_code = response_code_messages.CODE_EXPIRED["code"]
@@ -104,8 +139,15 @@ def test_do_not_change_email_if_code_is_expired(
     f"{change_email_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
+@patch(
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
+)
 def test_delete_code_if_expired(
-    mock_allow_request: MagicMock, client: APIClient, expired_code: str
+    token_secret_mock: MagicMock,
+    mock_allow_request: MagicMock,
+    client: APIClient,
+    expired_code: str,
 ):
     """
     When it is verified that the code has expired, it must be
@@ -120,8 +162,15 @@ def test_delete_code_if_expired(
     f"{change_email_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
+@patch(
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
+)
 def test_change_email_successful(
-    mock_allow_request: MagicMock, client: APIClient, code: str
+    token_secret_mock: MagicMock,
+    mock_allow_request: MagicMock,
+    client: APIClient,
+    code: str,
 ):
     expected_detail_message = response_code_messages.USER_EMAIL_CHANGED["detail"]
     expected_code = response_code_messages.USER_EMAIL_CHANGED["code"]
@@ -143,8 +192,15 @@ def test_change_email_successful(
     f"{change_email_view_path}.{allow_request_path_for_mock}",
     return_value=True,
 )
+@patch(
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
+)
 def test_delete_code_when_user_email_changed_successfully(
-    mock_allow_request: MagicMock, client: APIClient, code: str
+    token_secret_mock: MagicMock,
+    mock_allow_request: MagicMock,
+    client: APIClient,
+    code: str,
 ):
     """
     After the user's email has been changed, the code must be
@@ -156,7 +212,13 @@ def test_delete_code_when_user_email_changed_successfully(
 
 
 @pytest.mark.django_db
-def test_does_not_change_email_when_request_limit_is_reached(client: APIClient):
+@patch(
+    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
+    return_value=FAKE_SECRET,
+)
+def test_does_not_change_email_when_request_limit_is_reached(
+    token_secret_mock: MagicMock, client: APIClient
+):
     expected_status_code = status.HTTP_429_TOO_MANY_REQUESTS
     expected_detail_message = "Request was throttled."
     expected_code = "throttled"

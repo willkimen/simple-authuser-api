@@ -19,7 +19,6 @@ from user_app.constants.response_code_messages import (
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
     USER_EMAIL_CHANGED,
-    USER_NOT_FOUND,
     VALIDATION_ERRORS,
 )
 from user_app.models import ChangeEmailCodeModel
@@ -73,6 +72,7 @@ def send_code_to_email_change(request):
 
 @api_view(["POST"])
 @throttle_classes([FivePerMinuteRateLimit])
+@authentication_classes([JWTAuthentication])
 def change_user_email(request):
     """
     This view waits to receive the code and exchanges the user's email.
@@ -94,18 +94,9 @@ def change_user_email(request):
             status=status.HTTP_410_GONE,
         )
 
-    # Checks if user exist
-    try:
-        user = User.objects.get(email=change_email_code.user.email)
-    except User.DoesNotExist:
-        return Response(
-            USER_NOT_FOUND,
-            status=status.HTTP_404_NOT_FOUND,
-        )
-
     # Change email
-    user.email = change_email_code.new_email
-    user.save()
+    request.user.email = change_email_code.new_email
+    request.user.save()
     change_email_code.delete()  # Delete the code as it is no longer useful.
 
     return Response(USER_EMAIL_CHANGED, status=status.HTTP_200_OK)
