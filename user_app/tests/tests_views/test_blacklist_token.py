@@ -23,6 +23,8 @@ url: str = reverse("blacklist_token")
 FAKE_SECRET = "token_secret"
 FAKE_TYP = "access"
 FAKE_JTI = "fake_jti"
+FAKE_JTI_FOR_AUTH = "fake_jti_for_auth_header"
+FAKE_JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 FAKE_UID = 1
 INCORRECT_TYP = "incorrect_type"
 FAKE_EXP = int((timezone.now() + timedelta(seconds=60)).timestamp())
@@ -38,21 +40,31 @@ os_environ_get_path_for_mock = "os.environ.get"
 
 # ============ Fixtures ================
 @pytest.fixture
-def client_auth_header() -> APIClient:
+def user() -> User:
+    return User.objects.create_user(**FAKE_USER_DATA, is_active=True)
+
+
+@pytest.fixture
+def payload(user) -> dict:
+    return {
+        "uid": user.id,
+        "typ": FAKE_TYP,
+        "jti": FAKE_JTI,
+        "exp": FAKE_EXP,
+    }
+
+
+@pytest.fixture
+def client_auth_header(payload) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
     Returns:
         APIClient: An API client with the Authorization header set to a valid JWT token.
     """
-    user = User.objects.create_user(**FAKE_USER_DATA, is_active=True)
+    payload["jti"] = FAKE_JTI_FOR_AUTH
     token = jwt.encode(
-        {
-            "uid": user.id,
-            "typ": FAKE_TYP,
-            "jti": "fake_jti_for_auth_header",
-            "exp": FAKE_EXP,
-        },
+        payload,
         FAKE_SECRET,
     )
     client = APIClient()
@@ -61,19 +73,14 @@ def client_auth_header() -> APIClient:
 
 
 @pytest.fixture
-def blacklisted_token() -> str:
+def blacklisted_token(payload) -> str:
     """
     Creates and provides a blacklisted JWT token for testing.
 
     Returns:
         str: A JWT token that is blacklisted.
     """
-    payload = {
-        "uid": FAKE_UID,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
+    payload["jti"] = FAKE_JTI_IN_BLACKLIST
     BlacklistTokenModel.objects.create(
         user_id=FAKE_UID,
         jti=payload["jti"],
@@ -85,20 +92,14 @@ def blacklisted_token() -> str:
 
 
 @pytest.fixture
-def incorrect_typ_token() -> str:
+def incorrect_typ_token(payload) -> str:
     """
     Provides a JWT token with an incorrect type for testing.
 
     Returns:
         str: A JWT token with an incorrect type field ("typ").
     """
-    payload = {
-        "uid": FAKE_UID,
-        "typ": INCORRECT_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
-
+    payload["typ"] = INCORRECT_TYP
     return jwt.encode(payload, FAKE_SECRET)
 
 
@@ -129,20 +130,13 @@ def token_with_different_user_id() -> str:
 
 
 @pytest.fixture
-def valid_token() -> str:
+def valid_token(payload) -> str:
     """
     Provides a valid JWT token for testing.
 
     Returns:
         str: A valid JWT token for an active user.
     """
-    user = User.objects.create_user(**FAKE_USER_DATA, is_active=True)
-    payload = {
-        "uid": user.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
 
     return jwt.encode(payload, FAKE_SECRET)
 
@@ -226,10 +220,11 @@ def test_user_must_match_token_owner(
     f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
     return_value=FAKE_SECRET,
 )
-def test_user_must_match_token_owner(
+def test_logout_success_when_valid_token_is_provided(
     mock_secret: MagicMock,
     client_auth_header: APIClient,
     valid_token: str,
+    payload: dict,
 ):
     """
     Test that a valid JWT token allows the user to successfully log out (blacklist the token).
@@ -244,3 +239,4 @@ def test_user_must_match_token_owner(
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
     assert expected_status_code == actual_response.status_code
+    assert BlacklistTokenModel.objects.filter(jti=payload["jti"])
