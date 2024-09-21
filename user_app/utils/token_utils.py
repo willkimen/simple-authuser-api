@@ -52,7 +52,7 @@ def create_payload(user_id: int, is_refresh: bool = False) -> dict:
         "uid": user_id,
         "typ": "refresh" if is_refresh else "access",
         "jti": jti,
-        "exp": exp,
+        "exp": int(exp),
     }
 
 

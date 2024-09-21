@@ -75,6 +75,7 @@ def blacklisted_token() -> str:
         "exp": FAKE_EXP,
     }
     BlacklistTokenModel.objects.create(
+        user_id=FAKE_UID,
         jti=payload["jti"],
         typ=payload["typ"],
         exp=payload["exp"],

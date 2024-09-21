@@ -71,6 +71,7 @@ def blacklisted_refresh_token() -> str:
     }
 
     BlacklistTokenModel.objects.create(
+        user_id=user.id,
         jti=payload["jti"],
         typ=payload["typ"],
         exp=payload["exp"],

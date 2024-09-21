@@ -128,6 +128,7 @@ def blacklist_token(request):
 
     # Insert the JTI token in blacklist
     BlacklistTokenModel.objects.create(
+        user_id=request.user.id,
         jti=payload["jti"],
         exp=payload["exp"],
         typ=payload["typ"],
