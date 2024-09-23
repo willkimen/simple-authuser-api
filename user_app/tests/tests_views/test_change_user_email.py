@@ -19,10 +19,10 @@ from user_app.models import ChangeEmailCodeModel
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("change_user_email")
-FAKE_SECRET = "token_secret"
-allow_request_path_for_mock = "FivePerMinuteRateLimit.allow_request"
-send_email_path_for_mock = "send_change_email_code_by_email"
-os_environ_get_path_for_mock = "os.environ.get"
+allow_request = "FivePerMinuteRateLimit.allow_request"
+send_change_email_code_by_email = "send_change_email_code_by_email"
+os_environ_get = "os.environ.get"
+SECRET = "token_secret"
 NON_EXISTENT_CODE = "non_existent_code"
 OLD_EMAIL = "actual_email@email.com"
 NEW_EMAIL = "new_email@email.com"
@@ -42,7 +42,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def client(user) -> APIClient:
+def client(user: User) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -56,7 +56,7 @@ def client(user) -> APIClient:
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        FAKE_SECRET,
+        SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -64,7 +64,7 @@ def client(user) -> APIClient:
 
 
 @pytest.fixture
-def code(user) -> str:
+def code(user: User) -> str:
     """Creates and returns a valid confirmation code for changing the user's email."""
     return ChangeEmailCodeModel.objects.create(
         user=user,
@@ -85,12 +85,12 @@ def expired_code(user: User) -> str:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{change_email_view_path}.{allow_request_path_for_mock}",
+    f"{change_email_view_path}.{allow_request}",
     return_value=True,
 )
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_do_not_change_email_if_code_does_not_exist(
     token_secret_mock: MagicMock,
@@ -110,12 +110,12 @@ def test_do_not_change_email_if_code_does_not_exist(
 
 @pytest.mark.django_db
 @patch(
-    f"{change_email_view_path}.{allow_request_path_for_mock}",
+    f"{change_email_view_path}.{allow_request}",
     return_value=True,
 )
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_do_not_change_email_if_code_is_expired(
     token_secret_mock: MagicMock,
@@ -136,12 +136,12 @@ def test_do_not_change_email_if_code_is_expired(
 
 @pytest.mark.django_db
 @patch(
-    f"{change_email_view_path}.{allow_request_path_for_mock}",
+    f"{change_email_view_path}.{allow_request}",
     return_value=True,
 )
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_delete_code_if_expired(
     token_secret_mock: MagicMock,
@@ -159,12 +159,12 @@ def test_delete_code_if_expired(
 
 @pytest.mark.django_db
 @patch(
-    f"{change_email_view_path}.{allow_request_path_for_mock}",
+    f"{change_email_view_path}.{allow_request}",
     return_value=True,
 )
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_change_email_successful(
     token_secret_mock: MagicMock,
@@ -175,6 +175,9 @@ def test_change_email_successful(
     expected_detail_message = response_code_messages.USER_EMAIL_CHANGED["detail"]
     expected_code = response_code_messages.USER_EMAIL_CHANGED["code"]
     expected_status_code = status.HTTP_200_OK
+
+    # Checks if there's user with old email in database, before change.
+    assert User.objects.filter(email=OLD_EMAIL).exists()
 
     actual_response = client.post(url, data={"code": code}, format="json")
 
@@ -189,12 +192,12 @@ def test_change_email_successful(
 
 @pytest.mark.django_db
 @patch(
-    f"{change_email_view_path}.{allow_request_path_for_mock}",
+    f"{change_email_view_path}.{allow_request}",
     return_value=True,
 )
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_delete_code_when_user_email_changed_successfully(
     token_secret_mock: MagicMock,
@@ -206,15 +209,16 @@ def test_delete_code_when_user_email_changed_successfully(
     After the user's email has been changed, the code must be
     removed from the database.
     """
-
+    # Checks if there's code in database before change.
+    assert ChangeEmailCodeModel.objects.filter(code=code).exists()
     client.post(url, data={"code": code}, format="json")
     assert not ChangeEmailCodeModel.objects.filter(code=code).exists()
 
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_does_not_change_email_when_request_limit_is_reached(
     token_secret_mock: MagicMock, client: APIClient

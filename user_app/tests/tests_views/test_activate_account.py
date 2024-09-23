@@ -1,7 +1,8 @@
 """
 This module tests the activate_account() view, which aims to receive a activation 
 code from the user via a POST request and activate their account.
-For the user to have their account activated by the code, this code must exist in the database and be linked to the user's email.
+For the user to have their account activated by the code, 
+this code must exist in the database and be linked to the user's email.
 """
 
 from datetime import timedelta
@@ -20,16 +21,8 @@ from user_app.models import AccountActivationCodeModel
 # ========== Objects and constants ============
 User = get_user_model()
 url: str = reverse("activate_account")
-FAKE_CODE = "fake_code"
-FAKE_CODE_NOT_EXISTS = "code_not_exists"
-
-FAKE_USER_DATA = {
-    "first_name": "fake_first_name",
-    "last_name": "fake_last_name",
-    "email": "fake_email@email.com",
-    "password": "FAKEpassword10!",
-}
-allow_request_path_for_mock = "FivePerMinuteRateLimit.allow_request"
+CODE_NOT_EXISTS = "code_not_exists"
+allow_request = "FivePerMinuteRateLimit.allow_request"
 
 
 # ============ Fixture ================
@@ -41,14 +34,26 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def expired_code() -> str:
+def deactivated_user() -> User:
+    """Create a generic deactivated user."""
+    return User.objects.create_user(
+        first_name="fake_first_name",
+        last_name="fake_last_name",
+        email="fake_email@email.com",
+        password="FAKEpassword10!",
+        is_active=False,
+    )
+
+
+@pytest.fixture
+def expired_code(deactivated_user: User) -> str:
     """
-    Creates a AccountActivationCodeModel instance with an expired date (24h + 1 minute ago compared to now)
+    Creates a AccountActivationCodeModel instance with an
+    expired date (24h + 1 minute ago compared to now)
     """
 
     account_activation_code = AccountActivationCodeModel.objects.create(
-        user_id=FAKE_USER_DATA["email"],
-        code=FAKE_CODE,
+        user_id=deactivated_user.email,
     )
 
     # Create an expired date
@@ -62,49 +67,51 @@ def expired_code() -> str:
 
 
 @pytest.fixture
-def user_with_activation_code() -> dict:
+def code_for_deactivated_user(deactivated_user: User) -> str:
     """
-    This fixture creates a User instance and a related AccountActivationCodeModel instance
-    for account activation. It returns a dictionary containing the user's ID and
-    the activation code.
+    This fixture creates AccountActivationCodeModel instance for account activation.
 
     Returns:
-        dict: A dictionary with the user's ID and the activation code."""
-    # Creates user and persisted in database
-    user = User.objects.create_user(**FAKE_USER_DATA)
+        dict: An activation code for activated user."""
 
-    return {
-        "user_id": user.id,
-        "code": AccountActivationCodeModel.objects.create(
-            user_id=user.email,
-            code=FAKE_CODE,
-        ).code,
-    }
+    account_activation_code = AccountActivationCodeModel.objects.create(
+        user_id=deactivated_user.email,
+    )
+
+    return account_activation_code.code
 
 
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    f"{activate_account_view_path}.{allow_request}",
     return_value=True,
 )
 def test_successful_account_activation(
-    mock_allow_request: MagicMock, user_with_activation_code: dict, client: APIClient
+    mock_allow_request: MagicMock,
+    client: APIClient,
+    deactivated_user: User,
+    code_for_deactivated_user: str,
 ):
     """
     Test if the account activation request successfully activates the account.
 
     Args:
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
-        user_with_activation_code (dict): A dictionary with the user's ID and the activation code.
+        deactivated_user (User): An instance of a disabled user.
+        code_for_deactivated_user: Code belonging to a deactivated user.
         client (APIClient): The API client used to make requests.
     """
-    expected_detail_message = response_code_messages.USER_ACTIVATED["detail"]
-    expected_code = response_code_messages.USER_ACTIVATED["code"]
+
+    # Verify that the user's account is initially disabled.
+    assert User.objects.get(id=deactivated_user.id).is_active == False
+
+    expected_detail_message = response_code_messages.ACTIVATED_USER["detail"]
+    expected_code = response_code_messages.ACTIVATED_USER["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.post(
-        url, data={"code": user_with_activation_code["code"]}, format="json"
+        url, data={"code": code_for_deactivated_user}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code
@@ -112,37 +119,41 @@ def test_successful_account_activation(
     assert expected_code == actual_response.data["code"]
 
     # Verify that the user's account is activated
-    assert User.objects.get(id=user_with_activation_code["user_id"]).is_active == True
+    assert User.objects.get(id=deactivated_user.id).is_active == True
 
 
 @pytest.mark.django_db
 @patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    f"{activate_account_view_path}.{allow_request}",
     return_value=True,
 )
 def test_successfully_activated_account_removes_the_code_in_the_database(
-    mock_allow_request: MagicMock, user_with_activation_code: dict, client: APIClient
+    mock_allow_request: MagicMock,
+    client: APIClient,
+    code_for_deactivated_user: str,
 ):
     """
-    Test if the activation code is removed from the database after successful activation.
+    Test if the activation code is removed from the database after
+    successful activation.
 
     Args:
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
-        user_with_activation_code (dict): A dictionary with the user's ID and the activation code.
+        deactivated_user (User): An instance of a disabled user.
+        code_for_deactivated_user: Code belonging to a deactivated user.
         client (APIClient): The API client used to make requests.
     """
 
-    client.post(url, data={"code": user_with_activation_code["code"]}, format="json")
+    client.post(url, data={"code": code_for_deactivated_user}, format="json")
 
     # Assert that the activation code no longer exists in the database
     assert not AccountActivationCodeModel.objects.filter(
-        code=user_with_activation_code["code"]
+        code=code_for_deactivated_user
     ).exists()
 
 
 @pytest.mark.django_db
 @patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    f"{activate_account_view_path}.{allow_request}",
     return_value=True,
 )
 def test_not_activate_account_when_expired_code(
@@ -151,10 +162,12 @@ def test_not_activate_account_when_expired_code(
     client: APIClient,
 ):
     """
-    Test if the account activation request returns 410 when the provided code is expired.
+    Test if the account activation request returns 410 when the
+    provided code is expired.
 
     Args:
-        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass rate limiting.
+        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass
+                                           rate limiting.
         expired_code (str): The expired activation code.
         client (APIClient): The API client used to make requests.
 
@@ -174,7 +187,7 @@ def test_not_activate_account_when_expired_code(
 
 @pytest.mark.django_db
 @patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    f"{activate_account_view_path}.{allow_request}",
     return_value=True,
 )
 def test_expired_code_is_removed_from_the_database(
@@ -183,10 +196,12 @@ def test_expired_code_is_removed_from_the_database(
     client: APIClient,
 ):
     """
-    Test if the expired code is removed from the database when verified that it is expired.
+    Test if the expired code is removed from the database when verified
+    that it is expired.
 
     Args:
-        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass rate limiting.
+        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass
+                                           rate limiting.
         expired_code (str): The expired activation code.
         client (APIClient): The API client used to make requests.
 
@@ -201,39 +216,42 @@ def test_expired_code_is_removed_from_the_database(
 
 @pytest.mark.django_db
 @patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
+    f"{activate_account_view_path}.{allow_request}",
     return_value=True,
 )
 def test_not_activate_account_when_code_field_does_not_exists(
     mock_allow_request: MagicMock, client: APIClient
 ):
     """
-    Test if the account activation request returns 404 when the provided code does not exist.
+    Test if the account activation request returns 404 when
+    the provided code does not exist.
 
     Args:
-        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass rate limiting.
+        mock_throttle_classes (MagicMock): Mocked throttle classes to
+                                           bypass rate limiting.
+
         client (APIClient): The API client used to make requests.
 
-    This test checks that the server returns a 404 Not Found status code and an appropriate
-    error message when a non-existent activation code is provided in the request.
+    This test checks that the server returns a 404 Not Found status code
+    and an appropriate error message when a non-existent activation code
+    is provided in the request.
     """
-    code_not_exists = FAKE_CODE_NOT_EXISTS
     expected_detail_message = response_code_messages.CODE_NOT_FOUND["detail"]
     expected_code = response_code_messages.CODE_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
-    actual_response = client.post(url, data={"code": code_not_exists}, format="json")
+    actual_response = client.post(url, data={"code": CODE_NOT_EXISTS}, format="json")
 
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
 
 
-# Leave it for last to avoid any problems regarding the request rate limit
 @pytest.mark.django_db
 def test_not_activate_account_when_request_limit_is_reached(client: APIClient):
     """
-    Test if the account activation request is throttled when the request limit is reached.
+    Test if the account activation request is throttled when the
+    request limit is reached.
 
     Args:
         client (APIClient): The API client used to make requests.

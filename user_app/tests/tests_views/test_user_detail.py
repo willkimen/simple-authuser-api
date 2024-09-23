@@ -1,8 +1,9 @@
 """
 Test Module: user_detail() View
 
-This module contains the tests for the `user_detail` API view, which retrieves the details
-of an authenticated user. The tests ensure that the authenticated user receives their
+This module contains the tests for the `user_detail` API view, 
+which retrieves the details of an authenticated user. 
+The tests ensure that the authenticated user receives their 
 correct data in the response.
 """
 
@@ -22,8 +23,8 @@ from user_app.constants.path_for_mock import token_utils_module_path
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("detail")
-FAKE_SECRET = "token_secret"
-os_environ_get_path_for_mock = "os.environ.get"
+SECRET = "token_secret"
+os_environ_get = "os.environ.get"
 
 
 # ============ Fixtures ================
@@ -39,7 +40,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def client_auth_header(user) -> APIClient:
+def client_auth_header(user: User) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -53,7 +54,7 @@ def client_auth_header(user) -> APIClient:
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        FAKE_SECRET,
+        SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -63,8 +64,8 @@ def client_auth_header(user) -> APIClient:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_logged_user_returns_their_data_successfully(
     token_secret_mock: MagicMock, client_auth_header: APIClient, user: User

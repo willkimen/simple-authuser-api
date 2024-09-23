@@ -13,7 +13,7 @@ from user_app.constants.path_for_mock import crud_view_path
 # ============== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("register")
-send_email_path_for_mock = "send_activation_code_by_email"
+send_activation_code_by_email = "send_activation_code_by_email"
 
 
 # ============== Fixtures ================
@@ -37,7 +37,7 @@ def user_data() -> dict[str:str]:
 
 # ================ Tests ==================
 @pytest.mark.django_db
-@patch(f"{crud_view_path}.{send_email_path_for_mock}")
+@patch(f"{crud_view_path}.{send_activation_code_by_email}")
 def test_creates_user_with_valid_data(
     mock_send_activation_code_by_email: MagicMock,
     client: APIClient,
@@ -47,7 +47,8 @@ def test_creates_user_with_valid_data(
     Tests if a new user is correctly created with valid data.
 
     Args:
-        mock_send_activation_code_by_email (Mock): Mock of the activation email sending function.
+        mock_send_activation_code_by_email (Mock): Mock of the activation
+                                                   email sending function.
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
@@ -57,12 +58,12 @@ def test_creates_user_with_valid_data(
         "detail"
     ]
     expected_code = response_code_messages.USER_REGISTERED_SUCCESSFULLY["code"]
-
     actual_response = client.post(url, data=user_data, format="json")
-    actual_response.data["user"].update({"is_active": False})
 
     # Check if the user was created in the database with the expected data
     assert User.objects.filter(**actual_response.data["user"]).exists()
+    # Check if user was created with deactivated account.
+    assert False == actual_response.data["user"]["is_active"]
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
@@ -73,7 +74,7 @@ def test_creates_user_with_valid_data(
 
 @pytest.mark.django_db
 @patch(
-    f"{crud_view_path}.{send_email_path_for_mock}",
+    f"{crud_view_path}.{send_activation_code_by_email}",
     side_effect=smtplib.SMTPException(),
 )
 def test_does_not_create_user_when_email_sending_fails(
@@ -85,7 +86,8 @@ def test_does_not_create_user_when_email_sending_fails(
     Tests if user is not created when attempt to send email failed.
 
     Args:
-        mock_send_activation_code_by_email(MagicMock): Mock object to send email function
+        mock_send_activation_code_by_email(MagicMock): Mock object to send
+                                                       email function
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
@@ -156,7 +158,7 @@ def test_does_not_create_user_with_invalid_email_format(
 
 
 @pytest.mark.django_db
-@patch(f"{crud_view_path}.{send_email_path_for_mock}")
+@patch(f"{crud_view_path}.{send_activation_code_by_email}")
 def test_does_not_create_user_with_duplicate_email(
     mock_send_activation_code_by_email: MagicMock,
     client: APIClient,
@@ -166,7 +168,8 @@ def test_does_not_create_user_with_duplicate_email(
     Tests if a user is not created when the email is already registered.
 
     Args:
-        mock_send_activation_code_by_email (Mock): Mock of the activation email sending function.
+        mock_send_activation_code_by_email (Mock): Mock of the activation email
+                                                   sending function.
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
@@ -177,14 +180,16 @@ def test_does_not_create_user_with_duplicate_email(
 
     # Create a user with the provided email
     client.post(url, data=user_data, format="json")
-    # Try to create a second user with the same email
-    response = client.post(url, data=user_data, format="json")
 
-    assert expected_status_code == response.status_code
-    assert expected_code == response.data["code"]
-    assert expected_detail_message == response.data["detail"]
+    # Try to create a second user with the same email
+    actual_response = client.post(url, data=user_data, format="json")
+
+    assert expected_status_code == actual_response.status_code
+    assert expected_code == actual_response.data["code"]
+    assert expected_detail_message == actual_response.data["detail"]
     assert (
-        expected_error_message_field in response.data["field_errors"]["email"].__str__()
+        expected_error_message_field
+        in actual_response.data["field_errors"]["email"].__str__()
     )
 
 
@@ -249,7 +254,7 @@ def test_does_not_create_user_with_null_email(
 
 
 @pytest.mark.django_db
-@patch(f"{crud_view_path}.{send_email_path_for_mock}")
+@patch(f"{crud_view_path}.{send_activation_code_by_email}")
 def test_passwords_not_in_response(
     mock_send_activation_code_by_email: MagicMock,
     client: APIClient,
@@ -265,12 +270,8 @@ def test_passwords_not_in_response(
     """
     actual_response = client.post(url, data=user_data, format="json")
 
-    # Define variables for expected fields
-    expected_absent_fields = ["password", "confirmation_password"]
-
     # Check if these fields are not in the response
-    for field in expected_absent_fields:
-        assert field not in actual_response.data["user"]
+    assert "password" and "confirmation_passoword" not in actual_response.data["user"]
 
 
 @pytest.mark.django_db
@@ -308,7 +309,8 @@ def test_does_not_create_user_with_short_password(
     client: APIClient, user_data: dict[str, str]
 ):
     """
-    Tests if a user is not created when the provided password is shorter than 8 characters.
+    Tests if a user is not created when the provided password
+    is shorter than 8 characters.
 
     Args:
         client (APIClient): API client to make requests.
@@ -319,10 +321,8 @@ def test_does_not_create_user_with_short_password(
     expected_code = response_code_messages.VALIDATION_ERRORS["code"]
     expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
-    # Change the 'password' field to a password shorter than 8 characters
-    short_password = "abc!100"
-    user_data["password"] = short_password
-    user_data["confirmation_password"] = short_password
+    # Change the fields to a password shorter than 8 characters
+    user_data["password"] = user_data["confirmation_password"] = "abc!100"
 
     actual_response = client.post(url, data=user_data, format="json")
 
@@ -351,10 +351,8 @@ def test_does_not_create_user_with_numeric_password(
     expected_code = response_code_messages.VALIDATION_ERRORS["code"]
     expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
-    # Change the 'password' field to an entirely numeric password
-    numeric_password = "12345678910"
-    user_data["password"] = numeric_password
-    user_data["confirmation_password"] = numeric_password
+    # Change the fields to an entirely numeric password.
+    user_data["password"] = user_data["confirmation_password"] = "12345678910"
 
     actual_response = client.post(url, data=user_data, format="json")
 
@@ -383,10 +381,8 @@ def test_does_not_create_user_with_common_password(
     expected_code = response_code_messages.VALIDATION_ERRORS["code"]
     expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
-    # Change the 'password' field to a common password
-    common_password = "password123"
-    user_data["password"] = common_password
-    user_data["confirmation_password"] = common_password
+    # Change the fields to a common password.
+    user_data["password"] = user_data["confirmation_password"] = "password123"
 
     actual_response = client.post(url, data=user_data, format="json")
 
@@ -415,7 +411,7 @@ def test_does_not_create_user_with_blank_first_name(
     expected_code = response_code_messages.VALIDATION_ERRORS["code"]
     expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
 
-    # Change the first_name field to an empty value
+    # Change the first_name field to an empty value.
     user_data["first_name"] = ""
 
     actual_response = client.post(url, data=user_data, format="json")

@@ -8,7 +8,7 @@ from django.db import IntegrityError
 from user_app.models import UserProfileModel
 
 # ========== Constants ==================
-FAKE_EMAIL_UPPERCASE_DOMAIN = "fake_email@DOMAINUPPERCASE.com"
+EMAIL_UPPERCASE_DOMAIN = "fake_email@DOMAINUPPERCASE.com"
 
 
 # ============ Fixtures =========================
@@ -28,7 +28,7 @@ def user_data() -> dict[str, str]:
 
 # ============== Tests ==================
 @pytest.mark.django_db
-def test_creates_user_instance(user_data):
+def test_creates_user_instance(user_data: dict):
     """
     Tests if a user instance is correctly created with the provided data.
     """
@@ -44,7 +44,7 @@ def test_creates_user_instance(user_data):
 
 
 @pytest.mark.django_db
-def test_does_not_create_user_without_email(user_data):
+def test_does_not_create_user_without_email(user_data: dict):
     """
     Tests if an error is raised when trying to create a user without an email.
     """
@@ -55,9 +55,10 @@ def test_does_not_create_user_without_email(user_data):
 
 
 @pytest.mark.django_db
-def test_does_not_create_user_with_duplicate_email(user_data):
+def test_does_not_create_user_with_duplicate_email(user_data: dict):
     """
-    Tests if an integrity error is raised when trying to create two users with the same email.
+    Tests if an integrity error is raised when trying to create two users
+    with the same email.
     """
 
     with pytest.raises(IntegrityError):
@@ -66,7 +67,7 @@ def test_does_not_create_user_with_duplicate_email(user_data):
 
 
 @pytest.mark.django_db
-def test_does_not_create_user_without_password(user_data):
+def test_does_not_create_user_without_password(user_data: dict):
     """
     Tests if an error is raised when trying to create a user without a password.
     """
@@ -77,7 +78,7 @@ def test_does_not_create_user_without_password(user_data):
 
 
 @pytest.mark.django_db
-def test_creates_superuser(user_data):
+def test_creates_superuser(user_data: dict):
     """
     Tests if a superuser instance is correctly created with the provided data.
     """
@@ -94,5 +95,5 @@ def test_normalizes_email_domain(user_data):
     Tests if the email domain is normalized to lowercase.
     """
 
-    user_data["email"] = FAKE_EMAIL_UPPERCASE_DOMAIN
+    user_data["email"] = EMAIL_UPPERCASE_DOMAIN
     assert UserProfileModel.objects.create_user(**user_data).email.islower()

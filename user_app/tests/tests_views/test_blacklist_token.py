@@ -20,52 +20,52 @@ from user_app.models import BlacklistTokenModel
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("blacklist_token")
-FAKE_SECRET = "token_secret"
-FAKE_TYP = "access"
-FAKE_JTI = "fake_jti"
-FAKE_JTI_FOR_AUTH = "fake_jti_for_auth_header"
-FAKE_JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
-FAKE_UID = 1
+SECRET = "token_secret"
+UID = 1
+UID_FOR_DIFFERENT_USER = 100
+JTI_FOR_AUTH = "fake_jti_for_auth_header"
+JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 INCORRECT_TYP = "incorrect_type"
-FAKE_EXP = int((timezone.now() + timedelta(seconds=60)).timestamp())
-FAKE_USER_DATA = {
-    "id": FAKE_UID,
-    "first_name": "fake_first_name",
-    "last_name": "fake_last_name",
-    "email": "fake@email.com",
-    "password": "FAKEpassword10!",
-}
-os_environ_get_path_for_mock = "os.environ.get"
+os_environ_get = "os.environ.get"
 
 
 # ============ Fixtures ================
 @pytest.fixture
 def user() -> User:
-    return User.objects.create_user(**FAKE_USER_DATA, is_active=True)
+    """Generic user instance."""
+    return User.objects.create_user(
+        id=UID,
+        first_name="fake_first_name",
+        last_name="fake_last_name",
+        email="fake@email.com",
+        password="FAKEpassword10!",
+        is_active=True,
+    )
 
 
 @pytest.fixture
-def payload(user) -> dict:
+def payload(user: User) -> dict:
+    """Generic payload."""
     return {
         "uid": user.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
+        "typ": "access",
+        "jti": "fake_jti",
+        "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
     }
 
 
 @pytest.fixture
-def client_auth_header(payload) -> APIClient:
+def client_auth_header(payload: dict) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
     Returns:
         APIClient: An API client with the Authorization header set to a valid JWT token.
     """
-    payload["jti"] = FAKE_JTI_FOR_AUTH
+    payload["jti"] = JTI_FOR_AUTH
     token = jwt.encode(
         payload,
-        FAKE_SECRET,
+        SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -73,26 +73,26 @@ def client_auth_header(payload) -> APIClient:
 
 
 @pytest.fixture
-def blacklisted_token(payload) -> str:
+def blacklisted_token(payload: dict) -> str:
     """
     Creates and provides a blacklisted JWT token for testing.
 
     Returns:
         str: A JWT token that is blacklisted.
     """
-    payload["jti"] = FAKE_JTI_IN_BLACKLIST
+    payload["jti"] = JTI_IN_BLACKLIST
     BlacklistTokenModel.objects.create(
-        user_id=FAKE_UID,
+        user_id=payload["uid"],
         jti=payload["jti"],
         typ=payload["typ"],
         exp=payload["exp"],
     )
 
-    return jwt.encode(payload, FAKE_SECRET)
+    return jwt.encode(payload, SECRET)
 
 
 @pytest.fixture
-def incorrect_typ_token(payload) -> str:
+def incorrect_typ_token(payload: dict) -> str:
     """
     Provides a JWT token with an incorrect type for testing.
 
@@ -100,11 +100,11 @@ def incorrect_typ_token(payload) -> str:
         str: A JWT token with an incorrect type field ("typ").
     """
     payload["typ"] = INCORRECT_TYP
-    return jwt.encode(payload, FAKE_SECRET)
+    return jwt.encode(payload, SECRET)
 
 
 @pytest.fixture
-def token_with_different_user_id() -> str:
+def token_with_different_user_id(payload: dict) -> str:
     """
     Provides a JWT token for a different user, to test token-user mismatches.
 
@@ -112,25 +112,20 @@ def token_with_different_user_id() -> str:
         str: A JWT token with a user ID different from the one making the request.
     """
     USER_DATA = {
-        "id": 100,
+        "id": UID_FOR_DIFFERENT_USER,
         "first_name": "fake_first_name",
         "last_name": "fake_last_name",
         "email": "fake2@email.com",
         "password": "FAKEpassword10!",
     }
-    user = User.objects.create_user(**USER_DATA, is_active=True)
-    payload = {
-        "uid": user.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
+    different_user = User.objects.create_user(**USER_DATA, is_active=True)
+    payload["uid"] = different_user.id
 
-    return jwt.encode(payload, FAKE_SECRET)
+    return jwt.encode(payload, SECRET)
 
 
 @pytest.fixture
-def valid_token(payload) -> str:
+def valid_token(payload: dict) -> str:
     """
     Provides a valid JWT token for testing.
 
@@ -138,14 +133,14 @@ def valid_token(payload) -> str:
         str: A valid JWT token for an active user.
     """
 
-    return jwt.encode(payload, FAKE_SECRET)
+    return jwt.encode(payload, SECRET)
 
 
 # ========== Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_token_already_in_blacklist(
     mock_secret: MagicMock, client_auth_header: APIClient, blacklisted_token: str
@@ -167,8 +162,8 @@ def test_token_already_in_blacklist(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_token_type_must_be_access_or_refresh(
     mock_secret: MagicMock, client_auth_header: APIClient, incorrect_typ_token: str
@@ -192,8 +187,8 @@ def test_token_type_must_be_access_or_refresh(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_user_must_match_token_owner(
     mock_secret: MagicMock,
@@ -217,8 +212,8 @@ def test_user_must_match_token_owner(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_logout_success_when_valid_token_is_provided(
     mock_secret: MagicMock,

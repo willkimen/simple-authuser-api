@@ -1,5 +1,6 @@
 """
-This module contains tests for the `authenticate()` method of the `JWTAuthentication` class.
+This module contains tests for the `authenticate()` method of 
+the `JWTAuthentication` class.
 
 The tests cover various scenarios related to JWT authentication, including:
 - Empty or malformed authorization headers
@@ -39,46 +40,52 @@ User = get_user_model()
 factory = RequestFactory()
 jwt_authentication = JWTAuthentication()
 INCORRECT_TYP = "refresh"
-FAKE_SECRET = "fake_secret"
-FAKE_JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
-FAKE_UID = 10
-FAKE_TYP = "access"
-FAKE_JTI = "fake_jti"
-FAKE_EXP = int((timezone.now() + timedelta(days=1)).timestamp())
-FAKE_FIRST_NAME = "fake_first_name"
-FAKE_LAST_NAME = "fake_last_name"
-FAKE_EMAIL = "fake_email@email.com"
-FAKE_PASSWORD = "fale_password"
-os_environ_get_path_for_mock = "os.environ.get"
+ID = 1
+SECRET = "fake_secret"
+JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
+os_environ_get = "os.environ.get"
 
 
 # ================== Fixtures ===================
 @pytest.fixture
-def user_activated() -> User:
-    """Create and persisted activated user."""
-    return User.objects.create_user(
-        id=FAKE_UID,
-        first_name=FAKE_FIRST_NAME,
-        last_name=FAKE_LAST_NAME,
-        email=FAKE_EMAIL,
-        password=FAKE_PASSWORD,
-        is_active=True,
-    )
-
-
-@pytest.fixture
-def payload_with_user_activated(user_activated) -> dict:
-    """Create a payload with activated user."""
+def user_data() -> dict:
+    """Create a generic user data."""
     return {
-        "uid": user_activated.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
+        "id": ID,
+        "first_name": "fake_first_name",
+        "last_name": "fake_last_name",
+        "email": "fakeemail@email.com",
+        "password": "fake!_PASSWORD10",
+        "is_active": True,
     }
 
 
 @pytest.fixture
-def token_request_with_user_activated(payload_with_user_activated) -> Request:
+def payload() -> dict:
+    """Create a generic payload."""
+    return {
+        "uid": ID,
+        "typ": "access",
+        "jti": "fake_jti",
+        "exp": int((timezone.now() + timedelta(days=1)).timestamp()),
+    }
+
+
+@pytest.fixture
+def activated_user(user_data: dict) -> User:
+    """Create and persisted activated user."""
+    return User.objects.create_user(**user_data)
+
+
+@pytest.fixture
+def payload_with_activated_user(activated_user: User, payload: dict) -> dict:
+    """Create a payload with activated user."""
+    payload["uid"] = activated_user.id
+    return payload
+
+
+@pytest.fixture
+def token_request_with_activated_user(payload_with_activated_user: dict) -> Request:
     """
     Fixture to create a Django Request object with a valid JWT for an activated user.
 
@@ -89,13 +96,13 @@ def token_request_with_user_activated(payload_with_user_activated) -> Request:
     return Request(
         factory.get(
             "/",
-            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload_with_user_activated, FAKE_SECRET)}",
+            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload_with_activated_user, SECRET)}",
         )
     )
 
 
 @pytest.fixture
-def token_request_with_user_desactivated() -> Request:
+def token_request_with_deactivated_user(user_data: dict, payload: dict) -> Request:
     """
     Fixture to create a Django Request object with a JWT for a deactivated user.
 
@@ -103,26 +110,14 @@ def token_request_with_user_desactivated() -> Request:
         Request: A Django Request object with an Authorization header containing a JWT.
     """
 
-    user_desactivated = User.objects.create_user(
-        id=FAKE_UID,
-        first_name=FAKE_FIRST_NAME,
-        last_name=FAKE_LAST_NAME,
-        email=FAKE_EMAIL,
-        password=FAKE_PASSWORD,
-        is_active=False,
-    )
-
-    payload = {
-        "uid": user_desactivated.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
+    user_data["is_active"] = False
+    deactivated_user = User.objects.create_user(**user_data)
+    payload["uid"] = deactivated_user.id
 
     return Request(
         factory.get(
             "/",
-            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload, FAKE_SECRET)}",
+            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload, SECRET)}",
         )
     )
 
@@ -164,7 +159,7 @@ def incorrect_format_auth_header_request() -> list[Request]:
 
 
 @pytest.fixture
-def token_request_with_nonexistent_user() -> Request:
+def token_request_with_nonexistent_user(payload: dict) -> Request:
     """
     Create a request object with a JWT token for a nonexistent user.
 
@@ -172,19 +167,12 @@ def token_request_with_nonexistent_user() -> Request:
         Request: A request object with a JWT token in the Authorization header.
     """
 
-    payload = {
-        "uid": FAKE_UID,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
-
-    token = jwt.encode(payload, FAKE_SECRET)
+    token = jwt.encode(payload, SECRET)
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 @pytest.fixture
-def expired_token_request() -> Request:
+def expired_token_request(payload_with_activated_user: dict) -> Request:
     """
     Create a request object with an expired JWT token.
 
@@ -192,32 +180,17 @@ def expired_token_request() -> Request:
         Request: A request object with an expired JWT token
                  in the Authorization header.
     """
-    user = User.objects.create_user(
-        id=FAKE_UID,
-        first_name=FAKE_FIRST_NAME,
-        last_name=FAKE_LAST_NAME,
-        email=FAKE_EMAIL,
-        password=FAKE_PASSWORD,
-        is_active=True,
-    )
-
     # Create a expired date
     exp_expired = int((timezone.now() - timedelta(seconds=10)).timestamp())
+    payload_with_activated_user["exp"] = exp_expired
 
-    payload = {
-        "uid": user.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": exp_expired,
-    }
-
-    token = jwt.encode(payload, FAKE_SECRET)
+    token = jwt.encode(payload_with_activated_user, SECRET)
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 @pytest.fixture
-def token_request_with_invalid_secret() -> Request:
+def token_request_with_invalid_secret(payload_with_activated_user: dict) -> Request:
     """
     Create a request object with a JWT token signed with an incorrect secret.
 
@@ -225,24 +198,7 @@ def token_request_with_invalid_secret() -> Request:
         Request: A request object with a JWT token signed with an
                  incorrect secret in the Authorization header.
     """
-    user = User.objects.create_user(
-        id=FAKE_UID,
-        first_name=FAKE_FIRST_NAME,
-        last_name=FAKE_LAST_NAME,
-        email=FAKE_EMAIL,
-        password=FAKE_PASSWORD,
-        is_active=True,
-    )
-
-    payload = {
-        "uid": user.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
-
-    token = jwt.encode(payload, "invalid_secret")
-
+    token = jwt.encode(payload_with_activated_user, "invalid_secret")
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
@@ -260,7 +216,7 @@ def malformed_token_request() -> Request:
 
 
 @pytest.fixture
-def token_request_with_invalid_algorithm() -> Request:
+def token_request_with_invalid_algorithm(payload_with_activated_user: dict) -> Request:
     """
     Create a request object with a JWT token that has an invalid algorithm.
 
@@ -269,24 +225,8 @@ def token_request_with_invalid_algorithm() -> Request:
                  specifies an invalid algorithm in the header.
     """
 
-    user = User.objects.create_user(
-        id=FAKE_UID,
-        first_name=FAKE_FIRST_NAME,
-        last_name=FAKE_LAST_NAME,
-        email=FAKE_EMAIL,
-        password=FAKE_PASSWORD,
-        is_active=True,
-    )
-
-    payload = {
-        "uid": user.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
-
     # Encode the payload into a JWT token with the correct secret
-    token = jwt.encode(payload, FAKE_SECRET)
+    token = jwt.encode(payload_with_activated_user, SECRET)
 
     # Split the token into its components: header, payload, and signature
     header, payload, signature = token.split(".")
@@ -307,70 +247,44 @@ def token_request_with_invalid_algorithm() -> Request:
     # Reassemble the token with the modified header
     token_with_invalid_algorithm = f"{modified_header}.{payload}.{signature}"
 
-    # Create and return a request object with the JWT token that has an invalid algorithm
+    # Create and return a request object with the
+    # JWT token that has an invalid algorithm
     return Request(
         factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token_with_invalid_algorithm}")
     )
 
 
 @pytest.fixture
-def request_with_blacklisted_token() -> Request:
+def request_with_blacklisted_token(payload_with_activated_user: User) -> Request:
     """
     Create a request object with a JWT token that is blacklisted.
 
     Returns:
         Request: A request object with a JWT token that has a JTI in the blacklist.
     """
-    user = User.objects.create_user(
-        id=FAKE_UID,
-        first_name=FAKE_FIRST_NAME,
-        last_name=FAKE_LAST_NAME,
-        email=FAKE_EMAIL,
-        password=FAKE_PASSWORD,
-        is_active=True,
-    )
 
-    payload = {
-        "uid": user.id,
-        "typ": FAKE_TYP,
-        "jti": FAKE_JTI_IN_BLACKLIST,
-        "exp": FAKE_EXP,
-    }
+    payload_with_activated_user["jti"] = JTI_IN_BLACKLIST
 
-    token = jwt.encode(payload, FAKE_SECRET)
+    token = jwt.encode(payload_with_activated_user, SECRET)
 
     BlacklistTokenModel.objects.create(
-        user_id=FAKE_UID,
-        jti=payload["jti"],
-        exp=payload["exp"],
-        typ=payload["typ"],
+        user_id=payload_with_activated_user["uid"],
+        jti=payload_with_activated_user["jti"],
+        exp=payload_with_activated_user["exp"],
+        typ=payload_with_activated_user["typ"],
     )
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 @pytest.fixture
-def request_with_incorrect_type_token() -> Request:
+def request_with_incorrect_type_token(payload_with_activated_user: dict) -> Request:
     """
     Create a request object with a JWT token with incorrect type token.
     """
-    user = User.objects.create_user(
-        id=FAKE_UID,
-        first_name=FAKE_FIRST_NAME,
-        last_name=FAKE_LAST_NAME,
-        email=FAKE_EMAIL,
-        password=FAKE_PASSWORD,
-        is_active=True,
-    )
+    payload_with_activated_user["typ"] = INCORRECT_TYP
 
-    payload = {
-        "uid": user.id,
-        "typ": INCORRECT_TYP,
-        "jti": FAKE_JTI,
-        "exp": FAKE_EXP,
-    }
-
-    token = jwt.encode(payload, FAKE_SECRET)
+    token = jwt.encode(payload_with_activated_user, SECRET)
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
@@ -378,8 +292,8 @@ def request_with_incorrect_type_token() -> Request:
 # ================ Tests =======================
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_authentication_fails_when_token_type_is_incorrect(
     mock_token_secret: MagicMock,
@@ -389,8 +303,10 @@ def test_authentication_fails_when_token_type_is_incorrect(
     Test that authentication fails when the JWT token type ("typ") is incorrect.
 
     Args:
-        mock_token_secret (MagicMock): Mock object for retrieving the JWT secret from environment variables.
-        request_with_incorrect_type_token (Request): The request fixture containing a JWT token with an incorrect type.
+        mock_token_secret (MagicMock): Mock object for retrieving the JWT
+                                       secret from environment variables.
+        request_with_incorrect_type_token (Request): The request fixture containing a
+                                                     JWT token with an incorrect type.
     """
     expected_error_message = response_code_messages.IS_NOT_ACCESS_TOKEN["detail"]
     with pytest.raises(AuthenticationFailed) as e:
@@ -399,7 +315,6 @@ def test_authentication_fails_when_token_type_is_incorrect(
     assert expected_error_message == str(e.value)
 
 
-@pytest.mark.django_db
 def test_authentication_fails_when_empty_auth_header(
     empty_auth_header_request: Request,
 ):
@@ -407,7 +322,8 @@ def test_authentication_fails_when_empty_auth_header(
     Test that authentication fails when the Authorization header is empty.
 
     Args:
-        empty_auth_header_request (Request): A request object with an empty Authorization header.
+        empty_auth_header_request (Request): A request object with an empty
+                                             Authorization header.
     """
     expected_error_message = authentication_error_messages.AUTHORIZATION_HEADER_MISSING
     with pytest.raises(AuthenticationFailed) as e:
@@ -416,7 +332,6 @@ def test_authentication_fails_when_empty_auth_header(
     assert expected_error_message == str(e.value)
 
 
-@pytest.mark.django_db
 def test_authentication_fails_when_incorrect_type_auth_header(
     incorrect_auth_header_request: Request,
 ):
@@ -424,7 +339,8 @@ def test_authentication_fails_when_incorrect_type_auth_header(
     Test that authentication fails when the Authorization header has an incorrect type.
 
     Args:
-        incorrect_auth_header_request (Request): A request object with an incorrect Authorization header type.
+        incorrect_auth_header_request (Request): A request object with an
+                                                 incorrect Authorization header type.
     """
     expected_error_message = (
         authentication_error_messages.AUTHORIZATION_HEADER_WITHOUT_BEARER
@@ -435,15 +351,17 @@ def test_authentication_fails_when_incorrect_type_auth_header(
     assert expected_error_message == str(e.value)
 
 
-@pytest.mark.django_db
 def test_authentication_fails_when_incorrect_format_auth_header(
     incorrect_format_auth_header_request: list[Request],
 ):
     """
-    Test that authentication fails when the Authorization header is in an incorrect format.
+    Test that authentication fails when the Authorization header
+    is in an incorrect format.
 
     Args:
-        incorrect_format_auth_header_request (list[Request]): A list of request objects with incorrectly formatted Authorization headers.
+        incorrect_format_auth_header_request (list[Request]): A list of request objects
+                                                              with incorrectly formatted
+                                                              Authorization headers.
     """
     expected_error_message = (
         authentication_error_messages.INVALID_AUTHORIZATION_HEADER_FORMAT
@@ -458,8 +376,8 @@ def test_authentication_fails_when_incorrect_format_auth_header(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_authentication_fails_when_expired_token(
     mock_token_secret: MagicMock,
@@ -470,7 +388,8 @@ def test_authentication_fails_when_expired_token(
 
     Args:
         mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
-        expired_token_request (Request): Request object with an expired JWT in the Authorization header.
+        expired_token_request (Request): Request object with an expired
+                                         JWT in the Authorization header.
     """
     expected_error_message = token_exception_messages.EXPIRED_SIGNATURE["detail"]
     with pytest.raises(AuthenticationFailed) as e:
@@ -481,8 +400,8 @@ def test_authentication_fails_when_expired_token(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_authentication_fails_when_invalid_secret_token(
     mock_token_secret: MagicMock,
@@ -493,7 +412,8 @@ def test_authentication_fails_when_invalid_secret_token(
 
     Args:
         mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
-        token_request_with_invalid_secret (Request): Request object with a JWT encoded using an incorrect secret.
+        token_request_with_invalid_secret (Request): Request object with a JWT
+                                                     encoded using an incorrect secret.
     """
     expected_error_message = token_exception_messages.INVALID_SIGNATURE["detail"]
     with pytest.raises(AuthenticationFailed) as e:
@@ -502,10 +422,9 @@ def test_authentication_fails_when_invalid_secret_token(
     assert expected_error_message == str(e.value)
 
 
-@pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_authentication_fails_when_malformed_token(
     mock_token_secret: MagicMock,
@@ -527,8 +446,8 @@ def test_authentication_fails_when_malformed_token(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_authentication_fails_when_invalid_algorithm_token(
     mock_token_secret: MagicMock,
@@ -539,7 +458,8 @@ def test_authentication_fails_when_invalid_algorithm_token(
 
     Args:
         mock_token_secret: Mocked environment variable for JWT secret.
-        token_request_with_invalid_algorithm (Request): Request object containing a JWT with an invalid algorithm.
+        token_request_with_invalid_algorithm (Request): Request object containing a
+                                                        JWT with an invalid algorithm.
     """
     expected_error_message = token_exception_messages.INVALID_ALGORITHM["detail"]
     with pytest.raises(AuthenticationFailed) as e:
@@ -550,8 +470,8 @@ def test_authentication_fails_when_invalid_algorithm_token(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_authentication_fails_when_blacklisted_token(
     mock_token_secret: MagicMock,
@@ -574,8 +494,8 @@ def test_authentication_fails_when_blacklisted_token(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_authentication_fails_when_nonexistent_user(
     mock_token_secret: MagicMock,
@@ -586,7 +506,8 @@ def test_authentication_fails_when_nonexistent_user(
 
     Args:
         mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
-        token_request_with_nonexistent_user (Request): Request object with a JWT for a nonexistent user.
+        token_request_with_nonexistent_user (Request): Request object with a
+                                                       JWT for a nonexistent user.
     """
     expected_error_message = response_code_messages.USER_NOT_FOUND["detail"]
     with pytest.raises(AuthenticationFailed) as e:
@@ -597,61 +518,68 @@ def test_authentication_fails_when_nonexistent_user(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_authentication_success(
     mock_token_secret: MagicMock,
-    token_request_with_user_activated: Request,
-    user_activated: User,
-    payload_with_user_activated: dict,
+    token_request_with_activated_user: Request,
+    activated_user: User,
+    payload_with_activated_user: dict,
 ):
     """
     Test that the authentication succeeds for an activated user.
 
     Args:
-        mock_token_secret (MagicMock): Mock for the environment variable holding the JWT secret.
-        token_request_with_user_activated (Request): The request containing a JWT for an activated user.
-        user_activated (User): The activated user instance.
-        payload_with_user_activated (dict): The expected payload of the JWT for the activated user.
+        mock_token_secret (MagicMock): Mock for the environment variable
+                                       holding the JWT secret.
+        token_request_with_activated_user (Request): The request containing a
+                                                     JWT for an activated user.
+        activated_user (User): The activated user instance.
+        payload_with_activated_user (dict): The expected payload of the
+                                            JWT for the activated user.
 
     Asserts:
-        The authenticated user's details match the expected user, and the JWT payload is correct.
+        The authenticated user's details match the expected user, and the JWT
+        payload is correct.
     """
     user_actual, payload_actual = jwt_authentication.authenticate(
-        token_request_with_user_activated
+        token_request_with_activated_user
     )
 
-    assert user_activated.id == user_actual.id
-    assert user_activated.first_name == user_actual.first_name
-    assert user_activated.last_name == user_actual.last_name
-    assert user_activated.email == user_actual.email
-    assert user_activated.password == user_actual.password
-    assert user_activated.is_active == user_actual.is_active
-    assert payload_with_user_activated == payload_actual
+    assert activated_user.id == user_actual.id
+    assert activated_user.first_name == user_actual.first_name
+    assert activated_user.last_name == user_actual.last_name
+    assert activated_user.email == user_actual.email
+    assert activated_user.password == user_actual.password
+    assert activated_user.is_active == user_actual.is_active
+    assert payload_with_activated_user == payload_actual
 
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
-def test_authentication_fails_when_user_with_account_desactivated(
+def test_authentication_fails_when_user_with_account_deactivated(
     mock_token_secret: MagicMock,
-    token_request_with_user_desactivated: Request,
+    token_request_with_deactivated_user: Request,
 ):
     """
     Test that authentication fails when the user account is deactivated.
 
     Args:
-        mock_token_secret (MagicMock): Mock for the environment variable holding the JWT secret.
-        token_request_with_user_desactivated (Request): The request containing a JWT for a deactivated user.
+        mock_token_secret (MagicMock): Mock for the environment variable
+                                       holding the JWT secret.
+        token_request_with_deactivated_user (Request): The request containing a
+                                                        JWT for a deactivated user.
 
     Asserts:
-        The authentication fails with the appropriate error message indicating the user's account is not activated.
+        The authentication fails with the appropriate error message
+        indicating the user's account is not activated.
     """
     expected_error_message = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
     with pytest.raises(AuthenticationFailed) as e:
-        jwt_authentication.authenticate(token_request_with_user_desactivated)
+        jwt_authentication.authenticate(token_request_with_deactivated_user)
 
     assert expected_error_message == str(e.value)

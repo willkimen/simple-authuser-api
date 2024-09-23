@@ -13,12 +13,12 @@ from user_app.utils.email_service import send_activation_code_by_email
 
 # ========== Objects and constants ============
 User = get_user_model()
-FAKE_USER_EMAIL = "fake@email.com"
-FAKE_CODE = "mocked_code"
-email_message_path_for_mock = "EmailMessage"
-generate_random_code_path_for_mock = "generate_random_code"
-create_path_for_mock = "AccountActivationCodeModel.objects.create"
-exists_path_for_mock = "AccountActivationCodeModel.objects.exists"
+USER_EMAIL = "fake@email.com"
+CODE = "mocked_code"
+email_message_class = "EmailMessage"
+generate_random_code = "generate_random_code"
+create = "AccountActivationCodeModel.objects.create"
+exists = "AccountActivationCodeModel.objects.exists"
 
 
 # =============== Fixture =================
@@ -37,13 +37,13 @@ def expected_email_body():
 
 # =============== Tests ================
 @pytest.mark.django_db
-@patch(f"{email_service_module_path}.{email_message_path_for_mock}")
+@patch(f"{email_service_module_path}.{email_message_class}")
 @patch(
-    f"{email_service_module_path}.{generate_random_code_path_for_mock}",
+    f"{email_service_module_path}.{generate_random_code}",
     return_value="mocked_code",
 )
-@patch(f"{email_service_module_path}.{create_path_for_mock}")
-@patch(f"{email_service_module_path}.{exists_path_for_mock}", return_value=False)
+@patch(f"{email_service_module_path}.{create}")
+@patch(f"{email_service_module_path}.{exists}", return_value=False)
 def test_success_send_email(
     mock_exists: MagicMock,
     mock_create: MagicMock,
@@ -51,7 +51,7 @@ def test_success_send_email(
     MockEmailMessage: MagicMock,
     expected_email_body: str,
 ):
-    user_email = FAKE_USER_EMAIL
+    user_email = USER_EMAIL
     # Returns a mocked instance of the EmailMessage class
     mock_email_message_instance = MockEmailMessage.return_value
     email_subject_expected = "Confirm your email address"
@@ -63,6 +63,6 @@ def test_success_send_email(
     )
     mock_email_message_instance.send.assert_called_once()
     mock_create.assert_called_once_with(
-        code=FAKE_CODE,
+        code=CODE,
         user_id=user_email,
     )

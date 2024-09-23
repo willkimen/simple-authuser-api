@@ -73,7 +73,8 @@ def update(request):
     """
 
     # Initialize the serializer with the current user instance and the provided data.
-    # 'partial=True' allows partial updates (only fields provided in the request will be updated).
+    # 'partial=True' allows partial updates
+    # (only fields provided in the request will be updated).
     update_serializer = UserUpdateSerializer(
         instance=request.user, data=request.data, partial=True
     )

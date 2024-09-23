@@ -7,11 +7,11 @@ from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
 
 from user_app.constants.response_code_messages import (
+    ACTIVATED_USER,
     CODE_EXPIRED,
     CODE_NOT_FOUND,
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
     ERROR_SENDING_EMAIL,
-    USER_ACTIVATED,
     USER_HAS_ALREADY_ACTIVATED,
     USER_NOT_FOUND,
     VALIDATION_ERRORS,
@@ -57,7 +57,7 @@ def activate_account(request):
     user.is_active = True
     user.save()
     account_activation_code.delete()  # Delete the code as it is no longer useful.
-    return Response(USER_ACTIVATED, status=status.HTTP_200_OK)
+    return Response(ACTIVATED_USER, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])

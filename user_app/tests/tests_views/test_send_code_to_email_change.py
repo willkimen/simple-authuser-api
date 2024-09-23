@@ -19,16 +19,16 @@ from user_app.constants.path_for_mock import (
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("send_code_to_email_change")
-FAKE_SECRET = "token_secret"
-os_environ_get_path_for_mock = "os.environ.get"
+SECRET = "token_secret"
 LOGGED_USER_EMAIL = "loggeduser@email.com"
 EMAIL_ALREADY_EXISTS = "emailalreadyexists@email.com"
-send_email_path_for_mock = "send_change_email_code_by_email"
+os_environ_get = "os.environ.get"
+send_change_email_code_by_email = "send_change_email_code_by_email"
 
 
 # ============ Fixtures ================
 @pytest.fixture
-def persisted_user() -> User:
+def activated_user() -> User:
     """
     Provides a user object that is persisted in the database.
     """
@@ -42,7 +42,7 @@ def persisted_user() -> User:
 
 
 @pytest.fixture
-def client_auth_header(persisted_user) -> APIClient:
+def client_auth_header(activated_user) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -51,12 +51,12 @@ def client_auth_header(persisted_user) -> APIClient:
     """
     token = jwt.encode(
         {
-            "uid": persisted_user.id,
+            "uid": activated_user.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        FAKE_SECRET,
+        SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -66,22 +66,16 @@ def client_auth_header(persisted_user) -> APIClient:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_do_not_send_code_if_email_is_same_as_logged_in_user(
     token_secret_mock: MagicMock,
     client_auth_header: APIClient,
 ):
     """
-    Tests the scenario where the new email provided by the user is the same as the email of the logged-in user.
-
-    Scenario:
-        - The email provided for the change is the same as the email already registered for the logged-in user.
-
-    Verifies:
-        - If the HTTP 400 status code is returned.
-        - If the appropriate error message (EMAIL_ALREADY_IN_USE) is returned.
+    Tests the scenario where the new email provided by the user is the
+    same as the email of the logged-in user.
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_code = response_code_messages.EMAIL_ALREADY_IN_USE["code"]
@@ -98,22 +92,16 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_do_not_send_code_if_email_already_exists_in_database(
     token_secret_mock: MagicMock,
     client_auth_header: APIClient,
 ):
     """
-    Tests the scenario where the new email provided by the user already exists in the system.
-
-    Scenario:
-        - The email provided for the change is already registered to another user in the system.
-
-    Verifies:
-        - If the HTTP 409 status code is returned.
-        - If the appropriate error message (EMAIL_ALREADY_EXISTS) is returned.
+    Tests the scenario where the new email provided by the user already
+    exists in the system.
     """
     # Create a user to have an email in the database that already exists
     User.objects.create_user(
@@ -139,11 +127,11 @@ def test_do_not_send_code_if_email_already_exists_in_database(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 @patch(
-    f"{change_email_view_path}.{send_email_path_for_mock}",
+    f"{change_email_view_path}.{send_change_email_code_by_email}",
     side_effect=smtplib.SMTPException(),
 )
 def test_do_not_send_code_if_email_sending_fails(
@@ -153,13 +141,7 @@ def test_do_not_send_code_if_email_sending_fails(
 ):
     """
     Tests the scenario where sending the confirmation email fails.
-
-    Scenario:
-        - The system attempts to send the confirmation email, but an SMTP exception occurs.
-
-    Verifies:
-        - If the HTTP 500 status code is returned.
-        - If the appropriate error message (ERROR_SENDING_EMAIL) is returned.
+    The system attempts to send the confirmation email, but an SMTP exception occurs.
     """
     expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     expected_code = response_code_messages.ERROR_SENDING_EMAIL["code"]
@@ -176,23 +158,17 @@ def test_do_not_send_code_if_email_sending_fails(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_send_code_successfully(
     token_secret_mock: MagicMock,
     client_auth_header: APIClient,
 ):
     """
-    Tests the successful case of sending the confirmation email to the new email address.
-
-    Scenario:
-        - The user provides a valid new email that is not registered to any other account.
-        - The system successfully sends the confirmation code.
-
-    Verifies:
-        - If the HTTP 200 status code is returned.
-        - If the appropriate success message (EMAIL_SEND_TO_USER_SUCCESSFULLY) is returned.
+    Tests the successful case of sending the confirmation email to
+    the new email address.
+    The user provides a valid new email that is not registered to any other account.
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_code_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]

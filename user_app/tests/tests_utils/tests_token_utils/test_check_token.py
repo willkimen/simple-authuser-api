@@ -1,5 +1,7 @@
 """
-This module tests the check_token() function, which takes a JWT as an argument and returns the payload. It tests all possible exceptions raised as well as the success scenario.
+This module tests the check_token() function, which takes a JWT as an argument 
+and returns the payload. 
+It tests all possible exceptions raised as well as the success scenario.
 """
 
 import base64
@@ -26,30 +28,30 @@ from user_app.utils.token_utils import check_token
 
 # ========== Objects and constants ============
 User = get_user_model()
-FAKE_SECRET = "fake_secret"
+SECRET = "fake_secret"
 INVALID_SECRET = "invalid_secret"
 MALFORMED_TOKEN = "malformed.token.string"
-FAKE_UID = 1
-os_environ_get_path_for_mock = "os.environ.get"
+UID = 1
+os_environ_get = "os.environ.get"
 
 
 # ============== Fixture ==================
 @pytest.fixture
-def user_activated() -> User:
-    return User.objects.create(
-        id=FAKE_UID,
-        first_name="John",
-        last_name="Doe",
-        email="johndoe@email.com",
-        password="1234",
+def activated_user() -> User:
+    return User.objects.create_user(
+        id=UID,
+        first_name="fake_first_name",
+        last_name="fake_last_name",
+        email="fake_email@email.com",
+        password="Fake!_password10",
         is_active=True,
     )
 
 
 @pytest.fixture
-def payload(user_activated) -> dict:
+def payload(activated_user: User) -> dict:
     return {
-        "uid": user_activated.id,
+        "uid": activated_user.id,
         "typ": "fake_jti",
         "jti": "fake_jti",
         "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -66,7 +68,7 @@ def token_expired(payload: dict) -> str:
     """
     payload["exp"] = int((timezone.now() - timedelta(seconds=60)).timestamp())
 
-    return jwt.encode(payload, FAKE_SECRET)
+    return jwt.encode(payload, SECRET)
 
 
 @pytest.fixture
@@ -99,7 +101,7 @@ def token(payload: dict) -> str:
     Returns:
         str: The valid JWT.
     """
-    return jwt.encode(payload, FAKE_SECRET)
+    return jwt.encode(payload, SECRET)
 
 
 @pytest.fixture
@@ -111,7 +113,7 @@ def token_with_invalid_algorithm(payload: dict) -> str:
         str: The JWT with an invalid algorithm.
     """
     # Encode the payload into a JWT token with the correct secret
-    token = jwt.encode(payload, FAKE_SECRET)
+    token = jwt.encode(payload, SECRET)
 
     # Split the token into its components: header, payload, and signature
     header, payload, signature = token.split(".")
@@ -136,8 +138,8 @@ def token_with_invalid_algorithm(payload: dict) -> str:
 # ============= Tests ======================
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_expired_token(token_secret_mock: MagicMock, token_expired: str):
     """
@@ -156,14 +158,15 @@ def test_expired_token(token_secret_mock: MagicMock, token_expired: str):
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_invalid_signature(
     token_secret_mock: MagicMock, token_with_invalid_secret: str
 ):
     """
-    Test if the function raises InvalidSignatureError when the token has an invalid signature.
+    Test if the function raises InvalidSignatureError when the token has
+    an invalid signature.
 
     Args:
         token_secret_mock: Mocked environment variable for JWT secret.
@@ -178,8 +181,8 @@ def test_invalid_signature(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_decode_error(token_secret_mock: MagicMock, token_malformed: str):
     """
@@ -198,14 +201,15 @@ def test_decode_error(token_secret_mock: MagicMock, token_malformed: str):
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_invalid_algorithm(
     token_secret_mock: MagicMock, token_with_invalid_algorithm: str
 ):
     """
-    Test if the function raises InvalidAlgorithmError when the token has an invalid algorithm.
+    Test if the function raises InvalidAlgorithmError when the token has
+    an invalid algorithm.
 
     Args:
         token_secret_mock: Mocked environment variable for JWT secret.
@@ -220,22 +224,23 @@ def test_invalid_algorithm(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_token_in_black_list(token_secret_mock: MagicMock, token: str):
     """
-    Test if the function raises BlacklistTokenException when the token is in the blacklist.
+    Test if the function raises BlacklistTokenException when the token is
+    in the blacklist.
 
     Args:
         token_secret_mock: Mocked environment variable for JWT secret.
         token (str): The JWT.
     """
     expected_dict_with_code_and_detail = token_exception_messages.TOKEN_IN_BLACKLIST
-    payload: dict = jwt.decode(token, FAKE_SECRET, algorithms="HS256")
+    payload: dict = jwt.decode(token, SECRET, algorithms="HS256")
 
     BlacklistTokenModel.objects.create(
-        user_id=FAKE_UID,
+        user_id=UID,
         jti=payload["jti"],
         exp=payload["exp"],
         typ=payload["typ"],
@@ -248,12 +253,13 @@ def test_token_in_black_list(token_secret_mock: MagicMock, token: str):
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_success_create_token(token_secret_mock: MagicMock, token: str, payload: dict):
     """
-    Test to ensure that a JWT is successfully created and can be decoded to match the original payload.
+    Test to ensure that a JWT is successfully created and can be decoded to match
+    the original payload.
 
     Args:
         token_secret_mock (MagicMock): Mocked environment variable for JWT secret.

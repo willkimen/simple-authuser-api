@@ -1,6 +1,6 @@
 """
-This module tests the login() view, which expects to receive a user's email and password,
-and returns a access and refresh JWT in the response."""
+This module tests the login() view, which expects to receive a 
+user's email and password, and returns a access and refresh JWT in the response."""
 
 from unittest.mock import MagicMock, patch
 
@@ -16,15 +16,15 @@ from user_app.constants.path_for_mock import token_utils_module_path
 # ========== Objects and constants ============
 User = get_user_model()
 url: str = reverse("obtain_token_pair")
-FAKE_SECRET = "token_secret"
-FAKE_NONEXISTENT_EMAIL = "nonexistent@email.com"
-FAKE_USER_DATA = {
+SECRET = "token_secret"
+NONEXISTENT_EMAIL = "nonexistent@email.com"
+USER_DATA = {
     "first_name": "fake_first_name",
     "last_name": "fake_last_name",
     "email": "fake@email.com",
     "password": "FAKEpassword10!",
 }
-os_environ_get_path_for_mock = "os.environ.get"
+os_environ_get = "os.environ.get"
 
 
 # ============== Fixtures ==============
@@ -37,19 +37,19 @@ def client() -> APIClient:
 @pytest.fixture
 def data_user_nonexistent() -> dict[str:str]:
     """returns data for a non-existent user."""
-    return {"email": FAKE_NONEXISTENT_EMAIL, "password": FAKE_USER_DATA["password"]}
+    return {"email": NONEXISTENT_EMAIL, "password": USER_DATA["password"]}
 
 
 @pytest.fixture
-def user_with_not_activated_account() -> User:
+def deactivated_user() -> User:
     """returns user instance without activated account"""
-    return User.objects.create_user(**FAKE_USER_DATA, is_active=False)
+    return User.objects.create_user(**USER_DATA, is_active=False)
 
 
 @pytest.fixture
-def user_with_activated_account() -> User:
+def activated_user() -> User:
     """returns user instance without activated account"""
-    return User.objects.create_user(**FAKE_USER_DATA, is_active=True)
+    return User.objects.create_user(**USER_DATA, is_active=True)
 
 
 # =========== Tests ===================
@@ -77,14 +77,16 @@ def test_nonexistent_user_does_not_return_token_pair(
 
 @pytest.mark.django_db
 def test_user_with_not_activated_account_does_not_return_token_pair(
-    user_with_not_activated_account: User,
+    deactivated_user: User,
     client: APIClient,
 ):
     """
-    Test that attempting to log in with an account that has not been activated does not return a JWT pair.
+    Test that attempting to log in with an account that has not
+    been activated does not return a JWT pair.
 
     Args:
-        user_with_not_activated_account (User): A user instance with an account that is not activated.
+        user_with_not_activated_account (User): A user instance with an account that
+                                                is not activated.
         client (APIClient): The test client used to make HTTP requests.
     """
     expected_detail_message = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED[
@@ -96,8 +98,8 @@ def test_user_with_not_activated_account_does_not_return_token_pair(
     actual_response = client.post(
         url,
         data={
-            "email": user_with_not_activated_account.email,
-            "password": user_with_not_activated_account.password,
+            "email": deactivated_user.email,
+            "password": deactivated_user.password,
         },
         format="json",
     )
@@ -109,16 +111,17 @@ def test_user_with_not_activated_account_does_not_return_token_pair(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_returns_token_pair_successfully(
     mock_get: MagicMock,
-    user_with_activated_account: User,
+    activated_user: User,
     client: APIClient,
 ):
     """
-    Test that logging in with valid credentials for an activated account returns a JWT pair successfully.
+    Test that logging in with valid credentials for an activated
+    account returns a JWT pair successfully.
 
     Args:
         mock_get (MagicMock): Mock object for environment variable retrieval.
@@ -132,8 +135,8 @@ def test_returns_token_pair_successfully(
     actual_response = client.post(
         url,
         data={
-            "email": user_with_activated_account.email,
-            "password": user_with_activated_account.password,
+            "email": activated_user.email,
+            "password": activated_user.password,
         },
         format="json",
     )

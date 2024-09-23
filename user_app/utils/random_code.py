@@ -11,7 +11,8 @@ def generate_random_code(length=8, prefix=""):
     purposes.
 
     Args:
-        length (int): The length of the generated random part of the code. Defaults to 8.
+        length (int): The length of the generated random part of the code.
+                      Defaults to 8.
         prefix (str): An optional string to prepend to the generated code.
 
     Returns:

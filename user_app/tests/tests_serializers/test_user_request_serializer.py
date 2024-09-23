@@ -1,5 +1,6 @@
 """
-This module performs several tests related to errors and success in validating User data, using UserSerializer.
+This module performs several tests related to errors and success in validating 
+User data, using UserSerializer.
 """
 
 import pytest
@@ -11,8 +12,8 @@ from user_app.serializers import UserRequestSerializer
 
 # ========== Objects and constants ============
 User = get_user_model()
-FAKE_CONFIRMATION_PASSWORD_DIFFERENCE = "1234_!Fake_difference"
-FAKE_INVALID_PASSWORD = "1234"
+CONFIRMATION_PASSWORD_DIFFERENCE = "1234_!Fake_difference"
+INVALID_PASSWORD = "1234"
 
 
 # ============== Fixtures  ======================
@@ -37,8 +38,7 @@ def user_data_with_mismatched_passwords(valid_user_data: dict) -> dict[str, str]
     Returns user data where the passwords do not match.
     """
 
-    valid_user_data["confirmation_password"] = FAKE_CONFIRMATION_PASSWORD_DIFFERENCE
-
+    valid_user_data["confirmation_password"] = CONFIRMATION_PASSWORD_DIFFERENCE
     return valid_user_data
 
 
@@ -50,7 +50,7 @@ def user_data_with_invalid_passwords(valid_user_data: dict) -> dict[str, str]:
 
     # Set an invalid password for both keys on the same line.
     valid_user_data["password"] = valid_user_data["confirmation_password"] = (
-        FAKE_INVALID_PASSWORD
+        INVALID_PASSWORD
     )
 
     return valid_user_data
@@ -72,6 +72,18 @@ def test_user_persisted_successfully(valid_user_data: dict):
 
 
 @pytest.mark.django_db
+def test_serializer_does_not_should_return_sensitive_fields(valid_user_data: dict):
+    """
+    Tests if the serializer does not return
+    fields like passoword and confirmation_password
+    """
+    actual_serializer = UserRequestSerializer(data=valid_user_data)
+
+    assert actual_serializer.is_valid()
+    assert "password" and "confirmation_password" not in actual_serializer.data
+
+
+@pytest.mark.django_db
 def test_invalid_when_passwords_differ(user_data_with_mismatched_passwords: dict):
     """
     Tests if an error is raised when the passwords do not match.
@@ -84,13 +96,14 @@ def test_invalid_when_passwords_differ(user_data_with_mismatched_passwords: dict
     # Check if the serializer is invalid and the error message is as expected
     assert not actual_serializer.is_valid()
 
-    # Get the ErrorDetail object containing the error message for the confirmation_password field
+    # Get the ErrorDetail object containing the error message
+    # for the confirmation_password field
     error_detail_field: ErrorDetail = actual_serializer.errors.get(
         "confirmation_password", []
     )[0]
 
     # Get the message from the ErrorDetail
-    actual_error_message: str = error_detail_field.__str__()
+    actual_error_message = error_detail_field.__str__()
 
     assert expected_error_message == actual_error_message
 
@@ -103,7 +116,8 @@ def test_confirmation_password_field_not_persisted(valid_user_data: dict):
     # Initialize the serializer with the user data
     actual_serializer = UserRequestSerializer(data=valid_user_data)
 
-    # Check if the serializer is valid and the confirmation_password field is not present in the saved object
+    # Check if the serializer is valid and the confirmation_password field
+    # is not present in the saved object
     assert actual_serializer.is_valid()
     assert not hasattr(actual_serializer.save(), "confirmation_password")
 

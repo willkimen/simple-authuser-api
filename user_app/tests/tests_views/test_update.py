@@ -1,6 +1,7 @@
 """
 Tests for the update view in the user management module.
-This module contains tests to ensure the correct functionality of the update view, which handles the partial update of user information for authenticated users.
+This module contains tests to ensure the correct functionality of the update view, 
+which handles the partial update of user information for authenticated users.
 """
 
 from datetime import timedelta
@@ -20,8 +21,8 @@ from user_app.constants.path_for_mock import token_utils_module_path
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("update")
-FAKE_SECRET = "token_secret"
-os_environ_get_path_for_mock = "os.environ.get"
+SECRET = "token_secret"
+os_environ_get = "os.environ.get"
 
 
 # ============ Fixtures ================
@@ -47,7 +48,7 @@ def client_auth_header() -> APIClient:
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        FAKE_SECRET,
+        SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -57,21 +58,14 @@ def client_auth_header() -> APIClient:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_update_first_name_successfully(
     token_secret_mock: MagicMock, client_auth_header: APIClient
 ):
     """
     Test that a user can successfully update their first name.
-
-    This test:
-    - Uses the `client_auth_header` fixture to simulate an authenticated user.
-    - Sends a PATCH request to the `update` endpoint with the new first name.
-    - Asserts that the response status code is 200 OK.
-    - Validates that the response message indicates a successful update.
-    - Checks that the updated first name is reflected in the user data in the database.
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_code_messages.USER_UPDATED_SUCCESSFULLY["code"]
@@ -91,21 +85,14 @@ def test_update_first_name_successfully(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_update_last_name_successfully(
     token_secret_mock: MagicMock, client_auth_header: APIClient
 ):
     """
     Test that a user can successfully update their last name.
-
-    This test:
-    - Uses the `client_auth_header` fixture to simulate an authenticated user.
-    - Sends a PATCH request to the `update` endpoint with the new last name.
-    - Asserts that the response status code is 200 OK.
-    - Validates that the response message indicates a successful update.
-    - Checks that the updated last name is reflected in the user data in the database.
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_code_messages.USER_UPDATED_SUCCESSFULLY["code"]
@@ -125,21 +112,14 @@ def test_update_last_name_successfully(
 
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_update_first_and_last_name_successfully(
     token_secret_mock: MagicMock, client_auth_header: APIClient
 ):
     """
     Test that a user can successfully update both their first and last names.
-
-    This test:
-    - Uses the `client_auth_header` fixture to simulate an authenticated user.
-    - Sends a PATCH request to the `update` endpoint with new first and last names.
-    - Asserts that the response status code is 200 OK.
-    - Validates that the response message indicates a successful update.
-    - Checks that the updated first and last names are reflected in the user data in the database.
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_code_messages.USER_UPDATED_SUCCESSFULLY["code"]

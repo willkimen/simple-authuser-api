@@ -56,7 +56,7 @@ def active_user_email() -> str:
 
 
 @pytest.fixture
-def desactive_user_email() -> str:
+def deactive_user_email() -> str:
     """
     Fixture that creates a user with a deactivated account for testing purposes.
 
@@ -286,7 +286,7 @@ def test_failed_to_send_email(
     mock_send_email: MagicMock,
     mock_allow_request: MagicMock,
     client: APIClient,
-    desactive_user_email: str,
+    deactive_user_email: str,
 ):
     """
     Test if the email sending request returns 500 when there is an error sending the email.
@@ -295,7 +295,7 @@ def test_failed_to_send_email(
         mock_send_email (MagicMock): Mocked method to simulate an SMTP exception.
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        desactive_user_email (str): The email address of the user with a deactivated account.
+        deactive_user_email (str): The email address of the user with a deactivated account.
 
     This test checks that the server returns a 500 Internal Server Error status code and an appropriate
     error message when there is an SMTP exception while sending the activation email.
@@ -305,7 +305,7 @@ def test_failed_to_send_email(
     expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     actual_response = client.post(
-        url, data={"email": desactive_user_email}, format="json"
+        url, data={"email": deactive_user_email}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code
@@ -323,7 +323,7 @@ def test_send_email_successfully(
     mock_send_email: MagicMock,
     mock_allow_request: MagicMock,
     client: APIClient,
-    desactive_user_email: str,
+    deactive_user_email: str,
 ):
     """
     Test if the email sending request returns 200 when the email is sent successfully.
@@ -332,7 +332,7 @@ def test_send_email_successfully(
         mock_send_email (MagicMock): Mocked method to simulate successful email sending.
         mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        desactive_user_email (str): The email address of the user with a deactivated account.
+        deactive_user_email (str): The email address of the user with a deactivated account.
 
     This test checks that the server returns a 200 OK status code and an appropriate
     success message when the activation email is sent successfully.
@@ -344,7 +344,7 @@ def test_send_email_successfully(
     expected_code = response_code_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
 
     actual_response = client.post(
-        url, data={"email": desactive_user_email}, format="json"
+        url, data={"email": deactive_user_email}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code

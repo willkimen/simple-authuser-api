@@ -156,7 +156,8 @@ EMAIL_HOST = os.environ.get("ENV_EMAIL_HOST")
 # Get the SMTP server port from environment variables.
 EMAIL_PORT = os.environ.get("ENV_EMAIL_PORT")
 
-# Define whether TLS (Transport Layer Security) should be used. Convert the environment variable from string to boolean.
+# Define whether TLS (Transport Layer Security) should be used.
+# Convert the environment variable from string to boolean.
 EMAIL_USE_TLS: bool = True if os.environ.get("ENV_EMAIL_USE_TLS") == "True" else False
 
 # Get the username for SMTP server authentication from environment variables.

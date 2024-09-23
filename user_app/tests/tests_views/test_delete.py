@@ -1,6 +1,7 @@
 """
 Module for testing the user account deletion functionality.
-This module contains tests for the `delete` view of the user account API. The `delete` view allows authenticated users to delete their own accounts. 
+This module contains tests for the `delete` view of the user account API. 
+The `delete` view allows authenticated users to delete their own accounts. 
 """
 
 from datetime import timedelta
@@ -20,15 +21,15 @@ from user_app.constants.path_for_mock import token_utils_module_path
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("delete")
-FAKE_SECRET = "token_secret"
-os_environ_get_path_for_mock = "os.environ.get"
+SECRET = "token_secret"
+os_environ_get = "os.environ.get"
 
 
 # ============ Fixtures ================
 @pytest.fixture
-def persisted_user() -> User:
+def user() -> User:
     """
-    Provides a user object that is persisted in the database.
+    Provides a activated user object that is persisted in the database.
     """
     return User.objects.create_user(
         first_name="fake_first_name",
@@ -40,7 +41,7 @@ def persisted_user() -> User:
 
 
 @pytest.fixture
-def client_auth_header(persisted_user) -> APIClient:
+def client_auth_header(user: User) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -49,12 +50,12 @@ def client_auth_header(persisted_user) -> APIClient:
     """
     token = jwt.encode(
         {
-            "uid": persisted_user.id,
+            "uid": user.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        FAKE_SECRET,
+        SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -64,11 +65,11 @@ def client_auth_header(persisted_user) -> APIClient:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{token_utils_module_path}.{os_environ_get_path_for_mock}",
-    return_value=FAKE_SECRET,
+    f"{token_utils_module_path}.{os_environ_get}",
+    return_value=SECRET,
 )
 def test_user_deletion_successful(
-    token_secret_mock: MagicMock, client_auth_header: APIClient, persisted_user: User
+    token_secret_mock: MagicMock, client_auth_header: APIClient, user: User
 ):
     """
     Tests that the user can successfully delete their own account.
@@ -83,15 +84,11 @@ def test_user_deletion_successful(
     expected_detail_message = response_code_messages.USER_DELETED_SUCCESSFULLY["detail"]
 
     # Ensures the user exists in the database before the deletion request.
-    assert User.objects.filter(
-        id=persisted_user.id, email=persisted_user.email
-    ).exists()
+    assert User.objects.filter(id=user.id, email=user.email).exists()
 
     actual_response = client_auth_header.delete(url)
 
-    assert not User.objects.filter(
-        id=persisted_user.id, email=persisted_user.email
-    ).exists()
+    assert not User.objects.filter(id=user.id, email=user.email).exists()
     assert expected_code == actual_response.data["code"]
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_status_code == actual_response.status_code
