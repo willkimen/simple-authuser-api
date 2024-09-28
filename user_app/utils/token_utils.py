@@ -140,3 +140,51 @@ def check_token(token: str) -> dict:
         raise BlacklistTokenException()
 
     return payload
+
+
+def revoke_tokens(user_id: int, access_payload: dict) -> dict[str, str]:
+    """
+    Revokes both access and refresh tokens for a user and generates a new token pair.
+
+    This function adds the current access token to the blacklist and revokes all active refresh tokens
+    that haven't yet expired by adding them to the blacklist as well. Afterward, it deletes all refresh
+    tokens associated with the user and generates a new token pair.
+
+    Args:
+        user_id (int): The ID of the user whose tokens are being revoked.
+        access_payload (dict): The payload of the access token to be blacklisted.
+
+    Returns:
+        dict[str, str]: A new pair of access and refresh tokens for the user.
+    """
+    # Insert access token in blacklist
+    BlacklistTokenModel.objects.create(
+        user_id=access_payload["uid"],
+        typ=access_payload["typ"],
+        jti=access_payload["jti"],
+        exp=access_payload["exp"],
+    )
+
+    # Finds all occurrences of unexpired refresh.
+    now = timezone.now()
+    refreshes_not_expired = RefreshTokenModel.objects.filter(
+        user_id=user_id, exp__gt=now
+    )
+
+    # Insert all refreshes not expired in blacklist.
+    if refreshes_not_expired:
+        [
+            BlacklistTokenModel.objects.create(
+                user_id=refresh.user_id,
+                typ="refresh",
+                jti=refresh.jti,
+                exp=refresh.exp,
+            )
+            for refresh in refreshes_not_expired
+        ]
+
+    # Delete all occurrences.
+    RefreshTokenModel.objects.filter(user_id=user_id).delete()
+
+    # Create new token pair.
+    return create_pair_token(user_id)
