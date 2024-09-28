@@ -26,6 +26,7 @@ from user_app.serializers import EmailSerializer
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.email_service import send_change_email_code_by_email
+from user_app.utils.token_utils import revoke_tokens
 
 User = get_user_model()
 
@@ -99,4 +100,8 @@ def change_user_email(request):
     request.user.save()
     change_email_code.delete()  # Delete the code as it is no longer useful.
 
-    return Response(USER_EMAIL_CHANGED, status=status.HTTP_200_OK)
+    token_pair: dict[str, str] = revoke_tokens(request.user.id, request.auth)
+
+    return Response(
+        merge_dict(USER_EMAIL_CHANGED, token_pair), status=status.HTTP_200_OK
+    )

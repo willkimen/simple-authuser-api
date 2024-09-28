@@ -57,10 +57,15 @@ CODE_EXPIRED = {
     "detail": "The code has expired.",
 }
 
+
 USER_EMAIL_CHANGED = {
     "code": "USER_EMAIL_CHANGED",
-    "detail": "The user's email was changed successfully.",
+    "detail": (
+        "The user's email was changed successfully. All tokens have been revoked, "
+        "and a new pair of tokens has been generated."
+    ),
 }
+
 
 ACTIVATED_USER = {
     "code": "USER_ACTIVATED",
