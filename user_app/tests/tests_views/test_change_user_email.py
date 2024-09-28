@@ -97,6 +97,14 @@ def test_do_not_change_email_if_code_does_not_exist(
     mock_allow_request: MagicMock,
     client: APIClient,
 ):
+    """
+    This test verifies that when a non-existent change email code is provided,
+    the system returns an appropriate error response.
+
+    Mocked elements:
+    - allow_request: Mocks the rate limit allowing the request to proceed.
+    - os.environ.get: Mocks the secret key for token creation.
+    """
     expected_detail_message = response_code_messages.CODE_NOT_FOUND["detail"]
     expected_code = response_code_messages.CODE_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
@@ -123,6 +131,14 @@ def test_do_not_change_email_if_code_is_expired(
     client: APIClient,
     expired_code: str,
 ):
+    """
+    This test ensures that when an expired email change code is provided,
+    the system returns the correct error response indicating the code has expired.
+
+    Mocked elements:
+    - allow_request: Mocks the rate limit, allowing the request to proceed.
+    - os.environ.get: Mocks the secret key retrieval from environment variables.
+    """
     expected_detail_message = response_code_messages.CODE_EXPIRED["detail"]
     expected_code = response_code_messages.CODE_EXPIRED["code"]
     expected_status_code = status.HTTP_410_GONE
@@ -172,6 +188,14 @@ def test_change_email_successful(
     client: APIClient,
     code: str,
 ):
+    """
+    This test ensures that a user's email is successfully updated when a valid
+    email change code is provided.
+
+    Mocked elements:
+    - allow_request: Mocks the rate limit, allowing the request to proceed.
+    - os.environ.get: Mocks the secret key retrieval from environment variables.
+    """
     expected_detail_message = response_code_messages.USER_EMAIL_CHANGED["detail"]
     expected_code = response_code_messages.USER_EMAIL_CHANGED["code"]
     expected_status_code = status.HTTP_200_OK
@@ -184,6 +208,8 @@ def test_change_email_successful(
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
+    # Check if pair token is included in response.
+    assert "access" and "refresh" in actual_response.data
     # Checks if user with new email exists.
     assert User.objects.filter(email=NEW_EMAIL).exists()
     # Checks if user with old email not exists.
@@ -223,6 +249,13 @@ def test_delete_code_when_user_email_changed_successfully(
 def test_does_not_change_email_when_request_limit_is_reached(
     token_secret_mock: MagicMock, client: APIClient
 ):
+    """
+    This test ensures that the API enforces rate limiting and returns an error when
+    the number of allowed requests is exceeded.
+
+    Mocked elements:
+    - os.environ.get: Mocks the secret key retrieval from environment variables.
+    """
     expected_status_code = status.HTTP_429_TOO_MANY_REQUESTS
     expected_detail_message = "Request was throttled."
     expected_code = "throttled"
