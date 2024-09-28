@@ -10,7 +10,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_code_messages
+from user_app.constants import response_codes_and_messages
 from user_app.constants.path_for_mock import (
     change_email_view_path,
     token_utils_module_path,
@@ -78,8 +78,8 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
     same as the email of the logged-in user.
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_code = response_code_messages.EMAIL_ALREADY_IN_USE["code"]
-    expected_detail_message = response_code_messages.EMAIL_ALREADY_IN_USE["detail"]
+    expected_code = response_codes_and_messages.EMAIL_ALREADY_IN_USE["code"]
+    expected_detail_message = response_codes_and_messages.EMAIL_ALREADY_IN_USE["detail"]
 
     actual_response = client_auth_header.post(
         url, data={"email": LOGGED_USER_EMAIL}, format="json"
@@ -113,8 +113,8 @@ def test_do_not_send_code_if_email_already_exists_in_database(
     )
 
     expected_status_code = status.HTTP_409_CONFLICT
-    expected_code = response_code_messages.EMAIL_ALREADY_EXISTS["code"]
-    expected_detail_message = response_code_messages.EMAIL_ALREADY_EXISTS["detail"]
+    expected_code = response_codes_and_messages.EMAIL_ALREADY_EXISTS["code"]
+    expected_detail_message = response_codes_and_messages.EMAIL_ALREADY_EXISTS["detail"]
 
     actual_response = client_auth_header.post(
         url, data={"email": EMAIL_ALREADY_EXISTS}, format="json"
@@ -144,8 +144,8 @@ def test_do_not_send_code_if_email_sending_fails(
     The system attempts to send the confirmation email, but an SMTP exception occurs.
     """
     expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    expected_code = response_code_messages.ERROR_SENDING_EMAIL["code"]
-    expected_detail_message = response_code_messages.ERROR_SENDING_EMAIL["detail"]
+    expected_code = response_codes_and_messages.ERROR_SENDING_EMAIL["code"]
+    expected_detail_message = response_codes_and_messages.ERROR_SENDING_EMAIL["detail"]
 
     actual_response = client_auth_header.post(
         url, data={"email": "fake_email@email.com"}, format="json"
@@ -171,8 +171,8 @@ def test_send_code_successfully(
     The user provides a valid new email that is not registered to any other account.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_code_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
-    expected_detail_message = response_code_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY[
+    expected_code = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
+    expected_detail_message = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY[
         "detail"
     ]
 

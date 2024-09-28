@@ -17,7 +17,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_code_messages, token_exception_messages
+from user_app.constants import response_codes_and_messages, token_exception_messages
 from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import BlacklistTokenModel
 
@@ -190,8 +190,8 @@ def test_non_refresh_token_not_generate_new_access_token(
         client (APIClient): The test client used to make HTTP requests.
         incorrect_type_token (str): The JWT access token provided as a refresh token.
     """
-    expected_detail_message = response_code_messages.IS_NOT_REFRESH_TOKEN["detail"]
-    expected_code = response_code_messages.IS_NOT_REFRESH_TOKEN["code"]
+    expected_detail_message = response_codes_and_messages.IS_NOT_REFRESH_TOKEN["detail"]
+    expected_code = response_codes_and_messages.IS_NOT_REFRESH_TOKEN["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.post(
@@ -221,8 +221,8 @@ def test_nonexistent_user_not_generate_access_token(
         refresh_token_for_nonexistent_user (str): The refresh token for a
                                                   non-existent user.
     """
-    expected_detail_message = response_code_messages.USER_NOT_FOUND["detail"]
-    expected_code = response_code_messages.USER_NOT_FOUND["code"]
+    expected_detail_message = response_codes_and_messages.USER_NOT_FOUND["detail"]
+    expected_code = response_codes_and_messages.USER_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(
@@ -250,10 +250,10 @@ def test_inactive_user_not_generate_access_token(
         client (APIClient): The test client used to make HTTP requests.
         refresh_token_for_inactive_user (str): The refresh token for an inactive user.
     """
-    expected_detail_message = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED[
+    expected_detail_message = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED[
         "detail"
     ]
-    expected_code = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED["code"]
+    expected_code = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
@@ -281,8 +281,8 @@ def test_valid_refresh_token_creates_access_token(
         client (APIClient): The test client used to make HTTP requests.
         valid_refresh_token (str): The valid refresh token.
     """
-    expected_detail_message = response_code_messages.TOKEN_ACCESS_CREATED["detail"]
-    expected_code = response_code_messages.TOKEN_ACCESS_CREATED["code"]
+    expected_detail_message = response_codes_and_messages.TOKEN_ACCESS_CREATED["detail"]
+    expected_code = response_codes_and_messages.TOKEN_ACCESS_CREATED["code"]
     expected_status_code = status.HTTP_201_CREATED
     expected_typ_payload = "access"
     expected_uid_payload = UID

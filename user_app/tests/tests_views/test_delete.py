@@ -15,7 +15,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_code_messages
+from user_app.constants import response_codes_and_messages
 from user_app.constants.path_for_mock import token_utils_module_path
 
 # =========== Objects and constants ==============
@@ -80,8 +80,8 @@ def test_user_deletion_successful(
         persisted_user (User): The user to be deleted.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_code_messages.USER_DELETED_SUCCESSFULLY["code"]
-    expected_detail_message = response_code_messages.USER_DELETED_SUCCESSFULLY["detail"]
+    expected_code = response_codes_and_messages.USER_DELETED_SUCCESSFULLY["code"]
+    expected_detail_message = response_codes_and_messages.USER_DELETED_SUCCESSFULLY["detail"]
 
     # Ensures the user exists in the database before the deletion request.
     assert User.objects.filter(id=user.id, email=user.email).exists()

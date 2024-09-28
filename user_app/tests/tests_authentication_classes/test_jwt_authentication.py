@@ -29,7 +29,7 @@ from rest_framework.request import Request
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants import (
     authentication_error_messages,
-    response_code_messages,
+    response_codes_and_messages,
     token_exception_messages,
 )
 from user_app.constants.path_for_mock import token_utils_module_path
@@ -308,7 +308,7 @@ def test_authentication_fails_when_token_type_is_incorrect(
         request_with_incorrect_type_token (Request): The request fixture containing a
                                                      JWT token with an incorrect type.
     """
-    expected_error_message = response_code_messages.IS_NOT_ACCESS_TOKEN["detail"]
+    expected_error_message = response_codes_and_messages.IS_NOT_ACCESS_TOKEN["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(request_with_incorrect_type_token)
 
@@ -509,7 +509,7 @@ def test_authentication_fails_when_nonexistent_user(
         token_request_with_nonexistent_user (Request): Request object with a
                                                        JWT for a nonexistent user.
     """
-    expected_error_message = response_code_messages.USER_NOT_FOUND["detail"]
+    expected_error_message = response_codes_and_messages.USER_NOT_FOUND["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(token_request_with_nonexistent_user)
 
@@ -578,7 +578,7 @@ def test_authentication_fails_when_user_with_account_deactivated(
         The authentication fails with the appropriate error message
         indicating the user's account is not activated.
     """
-    expected_error_message = response_code_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
+    expected_error_message = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(token_request_with_deactivated_user)
 

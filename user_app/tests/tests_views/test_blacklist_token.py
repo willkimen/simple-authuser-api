@@ -13,7 +13,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_code_messages, token_exception_messages
+from user_app.constants import response_codes_and_messages, token_exception_messages
 from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import BlacklistTokenModel
 
@@ -171,10 +171,10 @@ def test_token_type_must_be_access_or_refresh(
     """
     Test that a JWT token with an incorrect type field ("typ") returns the appropriate error.
     """
-    expected_detail_message = response_code_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN[
+    expected_detail_message = response_codes_and_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN[
         "detail"
     ]
-    expected_code = response_code_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN["code"]
+    expected_code = response_codes_and_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client_auth_header.post(
@@ -198,8 +198,8 @@ def test_user_must_match_token_owner(
     """
     Test that a token's user ID must match the authenticated user's ID for the request to succeed.
     """
-    expected_detail_message = response_code_messages.USER_TOKEN_MISMATCH["detail"]
-    expected_code = response_code_messages.USER_TOKEN_MISMATCH["code"]
+    expected_detail_message = response_codes_and_messages.USER_TOKEN_MISMATCH["detail"]
+    expected_code = response_codes_and_messages.USER_TOKEN_MISMATCH["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client_auth_header.post(
@@ -224,8 +224,8 @@ def test_logout_success_when_valid_token_is_provided(
     """
     Test that a valid JWT token allows the user to successfully log out (blacklist the token).
     """
-    expected_detail_message = response_code_messages.LOGOUT_SUCCESSFUL["detail"]
-    expected_code = response_code_messages.LOGOUT_SUCCESSFUL["code"]
+    expected_detail_message = response_codes_and_messages.LOGOUT_SUCCESSFUL["detail"]
+    expected_code = response_codes_and_messages.LOGOUT_SUCCESSFUL["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client_auth_header.post(

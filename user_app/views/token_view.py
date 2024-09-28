@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
 
 from user_app.authentication_classes import JWTAuthentication
-from user_app.constants.response_code_messages import (
+from user_app.constants.response_codes_and_messages import (
     IS_NOT_ACCESS_OR_REFRESH_TOKEN,
     IS_NOT_REFRESH_TOKEN,
     LOGIN_SUCCESSFUL,

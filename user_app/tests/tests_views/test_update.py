@@ -15,7 +15,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_code_messages
+from user_app.constants import response_codes_and_messages
 from user_app.constants.path_for_mock import token_utils_module_path
 
 # =========== Objects and constants ==============
@@ -68,8 +68,8 @@ def test_update_first_name_successfully(
     Test that a user can successfully update their first name.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_code_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_code_messages.USER_UPDATED_SUCCESSFULLY["detail"]
+    expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["detail"]
     expected_new_first_name = "new_first_name"
 
     actual_response = client_auth_header.patch(
@@ -95,8 +95,8 @@ def test_update_last_name_successfully(
     Test that a user can successfully update their last name.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_code_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_code_messages.USER_UPDATED_SUCCESSFULLY["detail"]
+    expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["detail"]
     expected_new_last_name = "new_last_name"
 
     actual_response = client_auth_header.patch(
@@ -122,8 +122,8 @@ def test_update_first_and_last_name_successfully(
     Test that a user can successfully update both their first and last names.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_code_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_code_messages.USER_UPDATED_SUCCESSFULLY["detail"]
+    expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["detail"]
     expected_new_first_name = "new_first_name"
     expected_new_last_name = "new_last_name"
 

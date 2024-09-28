@@ -3,7 +3,7 @@ from rest_framework.authentication import BaseAuthentication, get_authorization_
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
-from user_app.constants import authentication_error_messages, response_code_messages
+from user_app.constants import authentication_error_messages, response_codes_and_messages
 from user_app.exceptions import TokenException
 from user_app.utils.token_utils import check_token
 
@@ -71,7 +71,7 @@ class JWTAuthentication(BaseAuthentication):
         # Verify is token is access type
         if payload["typ"] != "access":
             raise AuthenticationFailed(
-                response_code_messages.IS_NOT_ACCESS_TOKEN["detail"]
+                response_codes_and_messages.IS_NOT_ACCESS_TOKEN["detail"]
             )
 
         # Get the user from the payload
@@ -79,10 +79,10 @@ class JWTAuthentication(BaseAuthentication):
             user = User.objects.get(id=payload["uid"])
             if user.is_active is False:
                 raise AuthenticationFailed(
-                    response_code_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
+                    response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
                 )
         except User.DoesNotExist:
-            raise AuthenticationFailed(response_code_messages.USER_NOT_FOUND["detail"])
+            raise AuthenticationFailed(response_codes_and_messages.USER_NOT_FOUND["detail"])
 
         return (user, payload)
 

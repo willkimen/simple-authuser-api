@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
 
 from user_app.authentication_classes import JWTAuthentication
-from user_app.constants.response_code_messages import (
+from user_app.constants.response_codes_and_messages import (
     ERROR_SENDING_EMAIL,
     USER_DELETED_SUCCESSFULLY,
     USER_REGISTERED_SUCCESSFULLY,

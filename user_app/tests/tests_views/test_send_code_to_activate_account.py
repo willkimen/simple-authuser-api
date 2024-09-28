@@ -12,7 +12,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from user_app.constants import response_code_messages, validation_error_messages
+from user_app.constants import response_codes_and_messages, validation_error_messages
 from user_app.constants.path_for_mock import activate_account_view_path
 
 # ========== Objects and constants ============
@@ -117,8 +117,8 @@ def test_does_not_send_email_when_email_field_is_empty(
 
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.BLANK_FIELD
-    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
-    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
 
     actual_response = client.post(url, data={"email": ""}, format="json")
 
@@ -148,8 +148,8 @@ def test_does_not_send_email_when_email_field_is_null(
     """
     expected_error_message_field = validation_error_messages.NULL_FIELD
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
-    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
 
     actual_response = client.post(url, data={"email": None}, format="json")
 
@@ -197,8 +197,8 @@ def test_does_not_send_email_with_invalid_email_format(
     """
     expected_error_message_filed = validation_error_messages.INVALID_FORMAT_EMAIL
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_detail_message = response_code_messages.VALIDATION_ERRORS["detail"]
-    expected_code = response_code_messages.VALIDATION_ERRORS["code"]
+    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
 
     actual_response = client.post(
         url, data={"email": invalid_email_format}, format="json"
@@ -228,8 +228,8 @@ def test_does_not_send_email_when_user_does_not_exists(
     This test checks that the server returns a 404 Not Found status code and an appropriate
     error message when the email field contains an email address that does not belong to any user.
     """
-    expected_detail_message = response_code_messages.USER_NOT_FOUND["detail"]
-    expected_code = response_code_messages.USER_NOT_FOUND["code"]
+    expected_detail_message = response_codes_and_messages.USER_NOT_FOUND["detail"]
+    expected_code = response_codes_and_messages.USER_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data={"email": EMAIL_NONEXISTENT}, format="json")
@@ -260,10 +260,10 @@ def test_does_not_send_email_when_user_has_already_activated(
     This test checks that the server returns a 400 Bad Request status code and an appropriate
     error message when the email field contains an email address of a user who has already activated their account.
     """
-    expected_detail_message = response_code_messages.USER_HAS_ALREADY_ACTIVATED[
+    expected_detail_message = response_codes_and_messages.USER_HAS_ALREADY_ACTIVATED[
         "detail"
     ]
-    expected_code = response_code_messages.USER_HAS_ALREADY_ACTIVATED["code"]
+    expected_code = response_codes_and_messages.USER_HAS_ALREADY_ACTIVATED["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.post(url, data={"email": active_user_email}, format="json")
@@ -300,8 +300,8 @@ def test_failed_to_send_email(
     This test checks that the server returns a 500 Internal Server Error status code and an appropriate
     error message when there is an SMTP exception while sending the activation email.
     """
-    expected_detail_message = response_code_messages.ERROR_SENDING_EMAIL["detail"]
-    expected_code = response_code_messages.ERROR_SENDING_EMAIL["code"]
+    expected_detail_message = response_codes_and_messages.ERROR_SENDING_EMAIL["detail"]
+    expected_code = response_codes_and_messages.ERROR_SENDING_EMAIL["code"]
     expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     actual_response = client.post(
@@ -338,10 +338,10 @@ def test_send_email_successfully(
     success message when the activation email is sent successfully.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_detail_message = response_code_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY[
+    expected_detail_message = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY[
         "detail"
     ]
-    expected_code = response_code_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
+    expected_code = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
 
     actual_response = client.post(
         url, data={"email": deactive_user_email}, format="json"
