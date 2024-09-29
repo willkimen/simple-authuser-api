@@ -2,7 +2,7 @@ import random
 import string
 
 
-def generate_random_code(length=8, prefix=""):
+def generate_random_code(length: int = 8, prefix: str = "") -> str:
     """
     Generates a random alphanumeric code with an optional prefix.
 

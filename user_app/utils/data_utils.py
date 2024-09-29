@@ -1,7 +1,7 @@
 import copy
 
 
-def merge_dict(original_dict, update_data):
+def merge_dict(original_dict: dict, update_data: dict) -> dict:
     """
     Creates a deep copy of the original dictionary, updates it with new data,
     and returns the updated dictionary.

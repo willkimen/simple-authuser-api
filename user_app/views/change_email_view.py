@@ -3,6 +3,7 @@ This module provides views related to user email changes.
 """
 
 import smtplib
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -87,7 +88,7 @@ def change_user_email(request):
         return Response(CODE_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
     # Checks if the code is expired
-    now = timezone.now()
+    now: datetime = timezone.now()
     if change_email_code.expires_at < now:
         change_email_code.delete()
         return Response(

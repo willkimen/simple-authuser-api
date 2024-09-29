@@ -3,7 +3,10 @@ from rest_framework.authentication import BaseAuthentication, get_authorization_
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
-from user_app.constants import authentication_error_messages, response_codes_and_messages
+from user_app.constants import (
+    authentication_error_messages,
+    response_codes_and_messages,
+)
 from user_app.exceptions import TokenException
 from user_app.utils.token_utils import check_token
 
@@ -64,7 +67,7 @@ class JWTAuthentication(BaseAuthentication):
 
         # Validate the token and get the payload
         try:
-            payload = check_token(token)
+            payload: dict = check_token(token)
         except TokenException as e:
             raise AuthenticationFailed(str(e))
 
@@ -82,7 +85,9 @@ class JWTAuthentication(BaseAuthentication):
                     response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
                 )
         except User.DoesNotExist:
-            raise AuthenticationFailed(response_codes_and_messages.USER_NOT_FOUND["detail"])
+            raise AuthenticationFailed(
+                response_codes_and_messages.USER_NOT_FOUND["detail"]
+            )
 
         return (user, payload)
 

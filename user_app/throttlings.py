@@ -8,5 +8,5 @@ class FivePerMinuteRateLimit(SimpleRateThrottle):
 
     rate = "5/min"
 
-    def get_cache_key(self, request, view):
+    def get_cache_key(self, request, view) -> str:
         return self.get_ident(request)

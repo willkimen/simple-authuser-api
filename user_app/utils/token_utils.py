@@ -1,9 +1,10 @@
 import hashlib
 import os
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import jwt
+from django.db.models.query import QuerySet
 from django.utils import timezone
 
 from user_app.exceptions import (
@@ -37,10 +38,10 @@ def create_payload(user_id: int, is_refresh: bool = False) -> dict:
     # Create a unique JWT ID (JTI) using the user ID and the current timestamp.
     unix_timestamp = str(int(time.time()))
     hash = str(user_id) + unix_timestamp
-    jti = hashlib.sha256(hash.encode()).hexdigest()
+    jti: str = hashlib.sha256(hash.encode()).hexdigest()
 
     # Create an expiration timestamp for the token.
-    exp = (
+    exp: float = (
         (timezone.now() + timedelta(weeks=EXPIRATION_TIME_FOR_REFRESH)).timestamp()
         if is_refresh
         else (
@@ -56,7 +57,7 @@ def create_payload(user_id: int, is_refresh: bool = False) -> dict:
     }
 
 
-def create_token(user_id: int, is_refresh: bool = False):
+def create_token(user_id: int, is_refresh: bool = False) -> str:
     """
     Generates a JWT token for a given user.
 
@@ -75,7 +76,7 @@ def create_token(user_id: int, is_refresh: bool = False):
     """
 
     if is_refresh:
-        payload = create_payload(user_id, is_refresh=True)
+        payload: dict = create_payload(user_id, is_refresh=True)
 
         # Save the jti refresh token in database
         RefreshTokenModel.objects.create(
@@ -120,7 +121,7 @@ def check_token(token: str) -> dict:
         BlacklistTokenException: If the token is found in the blacklist.
     """
     try:
-        payload = jwt.decode(
+        payload: dict = jwt.decode(
             jwt=token,
             key=os.environ.get("ENV_JWT_SECRET"),
             algorithms=["HS256"],
@@ -166,8 +167,8 @@ def revoke_tokens(user_id: int, access_payload: dict) -> dict[str, str]:
     )
 
     # Finds all occurrences of unexpired refresh.
-    now = timezone.now()
-    refreshes_not_expired = RefreshTokenModel.objects.filter(
+    now: datetime = timezone.now()
+    refreshes_not_expired: QuerySet = RefreshTokenModel.objects.filter(
         user_id=user_id, exp__gt=now
     )
 

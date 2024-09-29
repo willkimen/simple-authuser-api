@@ -62,8 +62,8 @@ class ExpiredSignatureException(TokenException):
         """
         Initializes the ExpiredSignatureError with default message and code.
         """
-        self.detail = token_exception_messages.EXPIRED_SIGNATURE["detail"]
-        self.code = token_exception_messages.EXPIRED_SIGNATURE["code"]
+        self.detail: str = token_exception_messages.EXPIRED_SIGNATURE["detail"]
+        self.code: str = token_exception_messages.EXPIRED_SIGNATURE["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -83,8 +83,8 @@ class InvalidAlgorithmException(TokenException):
         """
         Initializes the InvalidAlgorithmError with default message and code.
         """
-        self.detail = token_exception_messages.INVALID_ALGORITHM["detail"]
-        self.code = token_exception_messages.INVALID_ALGORITHM["code"]
+        self.detail: str = token_exception_messages.INVALID_ALGORITHM["detail"]
+        self.code: str = token_exception_messages.INVALID_ALGORITHM["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -104,8 +104,8 @@ class InvalidSignatureException(TokenException):
         """
         Initializes the InvalidSignatureError with default message and code.
         """
-        self.detail = token_exception_messages.INVALID_SIGNATURE["detail"]
-        self.code = token_exception_messages.INVALID_SIGNATURE["code"]
+        self.detail: str = token_exception_messages.INVALID_SIGNATURE["detail"]
+        self.code: str = token_exception_messages.INVALID_SIGNATURE["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -125,8 +125,8 @@ class DecodeException(TokenException):
         """
         Initializes the DecodeError with default message and code.
         """
-        self.detail = token_exception_messages.DECODE_ERROR["detail"]
-        self.code = token_exception_messages.DECODE_ERROR["code"]
+        self.detail: str = token_exception_messages.DECODE_ERROR["detail"]
+        self.code: str = token_exception_messages.DECODE_ERROR["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -146,8 +146,8 @@ class InvalidTokenException(TokenException):
         """
         Initializes the InvalidTokenError with default message and code.
         """
-        self.detail = token_exception_messages.INVALID_TOKEN["detail"]
-        self.code = token_exception_messages.INVALID_TOKEN["code"]
+        self.detail: str = token_exception_messages.INVALID_TOKEN["detail"]
+        self.code: str = token_exception_messages.INVALID_TOKEN["code"]
         super().__init__(self.detail, self.code)
 
 
@@ -169,6 +169,6 @@ class BlacklistTokenException(TokenException):
         """
         Initialize the BlacklistTokenException with a default message and code.
         """
-        self.detail = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
-        self.code = token_exception_messages.TOKEN_IN_BLACKLIST["code"]
+        self.detail: str = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
+        self.code: str = token_exception_messages.TOKEN_IN_BLACKLIST["code"]
         super().__init__(self.detail, self.code)

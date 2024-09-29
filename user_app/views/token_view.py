@@ -67,7 +67,7 @@ def refresh_token_access(request):
 
     # Verify if the token is valid, it returns its payload.
     try:
-        payload = check_token(refresh)
+        payload: dict = check_token(refresh)
     except BlacklistTokenException as e:
         return Response(e.dict_repr(), status=status.HTTP_403_FORBIDDEN)
     except TokenException as e:
@@ -110,7 +110,7 @@ def blacklist_token(request):
 
     # Verify if the token is valid, it returns its payload.
     try:
-        payload = check_token(token)
+        payload: dict = check_token(token)
     except BlacklistTokenException as e:
         return Response(e.dict_repr(), status=status.HTTP_403_FORBIDDEN)
     except TokenException as e:

@@ -1,4 +1,5 @@
 import smtplib
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -44,7 +45,7 @@ def activate_account(request):
         )
 
     # Checks if the code is expired
-    now = timezone.now()
+    now: datetime = timezone.now()
     if account_activation_code.expires_at < now:
         account_activation_code.delete()  # Delete the code as it is no longer useful.
         return Response(

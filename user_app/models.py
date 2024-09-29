@@ -21,7 +21,7 @@ class UserProfileManager(BaseUserManager):
     where the email is used as the username.
     """
 
-    def create_user(self, email, password, is_active=False, **extra_fields):
+    def create_user(self, email: str, password: str, is_active=False, **extra_fields):
         """
         Create a user of the UserProfileManager type, which is by default
         persisted as inactive.
@@ -43,7 +43,7 @@ class UserProfileManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password, **extra_fields):
+    def create_superuser(self, email: str, password: str, **extra_fields):
         """
         Creates and returns a superuser with the specified email and password.
         Fields like email and password are required, and if they are not provided,
@@ -150,15 +150,15 @@ class ConfirmationCodeBaseModel(models.Model):
         """
         if not self.pk:
             if self.created_at is None:
-                self.created_at = timezone.now()
+                self.created_at: datetime = timezone.now()
 
             if self.expires_at is None:
-                self.expires_at = self.created_at + timedelta(
+                self.expires_at: datetime = self.created_at + timedelta(
                     hours=EXPIRATION_TIME_IN_HOURS
                 )
 
             if not self.code:
-                self.code = generate_random_code(prefix=self.__prefix)
+                self.code: str = generate_random_code(prefix=self.__prefix)
 
         super().save(*args, **kwargs)
 
@@ -262,7 +262,7 @@ class TokenModel(models.Model):
         Calls the parent class's save method to perform the actual save operation.
         """
         if isinstance(self.exp, int):
-            self.exp = timezone.make_aware(datetime.fromtimestamp(self.exp))
+            self.exp: datetime = timezone.make_aware(datetime.fromtimestamp(self.exp))
         super().save(*args, **kwargs)
 
     class Meta:
