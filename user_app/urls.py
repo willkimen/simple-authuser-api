@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     activate_account,
     blacklist_token,
+    change_password,
     change_user_email,
     delete,
     obtain_token_pair,
@@ -20,6 +21,7 @@ urlpatterns = [
     path("user/update/", update, name="update"),
     path("user/detail/", user_detail, name="detail"),
     path("user/delete/", delete, name="delete"),
+    path("user/change_passoword/", change_password, name="change_password"),
     path(
         "user/activate/",
         activate_account,

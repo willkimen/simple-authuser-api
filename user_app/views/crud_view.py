@@ -6,6 +6,7 @@ returning data for a given user.
 import smtplib
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
@@ -13,18 +14,22 @@ from rest_framework.response import Response
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants.response_codes_and_messages import (
     ERROR_SENDING_EMAIL,
+    PASSWORD_DO_NOT_MATCH,
     USER_DELETED_SUCCESSFULLY,
+    USER_PASSWORD_CHANGED,
     USER_REGISTERED_SUCCESSFULLY,
     USER_UPDATED_SUCCESSFULLY,
     VALIDATION_ERRORS,
 )
 from user_app.serializers import (
+    UserChangePasswordSerializer,
     UserRequestSerializer,
     UserResponseSerializer,
     UserUpdateSerializer,
 )
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.email_service import send_activation_code_by_email
+from user_app.utils.token_utils import revoke_tokens
 
 User = get_user_model()
 
@@ -118,3 +123,42 @@ def delete(request):
     """
     request.user.delete()
     return Response(USER_DELETED_SUCCESSFULLY, status=status.HTTP_200_OK)
+
+
+@api_view(["PATCH"])
+@authentication_classes([JWTAuthentication])
+def change_password(request):
+    """
+    Allows a user to change their password.
+
+    This endpoint requires the user to be authenticated with a JWT token. It accepts
+    PATCH requests containing the current password and the new password. If the
+    provided current password does not match the stored password, an error is returned.
+
+    Request Body:
+    - actual_password: The user's current password.
+    - new_password: The new password the user wants to set.
+    """
+    serializer = UserChangePasswordSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(
+            merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Check if the password coming from the request
+    # is the same as that of the logged in user.
+    if not check_password(serializer.data["actual_password"], request.user.password):
+        return Response(PASSWORD_DO_NOT_MATCH, status=status.HTTP_400_BAD_REQUEST)
+
+    # Change and save new password for user.
+    request.user.set_password(request.data["new_password"])
+    request.user.save()
+
+    # Revoke access token and all refreshes, and generate new token pair.
+    token_pair: dict[str, str] = revoke_tokens(request.user.id, request.auth)
+
+    return Response(
+        merge_dict(USER_PASSWORD_CHANGED, token_pair), status=status.HTTP_200_OK
+    )

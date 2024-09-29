@@ -98,4 +98,21 @@ class EmailSerializer(serializers.Serializer):
     Serializer for handling email input.
     """
 
-    email = serializers.EmailField()
+    email = serializers.EmailField(required=True)
+
+
+class UserChangePasswordSerializer(serializers.Serializer):
+    actual_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_new_password(self, new_password):
+        """
+        Validates the password strength using Django's standard validations.
+        """
+        try:
+            # Use Django's standard password validation
+            validate_password(new_password)
+        except ValidationError as e:
+            # Raise a validation error with the details of the error
+            raise serializers.ValidationError(detail=e)
+        return new_password
