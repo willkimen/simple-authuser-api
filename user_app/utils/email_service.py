@@ -3,12 +3,20 @@ from textwrap import dedent
 
 from django.core.mail import EmailMessage
 
-from user_app.constants.prefixes import ACTIVATE_ACCOUNT_PREFIX, CHANGE_EMAIL_PREFIX
-from user_app.models import AccountActivationCodeModel, ChangeEmailCodeModel
+from user_app.constants.prefixes import (
+    ACTIVATE_ACCOUNT_PREFIX,
+    CHANGE_EMAIL_PREFIX,
+    RESET_PASSWORD_PREFIX,
+)
+from user_app.models import (
+    AccountActivationCodeModel,
+    ChangeEmailCodeModel,
+    ResetPasswordCodeModel,
+)
 from user_app.utils.random_code import generate_random_code
 
 
-def __send_email_with_error_handling(email_message):
+def __send_email_with_error_handling(email_message: EmailMessage):
     """
     Sends an email and handles any SMTP-related errors.
 
@@ -66,9 +74,9 @@ def send_change_email_code_by_email(actual_email: str, new_email: str):
     email_subject = "Confirm your email address change"
 
     # Creates code and verify if already exists in database
-    code = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
+    code: str = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
     while ChangeEmailCodeModel.objects.filter(code=code).exists():
-        code = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
+        code: str = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
 
     email_body = dedent(
         f"""
@@ -108,9 +116,9 @@ def send_activation_code_by_email(user_email: str) -> None:
     email_subject = "Confirm your email address"
 
     # Creates code and verify if already exists in database
-    code = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
+    code: str = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
     while AccountActivationCodeModel.objects.filter(code=code).exists():
-        code = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
+        code: str = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
 
     email_body = dedent(
         f"""
@@ -133,6 +141,48 @@ def send_activation_code_by_email(user_email: str) -> None:
         raise smtplib.SMTPException(str(e))
 
     AccountActivationCodeModel.objects.create(
+        code=code,
+        user_id=user_email,
+    )
+
+
+def send_reset_password_code_by_email(user_email: str) -> None:
+    """
+    Sends a password reset code to the user's email address.
+
+    This function generates a unique password reset code and sends it via email
+    to the provided email address.
+    The email contains the reset code and instructions. If an error occurs
+    during the email sending process, the exception is raised and handled accordingly.
+    """
+    email_subject = "Reset Your Account Password"
+
+    # Creates code and verify if already exists in database
+    code: str = generate_random_code(prefix=RESET_PASSWORD_PREFIX)
+    while ResetPasswordCodeModel.objects.filter(code=code).exists():
+        code: str = generate_random_code(prefix=RESET_PASSWORD_PREFIX)
+
+    email_body = dedent(
+        f"""
+    Your password reset code is below - enter it in your open browser window to reset your password.
+
+    {code}
+
+    If you haven't requested a password reset, there's nothing to worry about - you can safely ignore this email.
+    """
+    )
+
+    # Create the email message object
+    email_message = EmailMessage(
+        subject=email_subject, body=email_body, to=[user_email]
+    )
+
+    try:
+        __send_email_with_error_handling(email_message)
+    except smtplib.SMTPException as e:
+        raise smtplib.SMTPException(str(e))
+
+    ResetPasswordCodeModel.objects.create(
         code=code,
         user_id=user_email,
     )

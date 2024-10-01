@@ -6,6 +6,10 @@ activate_account_view_path = importlib.import_module(
     "user_app.views.activate_account_view"
 ).__name__
 
+reset_password_view = importlib.import_module(
+    "user_app.views.reset_password_view"
+).__name__
+
 crud_view_path = importlib.import_module("user_app.views.crud_view").__name__
 
 change_email_view_path = importlib.import_module(

@@ -10,7 +10,7 @@ from user_app.utils.random_code import generate_random_code
 """ 
 Insert an integer representing the number of hours to define the expiration
 time for the confirmation code, which will be used for various cases:
-user account activation, email change, password change, and password reset.
+user account activation, password change, and password reset.
 """
 EXPIRATION_TIME_IN_HOURS = 24
 
@@ -234,6 +234,39 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
     class Meta:
         db_table = "change_email_code"
         verbose_name = "change email code"
+
+
+class ResetPasswordCodeModel(ConfirmationCodeBaseModel):
+    """
+    Model for storing password reset confirmation codes.
+
+    This model stores codes used for resetting a user's password.
+    It extends the `ConfirmationCodeBaseModel` and is associated with the user
+    via their email address.
+
+    Fields:
+    - `user` (ForeignKey): Foreign key that relates to the custom user
+                           model UserProfileModel. The value of this field is
+                           the user's email, not the primary key.
+
+    How to relate the user to this model?:
+        You can either pass a user instance to the .user=user_instance or
+        the user's email to the .user_id=user_instance.email.
+    """
+
+    __prefix = prefixes.RESET_PASSWORD_PREFIX
+    user = models.ForeignKey(
+        "UserProfileModel",
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="reset_password_codes",
+        to_field="email",
+        db_column="user_email",
+    )
+
+    class Meta:
+        db_table = "reset_password_code"
+        verbose_name = "reset password code"
 
 
 class TokenModel(models.Model):
