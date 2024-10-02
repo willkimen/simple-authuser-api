@@ -23,6 +23,7 @@ User = get_user_model()
 url: str = reverse("delete")
 SECRET = "token_secret"
 os_environ_get = "os.environ.get"
+USER_ID = 100
 
 
 # ============ Fixtures ================
@@ -32,6 +33,7 @@ def user() -> User:
     Provides a activated user object that is persisted in the database.
     """
     return User.objects.create_user(
+        id=USER_ID,
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fake@email.com",
@@ -69,7 +71,8 @@ def client_auth_header(user: User) -> APIClient:
     return_value=SECRET,
 )
 def test_user_deletion_successful(
-    token_secret_mock: MagicMock, client_auth_header: APIClient, user: User
+    token_secret_mock: MagicMock,
+    client_auth_header: APIClient,
 ):
     """
     Tests that the user can successfully delete their own account.
@@ -77,18 +80,19 @@ def test_user_deletion_successful(
     Args:
         token_secret_mock (MagicMock): Mocked environment variable for JWT secret.
         client_auth_header (APIClient): API client with valid JWT authentication.
-        persisted_user (User): The user to be deleted.
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_codes_and_messages.USER_DELETED_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.USER_DELETED_SUCCESSFULLY["detail"]
-
-    # Ensures the user exists in the database before the deletion request.
-    assert User.objects.filter(id=user.id, email=user.email).exists()
+    expected_detail_message = response_codes_and_messages.USER_DELETED_SUCCESSFULLY[
+        "detail"
+    ]
+    expected_user_delete = User.objects.get(id=USER_ID)
 
     actual_response = client_auth_header.delete(url)
 
-    assert not User.objects.filter(id=user.id, email=user.email).exists()
+    assert not User.objects.filter(
+        id=expected_user_delete.id, email=expected_user_delete.email
+    ).exists()
     assert expected_code == actual_response.data["code"]
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_status_code == actual_response.status_code
