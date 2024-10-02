@@ -133,7 +133,7 @@ class ConfirmationCodeBaseModel(models.Model):
     - The class attribute __prefix is private and should not be set.
     """
 
-    __prefix = ""
+    _prefix = ""
     code = models.CharField(
         max_length=16,
         unique=True,
@@ -158,7 +158,7 @@ class ConfirmationCodeBaseModel(models.Model):
                 )
 
             if not self.code:
-                self.code: str = generate_random_code(prefix=self.__prefix)
+                self.code: str = generate_random_code(prefix=self._prefix)
 
         super().save(*args, **kwargs)
 
@@ -185,7 +185,7 @@ class AccountActivationCodeModel(ConfirmationCodeBaseModel):
         the user's email to the .user_id=user_instance.email.
     """
 
-    __prefix = prefixes.ACTIVATE_ACCOUNT_PREFIX
+    _prefix = prefixes.ACTIVATE_ACCOUNT_PREFIX
     user = models.ForeignKey(
         "UserProfileModel",
         on_delete=models.CASCADE,
@@ -220,7 +220,7 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
         the user's email to the .user_id=user_instance.email.
     """
 
-    __prefix = prefixes.CHANGE_EMAIL_PREFIX
+    _prefix = prefixes.CHANGE_EMAIL_PREFIX
     user = models.ForeignKey(
         "UserProfileModel",
         on_delete=models.CASCADE,
@@ -254,7 +254,7 @@ class ResetPasswordCodeModel(ConfirmationCodeBaseModel):
         the user's email to the .user_id=user_instance.email.
     """
 
-    __prefix = prefixes.RESET_PASSWORD_PREFIX
+    _prefix = prefixes.RESET_PASSWORD_PREFIX
     user = models.ForeignKey(
         "UserProfileModel",
         on_delete=models.CASCADE,

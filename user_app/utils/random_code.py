@@ -20,4 +20,4 @@ def generate_random_code(length: int = 8, prefix: str = "") -> str:
     """
     characters = string.ascii_letters + string.digits
     random_code = "".join(random.choice(characters) for _ in range(length))
-    return f"{prefix}-{random_code}"
+    return f"{prefix}{random_code}"
