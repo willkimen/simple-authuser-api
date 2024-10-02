@@ -9,6 +9,7 @@ from .views import (
     obtain_token_pair,
     refresh_token_access,
     register,
+    reset_password,
     send_code_to_activate_account,
     send_code_to_email_change,
     send_code_to_reset_password,
@@ -51,6 +52,11 @@ urlpatterns = [
         "user/send_code/reset_password/",
         send_code_to_reset_password,
         name="send_code_to_reset_password",
+    ),
+    path(
+        "user/reset_password/",
+        reset_password,
+        name="reset_password",
     ),
     # =============== JWT Endpoints =================
     # Endpoint to obtain a JWT pair (access and refresh tokens) after successful login.

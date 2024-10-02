@@ -116,3 +116,40 @@ class UserChangePasswordSerializer(serializers.Serializer):
             # Raise a validation error with the details of the error
             raise serializers.ValidationError(detail=e)
         return new_password
+
+
+class UserResetPasswordSerializer(serializers.Serializer):
+    """
+    Serializer used to validate the data provided during the password reset process.
+    """
+
+    code = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirmation_new_password = serializers.CharField(required=True)
+
+    def validate(self, data):
+        """
+        Validates the provided data, ensuring the passwords match.
+        Raises a validation error if the passwords do not match.
+        """
+        # Check if the new_password and confirmation_new_password match.
+        if data.get("new_password") != data.get("confirmation_new_password"):
+            raise serializers.ValidationError(
+                detail={
+                    "confirmation_new_password": validation_error_messages.PASSWORD_DO_NOT_MATCH
+                }
+            )
+        return data
+
+    def validate_new_password(self, new_password):
+        """
+        Validates the strength of the new password using Django's standard validations.
+        Raises a validation error if the password does not meet security requirements.
+        """
+        try:
+            # Use Django's standard password validation
+            validate_password(new_password)
+        except ValidationError as e:
+            # Raise a validation error with the details of the error
+            raise serializers.ValidationError(detail=e)
+        return new_password

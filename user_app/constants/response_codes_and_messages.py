@@ -59,12 +59,17 @@ CODE_EXPIRED = {
 
 USER_EMAIL_CHANGED = {
     "code": "USER_EMAIL_CHANGED",
-    "detail": "Email changed successfully. Your credentials have been updated.",
+    "detail": "Email changed successfully. Please log in again using your new email address.",
 }
 
 USER_PASSWORD_CHANGED = {
     "code": "USER_PASSWORD_CHANGED",
-    "detail": "Password changed successfully. Your credentials have been updated.",
+    "detail": "Password changed successfully. Please log in again using your new password.",
+}
+
+USER_PASSWORD_RESET = {
+    "code": "USER_PASSWORD_RESET",
+    "detail": "Password reset successfully. Please log in again using your new password.",
 }
 
 PASSWORD_DO_NOT_MATCH = {
