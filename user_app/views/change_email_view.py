@@ -101,7 +101,7 @@ def change_user_email(request):
     request.user.save()
     change_email_code.delete()  # Delete the code as it is no longer useful.
 
-    token_pair: dict[str, str] = revoke_tokens(request.user.id, request.auth)
+    token_pair: dict[str, str] = revoke_tokens(request.user.id)
 
     return Response(
         merge_dict(USER_EMAIL_CHANGED, token_pair), status=status.HTTP_200_OK

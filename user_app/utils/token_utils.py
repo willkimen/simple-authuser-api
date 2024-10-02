@@ -15,7 +15,7 @@ from user_app.exceptions import (
     InvalidSignatureException,
     InvalidTokenException,
 )
-from user_app.models import BlacklistTokenModel, RefreshTokenModel
+from user_app.models import BlacklistTokenModel, ValidTokenModel
 
 EXPIRATION_TIME_FOR_REFRESH = 1
 EXPIRATION_TIME_FOR_ACCESS = 10
@@ -62,7 +62,7 @@ def create_token(user_id: int, is_refresh: bool = False) -> str:
     Generates a JWT token for a given user.
 
     If `is_refresh` is set to True, a refresh token is generated
-    and stored in the database.
+    and stored in the database else a access is generated and stored in database.
     Otherwise, an access token is created. Both tokens are signed using a secret key
     stored in the environment variable `ENV_JWT_SECRET`.
 
@@ -75,17 +75,14 @@ def create_token(user_id: int, is_refresh: bool = False) -> str:
         str: The encoded JWT token.
     """
 
-    if is_refresh:
-        payload: dict = create_payload(user_id, is_refresh=True)
+    payload: dict = create_payload(user_id, is_refresh)
 
-        # Save the jti refresh token in database
-        RefreshTokenModel.objects.create(
-            jti=payload["jti"], user_id=user_id, exp=payload["exp"]
-        )
+    # Save the jti token in database
+    ValidTokenModel.objects.create(
+        user_id=user_id, jti=payload["jti"], exp=payload["exp"], typ=payload["typ"]
+    )
 
-        return jwt.encode(payload, os.environ.get("ENV_JWT_SECRET"))
-
-    return jwt.encode(create_payload(user_id), os.environ.get("ENV_JWT_SECRET"))
+    return jwt.encode(payload, os.environ.get("ENV_JWT_SECRET"))
 
 
 def create_pair_token(user_id: int) -> dict:
@@ -143,49 +140,41 @@ def check_token(token: str) -> dict:
     return payload
 
 
-def revoke_tokens(user_id: int, access_payload: dict) -> dict[str, str]:
+def revoke_tokens(user_id: int) -> dict[str, str]:
     """
     Revokes both access and refresh tokens for a user and generates a new token pair.
 
-    This function adds the current access token to the blacklist and revokes all active refresh tokens
-    that haven't yet expired by adding them to the blacklist as well. Afterward, it deletes all refresh
-    tokens associated with the user and generates a new token pair.
+    This function revokes all active  tokens that haven't yet expired by adding them to
+    the blacklist. Afterward, it deletes all tokens associated with the user
+    and generates a new token pair.
 
-    Args:
-        user_id (int): The ID of the user whose tokens are being revoked.
-        access_payload (dict): The payload of the access token to be blacklisted.
+       Args:
+           user_id (int): The ID of the user whose tokens are being revoked.
 
-    Returns:
-        dict[str, str]: A new pair of access and refresh tokens for the user.
+       Returns:
+           dict[str, str]: A new pair of access and refresh tokens for the user.
     """
-    # Insert access token in blacklist
-    BlacklistTokenModel.objects.create(
-        user_id=access_payload["uid"],
-        typ=access_payload["typ"],
-        jti=access_payload["jti"],
-        exp=access_payload["exp"],
-    )
 
     # Finds all occurrences of unexpired refresh.
     now: datetime = timezone.now()
-    refreshes_not_expired: QuerySet = RefreshTokenModel.objects.filter(
+    tokens_not_expired: QuerySet = ValidTokenModel.objects.filter(
         user_id=user_id, exp__gt=now
     )
 
     # Insert all refreshes not expired in blacklist.
-    if refreshes_not_expired:
+    if tokens_not_expired:
         [
             BlacklistTokenModel.objects.create(
-                user_id=refresh.user_id,
-                typ="refresh",
-                jti=refresh.jti,
-                exp=refresh.exp,
+                user_id=token.user_id,
+                typ=token.typ,
+                jti=token.jti,
+                exp=token.exp,
             )
-            for refresh in refreshes_not_expired
+            for token in tokens_not_expired
         ]
 
     # Delete all occurrences.
-    RefreshTokenModel.objects.filter(user_id=user_id).delete()
+    ValidTokenModel.objects.filter(user_id=user_id).delete()
 
     # Create new token pair.
     return create_pair_token(user_id)

@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from user_app.constants.path_for_mock import token_utils_module_path
-from user_app.models import RefreshTokenModel
+from user_app.models import ValidTokenModel
 from user_app.utils.token_utils import create_token
 
 # ========== Objects and constants ============
@@ -45,14 +45,14 @@ def payload(user: User) -> dict:
     return_value=SECRET,
 )
 @patch(f"{token_utils_module_path}.{create_payload}")
-def test_refresh_token_persisted_in_databas(
+def test_token_persisted_in_database(
     mock_create_payload: MagicMock, mock_secret: MagicMock, payload: dict
 ):
     """
-    Test if a refresh token is correctly persisted in the database.
+    Test if a token is correctly persisted in the database.
 
     This test mocks the `create_payload` function to return a predefined payload and
-    checks whether the corresponding refresh token is stored in the RefreshTokenModel.
+    checks whether the corresponding token is stored in the ValidTokenModel.
 
     Args:
         mock_create_payload (MagicMock): Mocked version of the create_payload function.
@@ -68,6 +68,9 @@ def test_refresh_token_persisted_in_databas(
     # Converte UNIX Timestamp date to aware datetime.
     payload["exp"] = timezone.make_aware(datetime.fromtimestamp(payload["exp"]))
 
-    assert RefreshTokenModel.objects.filter(
-        user_id=payload["uid"], jti=payload["jti"], exp=payload["exp"]
+    assert ValidTokenModel.objects.filter(
+        user_id=payload["uid"],
+        jti=payload["jti"],
+        exp=payload["exp"],
+        typ=payload["typ"],
     ).exists()

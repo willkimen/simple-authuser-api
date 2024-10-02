@@ -157,7 +157,7 @@ def change_password(request):
     request.user.save()
 
     # Revoke access token and all refreshes, and generate new token pair.
-    token_pair: dict[str, str] = revoke_tokens(request.user.id, request.auth)
+    token_pair: dict[str, str] = revoke_tokens(request.user.id)
 
     return Response(
         merge_dict(USER_PASSWORD_CHANGED, token_pair), status=status.HTTP_200_OK

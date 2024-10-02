@@ -277,12 +277,25 @@ class TokenModel(models.Model):
     The expiration field is managed to ensure it's stored as a `DateTimeField`,
     converting from an integer timestamp if necessary.
 
+
+    Attributes:
+        TYPE_TOKEN_CHOICES (list): Choices for the type of token.
+
+        typ (CharField): The type of the token, which can be
+                         either 'access' or 'refresh'. This field is limited
+                         to the choices defined in `TYPE_TOKEN_CHOICES`.
     Methods:
         save: Overrides the default save method to handle the `exp` field conversion.
     """
 
+    TYPE_TOKEN_CHOICES = [
+        ("access", "access"),
+        ("refresh", "refresh"),
+    ]
+
     jti = models.CharField(max_length=255)
     exp = models.DateTimeField()
+    typ = models.CharField(max_length=10, choices=TYPE_TOKEN_CHOICES)
 
     def save(self, *args, **kwargs):
         """
@@ -309,20 +322,9 @@ class BlacklistTokenModel(TokenModel):
     that should no longer be accepted by the system.
 
     Attributes:
-        TYPE_TOKEN_CHOICES (list): Choices for the type of token.
-
-        typ (CharField): The type of the token, which can be
-                         either 'access' or 'refresh'. This field is limited
-                         to the choices defined in `TYPE_TOKEN_CHOICES`.
-
         user (ForeignKey): A foreign key relationship to the `UserProfileModel`,
                            representing the user that owns this token.
     """
-
-    TYPE_TOKEN_CHOICES = [
-        ("access", "access"),
-        ("refresh", "refresh"),
-    ]
 
     user = models.ForeignKey(
         "UserProfileModel",
@@ -331,19 +333,15 @@ class BlacklistTokenModel(TokenModel):
         related_name="blacklist_tokens",
         db_column="uid",
     )
-    typ = models.CharField(max_length=10, choices=TYPE_TOKEN_CHOICES)
 
     class Meta:
         db_table = "blacklist_token"
         verbose_name = "blacklist token"
 
 
-class RefreshTokenModel(TokenModel):
+class ValidTokenModel(TokenModel):
     """
-    Represents a model for storing valid refresh tokens.
-
-    This model is used to store refresh tokens that allow a user to obtain
-    a new access token after the old one expires.
+    Represents a model for storing valid tokens.
 
     Attributes:
         user (ForeignKey): A foreign key relationship to the `UserProfileModel`,
@@ -354,10 +352,10 @@ class RefreshTokenModel(TokenModel):
         "UserProfileModel",
         on_delete=models.CASCADE,
         null=False,
-        related_name="refresh_tokens",
+        related_name="valid_tokens",
         db_column="uid",
     )
 
     class Meta:
-        db_table = "refresh_token"
-        verbose_name = "refresh token"
+        db_table = "valid_token"
+        verbose_name = "valid token"

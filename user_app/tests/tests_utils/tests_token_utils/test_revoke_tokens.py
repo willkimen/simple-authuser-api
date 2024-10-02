@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from user_app.constants.path_for_mock import token_utils_module_path
-from user_app.models import BlacklistTokenModel, RefreshTokenModel
+from user_app.models import BlacklistTokenModel, ValidTokenModel
 from user_app.utils.token_utils import revoke_tokens
 
 # ========== Objects, auxiliary functions and constants ============
@@ -39,62 +39,44 @@ def user() -> User:
 
 
 @pytest.fixture
-def access_payload(user: User) -> dict:
+def payload(user: User) -> dict:
     """
-    Creates and returns a fake access token payload simulating a JWT token payload.
+    Creates an token paylaod and saves it in the database.
 
     Args:
-        user (User): The user associated with the access token.
+        user (User): The user associated with the token.
 
     Returns:
-        dict: Dictionary representing the access token payload with UID, type,
+        dict: Dictionary representing the token payload with UID, type,
         JTI, and expiration.
     """
-    return {
+    payload = {
         "uid": user.id,
         "typ": "access",
         "jti": "fake_access_jti",
         "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
     }
 
-
-@pytest.fixture
-def refresh_payload(user: User) -> dict:
-    """
-    Creates a refresh token and saves it in the database.
-
-    Args:
-        user (User): The user associated with the refresh token.
-
-    Returns:
-        dict: Dictionary representing the refresh token payload.
-    """
-    payload = {
-        "uid": user.id,
-        "typ": "refresh",
-        "jti": "fake_refresh_jti",
-        "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
-    }
-
-    RefreshTokenModel.objects.create(
+    ValidTokenModel.objects.create(
         user_id=payload["uid"],
         jti=payload["jti"],
         exp=payload["exp"],
+        typ=payload["typ"],
     )
 
     return payload
 
 
 @pytest.fixture
-def expired_refresh_payload(user: User) -> dict:
+def expired_payload(user: User) -> dict:
     """
-    Creates an expired refresh token and saves it in the database.
+    Creates an expired token payload and saves it in the database.
 
     Args:
-        user (User): The user associated with the expired refresh token.
+        user (User): The user associated with the expired token.
 
     Returns:
-        dict: Dictionary representing the expired refresh token payload.
+        dict: Dictionary representing the expired token payload.
     """
     expired_payload = {
         "uid": user.id,
@@ -103,26 +85,27 @@ def expired_refresh_payload(user: User) -> dict:
         "exp": int((timezone.now() - timedelta(seconds=60)).timestamp()),
     }
 
-    RefreshTokenModel.objects.create(
+    ValidTokenModel.objects.create(
         user_id=expired_payload["uid"],
         jti=expired_payload["jti"],
         exp=expired_payload["exp"],
+        typ=expired_payload["typ"],
     )
 
     return expired_payload
 
 
 @pytest.fixture
-def refresh_payloads(user: User) -> list[dict]:
+def payloads(user: User) -> list[dict]:
     """
-    Creates a list of refresh tokens, some expired and others valid,
+    Creates a list of tokens, some expired and others valid,
     and saves them in the database.
 
     Args:
-        user (User): The user associated with the refresh tokens.
+        user (User): The user associated with the tokens.
 
     Returns:
-        list[dict]: List of dictionaries representing the refresh token payloads.
+        list[dict]: List of dictionaries representing the token payloads.
     """
     expired_date = int((timezone.now() - timedelta(seconds=60)).timestamp())
     date = int((timezone.now() + timedelta(seconds=60)).timestamp())
@@ -130,13 +113,13 @@ def refresh_payloads(user: User) -> list[dict]:
     payloads = [
         {
             "uid": user.id,
-            "typ": "refresh",
+            "typ": "access",
             "jti": "jti_1",
             "exp": expired_date,
         },
         {
             "uid": user.id,
-            "typ": "refresh",
+            "typ": "access",
             "jti": "jti_2",
             "exp": date,
         },
@@ -155,8 +138,11 @@ def refresh_payloads(user: User) -> list[dict]:
     ]
 
     [
-        RefreshTokenModel.objects.create(
-            user_id=payload["uid"], jti=payload["jti"], exp=payload["exp"]
+        ValidTokenModel.objects.create(
+            user_id=payload["uid"],
+            jti=payload["jti"],
+            exp=payload["exp"],
+            typ=payload["typ"],
         )
         for payload in payloads
     ]
@@ -173,27 +159,25 @@ def refresh_payloads(user: User) -> list[dict]:
 @patch(
     f"{token_utils_module_path}.{create_pair_token_mock}",
 )
-def test_access_token_persisted_in_blacklist(
-    create_pair_token_mock: MagicMock, mock_secret: MagicMock, access_payload: dict
+def test_token_persisted_in_blacklist(
+    create_pair_token_mock: MagicMock, mock_secret: MagicMock, payload: dict
 ):
     """
-    Tests if the access token is correctly added to the blacklist.
+    Tests if the token is correctly added to the blacklist.
 
     Verifies:
-    - That the access token has been persisted in the blacklist table.
+    - That the token has been persisted in the blacklist table.
     - That the function to create a new token pair was called.
     """
-    access_payload["exp"] = convert_unix_timestamp_to_aware_datetime(
-        access_payload["exp"]
-    )
+    payload["exp"] = convert_unix_timestamp_to_aware_datetime(payload["exp"])
 
-    revoke_tokens(access_payload["uid"], access_payload)
+    revoke_tokens(payload["uid"])
 
     assert BlacklistTokenModel.objects.filter(
-        user_id=access_payload["uid"],
-        typ=access_payload["typ"],
-        jti=access_payload["jti"],
-        exp=access_payload["exp"],
+        user_id=payload["uid"],
+        typ=payload["typ"],
+        jti=payload["jti"],
+        exp=payload["exp"],
     ).exists()
 
     create_pair_token_mock.assert_called()
@@ -207,67 +191,30 @@ def test_access_token_persisted_in_blacklist(
 @patch(
     f"{token_utils_module_path}.{create_pair_token_mock}",
 )
-def test_refresh_token_persisted_in_blacklist(
+def test_expired_token_does_not_persisted_in_blacklist(
     create_pair_token_mock: MagicMock,
     mock_secret: MagicMock,
-    access_payload: dict,
-    refresh_payload: dict,
+    payload: dict,
+    expired_payload: ValidTokenModel,
 ):
     """
-    Tests if the valid refresh token is added to the blacklist.
+    Tests if an expired token is NOT added to the blacklist.
 
     Verifies:
-    - That the refresh token has been persisted in the blacklist table.
+    - That the expired token has not been persisted in the blacklist table.
     - That the function to create a new token pair was called.
     """
-    refresh_payload["exp"] = convert_unix_timestamp_to_aware_datetime(
-        refresh_payload["exp"]
+    expired_payload["exp"] = convert_unix_timestamp_to_aware_datetime(
+        expired_payload["exp"]
     )
 
-    revoke_tokens(access_payload["uid"], access_payload)
-
-    assert BlacklistTokenModel.objects.filter(
-        user_id=refresh_payload["uid"],
-        typ=refresh_payload["typ"],
-        jti=refresh_payload["jti"],
-        exp=refresh_payload["exp"],
-    ).exists()
-
-    create_pair_token_mock.assert_called()
-
-
-@pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-@patch(
-    f"{token_utils_module_path}.{create_pair_token_mock}",
-)
-def test_expired_refresh_token_does_not_persisted_in_blacklist(
-    create_pair_token_mock: MagicMock,
-    mock_secret: MagicMock,
-    access_payload: dict,
-    expired_refresh_payload: RefreshTokenModel,
-):
-    """
-    Tests if an expired refresh token is NOT added to the blacklist.
-
-    Verifies:
-    - That the expired refresh token has not been persisted in the blacklist table.
-    - That the function to create a new token pair was called.
-    """
-    expired_refresh_payload["exp"] = convert_unix_timestamp_to_aware_datetime(
-        expired_refresh_payload["exp"]
-    )
-
-    revoke_tokens(access_payload["uid"], access_payload)
+    revoke_tokens(payload["uid"])
 
     assert not BlacklistTokenModel.objects.filter(
-        user_id=expired_refresh_payload["uid"],
-        typ=expired_refresh_payload["typ"],
-        jti=expired_refresh_payload["jti"],
-        exp=expired_refresh_payload["exp"],
+        user_id=expired_payload["uid"],
+        typ=expired_payload["typ"],
+        jti=expired_payload["jti"],
+        exp=expired_payload["exp"],
     ).exists()
 
     create_pair_token_mock.assert_called()
@@ -281,23 +228,23 @@ def test_expired_refresh_token_does_not_persisted_in_blacklist(
 @patch(
     f"{token_utils_module_path}.{create_pair_token_mock}",
 )
-def test_all_refreshes_are_deleted(
+def test_all_tokens_are_deleted(
     create_pair_token_mock: MagicMock,
     mock_secret: MagicMock,
-    access_payload: dict,
-    refresh_payloads: list[dict],
+    payload: dict,
+    payloads: list[dict],
 ):
     """
-    Tests if all refresh tokens are deleted after revocation.
+    Tests if all  tokens are deleted after revocation.
 
     Verifies:
-    - That all refresh tokens associated with the user have been removed
+    - That all tokens associated with the user have been removed
       from the database.
     - That the function to create a new token pair was called.
     """
-    revoke_tokens(access_payload["uid"], access_payload)
-    assert not RefreshTokenModel.objects.filter(
-        user_id=access_payload["uid"],
+    revoke_tokens(payload["uid"])
+    assert not ValidTokenModel.objects.filter(
+        user_id=payload["uid"],
     ).exists()
 
     create_pair_token_mock.assert_called()
