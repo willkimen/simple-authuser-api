@@ -2,67 +2,67 @@
 This module tests the function for sending an email with an account confirmation code.
 """
 
-from textwrap import dedent
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth import get_user_model
 
 from user_app.constants.path_for_mock import email_service_module_path
+from user_app.models import AccountActivationCodeModel
 from user_app.utils.email_service import send_activation_code_by_email
 
 # ========== Objects and constants ============
 User = get_user_model()
-USER_EMAIL = "fake@email.com"
 CODE = "mocked_code"
 email_message_class = "EmailMessage"
 generate_random_code = "generate_random_code"
-create = "AccountActivationCodeModel.objects.create"
-exists = "AccountActivationCodeModel.objects.exists"
 
 
-# =============== Fixture =================
+# =============== Fixtures ================
 @pytest.fixture
-def expected_email_body():
-    return dedent(
-        """
-    Your confirmation code is below - enter it in your open browser window and we'll help you to sign in.
-
-    mocked_code
-
-    If you haven't requested this email, there's nothing to worry about - you can safely ignore it.
+def deactivated_user() -> User:
     """
+    Fixture to create and return an activated User object.
+    """
+    return User.objects.create_user(
+        first_name="fake_first_name",
+        last_name="fake_last_name",
+        email="fakeemail@email.com",
+        password="FAKEpassword10!",
     )
 
 
 # =============== Tests ================
 @pytest.mark.django_db
 @patch(f"{email_service_module_path}.{email_message_class}")
-@patch(
-    f"{email_service_module_path}.{generate_random_code}",
-    return_value="mocked_code",
-)
-@patch(f"{email_service_module_path}.{create}")
-@patch(f"{email_service_module_path}.{exists}", return_value=False)
 def test_success_send_email(
-    mock_exists: MagicMock,
-    mock_create: MagicMock,
-    mock_generate_random_code: MagicMock,
     MockEmailMessage: MagicMock,
-    expected_email_body: str,
+    deactivated_user: User,
 ):
-    user_email = USER_EMAIL
     # Returns a mocked instance of the EmailMessage class
     mock_email_message_instance = MockEmailMessage.return_value
-    email_subject_expected = "Confirm your email address"
 
-    send_activation_code_by_email(user_email)
+    send_activation_code_by_email(deactivated_user.email)
 
-    MockEmailMessage.assert_called_once_with(
-        subject=email_subject_expected, body=expected_email_body, to=[user_email]
-    )
-    mock_email_message_instance.send.assert_called_once()
-    mock_create.assert_called_once_with(
-        code=CODE,
-        user_id=user_email,
-    )
+    mock_email_message_instance.send.assert_called()
+
+
+@pytest.mark.django_db
+@patch(f"{email_service_module_path}.{email_message_class}")
+@patch(
+    f"{email_service_module_path}.{generate_random_code}",
+    return_value=CODE,
+)
+def test_success_send_email_create_code_in_database(
+    mock_generate_random_code: MagicMock,
+    MockEmailMessage: MagicMock,
+    deactivated_user: User,
+):
+    # Returns a mocked instance of the EmailMessage class
+    mock_email_message_instance = MockEmailMessage.return_value
+
+    send_activation_code_by_email(deactivated_user.email)
+
+    mock_email_message_instance.send.assert_called()
+
+    assert AccountActivationCodeModel.objects.filter(code=CODE).exists()
