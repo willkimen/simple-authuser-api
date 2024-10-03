@@ -1,21 +1,18 @@
-"""
-This module tests the function for sending an email with an account confirmation code.
-"""
-
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth import get_user_model
 
 from user_app.constants.path_for_mock import email_service_module_path
-from user_app.models import AccountActivationCodeModel
-from user_app.utils.email_service import send_activation_code_by_email
+from user_app.models import ChangeEmailCodeModel
+from user_app.utils.email_service import send_change_email_code_by_email
 
 # ========== Objects and constants ============
 User = get_user_model()
 CODE = "mocked_code"
 email_message_class = "EmailMessage"
 generate_random_code = "generate_random_code"
+NEW_EMAIL = "fakenewemail@email.com"
 
 
 # =============== Fixtures ================
@@ -42,7 +39,7 @@ def test_success_send_email(
     # Returns a mocked instance of the EmailMessage class
     mock_email_message_instance = MockEmailMessage.return_value
 
-    send_activation_code_by_email(deactivated_user.email)
+    send_change_email_code_by_email(deactivated_user.email, NEW_EMAIL)
 
     mock_email_message_instance.send.assert_called()
 
@@ -61,8 +58,8 @@ def test_success_send_email_create_code_in_database(
     # Returns a mocked instance of the EmailMessage class
     mock_email_message_instance = MockEmailMessage.return_value
 
-    send_activation_code_by_email(deactivated_user.email)
+    send_change_email_code_by_email(deactivated_user.email, NEW_EMAIL)
 
     mock_email_message_instance.send.assert_called()
 
-    assert AccountActivationCodeModel.objects.filter(code=CODE).exists()
+    assert ChangeEmailCodeModel.objects.filter(code=CODE).exists()
