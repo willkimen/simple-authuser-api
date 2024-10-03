@@ -14,6 +14,7 @@ from user_app.constants.response_codes_and_messages import (
     LOGIN_SUCCESSFUL,
     LOGOUT_SUCCESSFUL,
     TOKEN_ACCESS_CREATED,
+    TOKEN_IS_VALID,
     USER_ACCOUNT_NOT_ACTIVATED,
     USER_NOT_FOUND,
     USER_TOKEN_MISMATCH,
@@ -135,3 +136,24 @@ def blacklist_token(request):
     )
 
     return Response(LOGOUT_SUCCESSFUL, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def verify_token(request):
+    token = request.data.get("token", None)
+
+    # Verify if the token is valid, it returns its payload.
+    try:
+        payload: dict = check_token(token)
+    except BlacklistTokenException as e:
+        return Response(e.dict_repr(), status=status.HTTP_403_FORBIDDEN)
+    except TokenException as e:
+        return Response(e.dict_repr(), status=status.HTTP_400_BAD_REQUEST)
+
+    # Verify if token is a refresh or access type
+    if payload["typ"] not in ["access", "refresh"]:
+        return Response(
+            IS_NOT_ACCESS_OR_REFRESH_TOKEN, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    return Response(TOKEN_IS_VALID, status=status.HTTP_200_OK)

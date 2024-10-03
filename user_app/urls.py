@@ -15,6 +15,7 @@ from .views import (
     send_code_to_reset_password,
     update,
     user_detail,
+    verify_token,
 )
 
 urlpatterns = [
@@ -65,4 +66,6 @@ urlpatterns = [
     path("token/access/", refresh_token_access, name="refresh_token_access"),
     # Endpoint to add a token to the blacklist.
     path("token/blacklist/", blacklist_token, name="blacklist_token"),
+    # Endpoint to verify token.
+    path("token/verify/", verify_token, name="verify_token"),
 ]

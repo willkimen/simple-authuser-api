@@ -126,3 +126,9 @@ USER_TOKEN_MISMATCH = {
     "code": "USER_TOKEN_MISMATCH",
     "detail": "The authenticated user does not match the user associated with the token.",
 }
+
+
+TOKEN_IS_VALID = {
+    "code": "TOKEN_IS_VALID",
+    "detail": "The provided token is valid and can be used for authentication.",
+}
