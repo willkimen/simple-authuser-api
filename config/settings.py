@@ -7,22 +7,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 # -----------------------------------------------------------------------------
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "ENV_SECRET_KEY", "secret_insecure_jldsfj5165ser5wg16ae5344*"
-)
+SECRET_KEY = os.environ.get("SECRET_KEY", "secret_insecure_jldsfj5165ser5wg16ae5344*")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 # ----- Allowed hosts -----
 ALLOWED_HOSTS: list[str] = [
-    host.strip() for host in os.environ.get("ENV_ALLOWED_HOSTS", "").split(",")
+    host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",")
 ]
 
 # ---- Cors ----
 CORS_ALLOWED_ORIGINS: list[str] = [
-    origin.strip()
-    for origin in os.environ.get("ENV_CORS_ALLOWED_ORIGINS", "").split(",")
+    origin.strip() for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
 ]
 
 # Installed apps
@@ -151,20 +148,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 # Get the SMTP server host from environment variables.
-EMAIL_HOST = os.environ.get("ENV_EMAIL_HOST")
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
 
 # Get the SMTP server port from environment variables.
-EMAIL_PORT = os.environ.get("ENV_EMAIL_PORT")
+EMAIL_PORT = os.environ.get("EMAIL_PORT")
 
 # Define whether TLS (Transport Layer Security) should be used.
 # Convert the environment variable from string to boolean.
-EMAIL_USE_TLS: bool = True if os.environ.get("ENV_EMAIL_USE_TLS") == "True" else False
+EMAIL_USE_TLS: bool = True if os.environ.get("TLS") == "True" else False
 
 # Get the username for SMTP server authentication from environment variables.
-EMAIL_HOST_USER = os.environ.get("ENV_EMAIL_HOST_USER")
+EMAIL_HOST_USER = os.environ.get("USER_CREDENTIAL_SMTP")
 
 # Get the password for SMTP server authentication from environment variables.
-EMAIL_HOST_PASSWORD = os.environ.get("ENV_EMAIL_HOST_PASSWORD")
+EMAIL_HOST_PASSWORD = os.environ.get("PASSWORD_CREDENTIAL_SMTP")
 
 # Get the default email address to be used as the sender in sent messages.
-DEFAULT_FROM_EMAIL = os.environ.get("ENV_DEFAULT_FROM_EMAIL")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_EMAIL")

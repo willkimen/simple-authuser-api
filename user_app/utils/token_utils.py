@@ -64,7 +64,7 @@ def create_token(user_id: int, is_refresh: bool = False) -> str:
     If `is_refresh` is set to True, a refresh token is generated
     and stored in the database else a access is generated and stored in database.
     Otherwise, an access token is created. Both tokens are signed using a secret key
-    stored in the environment variable `ENV_JWT_SECRET`.
+    stored in the environment variable `TOKEN_SECRET`.
 
     Args:
         user_id (int): The ID of the user for whom the token is generated.
@@ -82,7 +82,7 @@ def create_token(user_id: int, is_refresh: bool = False) -> str:
         user_id=user_id, jti=payload["jti"], exp=payload["exp"], typ=payload["typ"]
     )
 
-    return jwt.encode(payload, os.environ.get("ENV_JWT_SECRET"))
+    return jwt.encode(payload, os.environ.get("TOKEN_SECRET"))
 
 
 def create_pair_token(user_id: int) -> dict:
@@ -120,7 +120,7 @@ def check_token(token: str) -> dict:
     try:
         payload: dict = jwt.decode(
             jwt=token,
-            key=os.environ.get("ENV_JWT_SECRET"),
+            key=os.environ.get("TOKEN_SECRET"),
             algorithms=["HS256"],
         )
     except jwt.exceptions.ExpiredSignatureError:
