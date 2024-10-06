@@ -10,7 +10,7 @@ from user_app.utils.email_service import send_change_email_code_by_email
 # ========== Objects and constants ============
 User = get_user_model()
 CODE = "mocked_code"
-email_message_class = "EmailMessage"
+email_multi_class_mock = "EmailMultiAlternatives"
 generate_random_code = "generate_random_code"
 NEW_EMAIL = "fakenewemail@email.com"
 
@@ -31,35 +31,35 @@ def deactivated_user() -> User:
 
 # =============== Tests ================
 @pytest.mark.django_db
-@patch(f"{email_service_module_path}.{email_message_class}")
+@patch(f"{email_service_module_path}.{email_multi_class_mock}")
 def test_success_send_email(
-    MockEmailMessage: MagicMock,
+    MockEmailMultiAlternatives: MagicMock,
     deactivated_user: User,
 ):
-    # Returns a mocked instance of the EmailMessage class
-    mock_email_message_instance = MockEmailMessage.return_value
+    # Returns a mocked instance of the EmailMultiAlternatives class
+    mock_email_multi_instance = MockEmailMultiAlternatives.return_value
 
     send_change_email_code_by_email(deactivated_user.email, NEW_EMAIL)
 
-    mock_email_message_instance.send.assert_called()
+    mock_email_multi_instance.send.assert_called()
 
 
 @pytest.mark.django_db
-@patch(f"{email_service_module_path}.{email_message_class}")
+@patch(f"{email_service_module_path}.{email_multi_class_mock}")
 @patch(
     f"{email_service_module_path}.{generate_random_code}",
     return_value=CODE,
 )
 def test_success_send_email_create_code_in_database(
     mock_generate_random_code: MagicMock,
-    MockEmailMessage: MagicMock,
+    MockEmailMultiAlternatives: MagicMock,
     deactivated_user: User,
 ):
-    # Returns a mocked instance of the EmailMessage class
-    mock_email_message_instance = MockEmailMessage.return_value
+    # Returns a mocked instance of the EmailMultiAlternatives class
+    mock_email_multi_instance = MockEmailMultiAlternatives.return_value
 
     send_change_email_code_by_email(deactivated_user.email, NEW_EMAIL)
 
-    mock_email_message_instance.send.assert_called()
+    mock_email_multi_instance.send.assert_called()
 
     assert ChangeEmailCodeModel.objects.filter(code=CODE).exists()

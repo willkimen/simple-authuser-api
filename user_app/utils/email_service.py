@@ -1,7 +1,8 @@
+import os
 import smtplib
 from textwrap import dedent
 
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 
 from user_app.constants.prefixes import (
     ACTIVATE_ACCOUNT_PREFIX,
@@ -15,13 +16,21 @@ from user_app.models import (
 )
 from user_app.utils.random_code import generate_random_code
 
+MESSAGE_24H_EXPIRED = (
+    "Please note that this code is valid for 24 hours. "
+    "After that, it will expire, and you'll need to request a new one."
+)
+MESSAGE_SAFELY_IGNORE = "If you haven't requested this email, you can safely ignore it."
+confirmation_link = os.environ.get("REDIRECT_TO_ACTIVATE_ACCOUNT_PAGE", "")
+reset_link = os.environ.get("REDIRECT_TO_RESET_PASSWORD_PAGE", "")
 
-def __send_email_with_error_handling(email_message: EmailMessage):
+
+def __send_email_with_error_handling(email_multi: EmailMultiAlternatives):
     """
     Sends an email and handles any SMTP-related errors.
 
     Args:
-        email_message (EmailMessage): The email message to be sent.
+        email_multi (EmailMultiAlternatives): The email message to be sent.
 
     Raises:
         smtplib.SMTPConnectError: If there is a connection issue with the SMTP server.
@@ -35,7 +44,7 @@ def __send_email_with_error_handling(email_message: EmailMessage):
         smtplib.SMTPException: For any other SMTP-related errors.
     """
     try:
-        email_message.send()
+        email_multi.send()
     except smtplib.SMTPConnectError as e:
         raise smtplib.SMTPConnectError(f"Failed to connect to the SMTP server: {e}")
     except smtplib.SMTPAuthenticationError as e:
@@ -71,14 +80,14 @@ def send_change_email_code_by_email(actual_email: str, new_email: str):
     This function generates a random confirmation code for changing the user's email,
     sends the code to the new email address, and stores the code.
     """
-    email_subject = "Confirm your email address change"
+    subject = "Confirm your email address change"
 
     # Creates code and verify if already exists in database
     code: str = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
     while ChangeEmailCodeModel.objects.filter(code=code).exists():
         code: str = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
 
-    email_body = dedent(
+    body = dedent(
         f"""
     You requested to change your email from {actual_email} to {new_email}.
 
@@ -86,15 +95,29 @@ def send_change_email_code_by_email(actual_email: str, new_email: str):
 
     {code}
 
-    If you did not request this email change, please ignore this message. Your account will remain unchanged.
+    {MESSAGE_24H_EXPIRED}
+
+    {MESSAGE_SAFELY_IGNORE}
     """
     )
 
+    html_body = dedent(
+        f"""
+        <p>You requested to change your email from <strong>{actual_email}</strong> to <strong>{new_email}</strong>.</p>
+        <p>To confirm this change, please use the confirmation code below:</p>
+        <h2>{code}</h2>
+        <p>{MESSAGE_24H_EXPIRED}</p>
+        <p>{MESSAGE_SAFELY_IGNORE}</p>
+        """
+    )
+
     # Create the email message object
-    email_message = EmailMessage(subject=email_subject, body=email_body, to=[new_email])
+    email_multi = EmailMultiAlternatives(subject=subject, body=body, to=[new_email])
+    email_multi.content_subtype = "html"  # Make the email HTML-friendly
+    email_multi.attach_alternative(html_body, "text/html")
 
     try:
-        __send_email_with_error_handling(email_message)
+        __send_email_with_error_handling(email_multi)
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
@@ -113,30 +136,46 @@ def send_activation_code_by_email(user_email: str) -> None:
     user's email, and saves the code and email in the database. The activation code is
     used for verifying the user's email during the registration process.
     """
-    email_subject = "Confirm your email address"
+    subject = "Confirm your email address"
 
     # Creates code and verify if already exists in database
     code: str = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
     while AccountActivationCodeModel.objects.filter(code=code).exists():
         code: str = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
 
-    email_body = dedent(
+    body = dedent(
         f"""
-    Your confirmation code is below - enter it in your open browser window and we'll help you to sign in.
+        Your confirmation code is below:
 
-    {code}
+        {code}
 
-    If you haven't requested this email, there's nothing to worry about - you can safely ignore it.
-    """
+        To complete your registration, please visit the following link and submit the code:
+        {confirmation_link}
+
+        {MESSAGE_24H_EXPIRED}
+
+        {MESSAGE_SAFELY_IGNORE}
+        """
+    )
+
+    html_body = dedent(
+        f"""
+        <p>Your confirmation code is below:</p>
+        <h2>{code}</h2>
+        <p>To complete your registration, please visit the following link and submit the code:</p>
+        <a href="{confirmation_link}">Activate Account</a>
+        <p>{MESSAGE_24H_EXPIRED}</p>
+        <p>{MESSAGE_SAFELY_IGNORE}</p>
+        """
     )
 
     # Create the email message object
-    email_message = EmailMessage(
-        subject=email_subject, body=email_body, to=[user_email]
-    )
+    email_multi = EmailMultiAlternatives(subject=subject, body=body, to=[user_email])
+    email_multi.content_subtype = "html"  # Make the email HTML-friendly
+    email_multi.attach_alternative(html_body, "text/html")
 
     try:
-        __send_email_with_error_handling(email_message)
+        __send_email_with_error_handling(email_multi)
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
@@ -155,30 +194,46 @@ def send_reset_password_code_by_email(user_email: str) -> None:
     The email contains the reset code and instructions. If an error occurs
     during the email sending process, the exception is raised and handled accordingly.
     """
-    email_subject = "Reset Your Account Password"
+    subject = "Reset Your Account Password"
 
     # Creates code and verify if already exists in database
     code: str = generate_random_code(prefix=RESET_PASSWORD_PREFIX)
     while ResetPasswordCodeModel.objects.filter(code=code).exists():
         code: str = generate_random_code(prefix=RESET_PASSWORD_PREFIX)
 
-    email_body = dedent(
+    body = dedent(
         f"""
-    Your password reset code is below - enter it in your open browser window to reset your password.
+        Your password reset code is below:
 
-    {code}
+        {code}
 
-    If you haven't requested a password reset, there's nothing to worry about - you can safely ignore this email.
-    """
+        To reset your password, please visit the following link and submit the code:
+        {reset_link}
+
+        {MESSAGE_24H_EXPIRED}
+
+        {MESSAGE_SAFELY_IGNORE}
+        """
+    )
+
+    html_body = dedent(
+        f"""
+        <p>Your password reset code is below:</p>
+        <h2>{code}</h2>
+        <p>To reset your password, please visit the following link and submit the code:</p>
+        <a href="{reset_link}">Reset Password</a>
+        <p>{MESSAGE_24H_EXPIRED}</p>
+        <p>{MESSAGE_SAFELY_IGNORE}</p>
+        """
     )
 
     # Create the email message object
-    email_message = EmailMessage(
-        subject=email_subject, body=email_body, to=[user_email]
-    )
+    email_multi = EmailMultiAlternatives(subject=subject, body=body, to=[user_email])
+    email_multi.content_subtype = "html"  # Make the email HTML-friendly
+    email_multi.attach_alternative(html_body, "text/html")
 
     try:
-        __send_email_with_error_handling(email_message)
+        __send_email_with_error_handling(email_multi)
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
