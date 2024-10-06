@@ -25,7 +25,7 @@ confirmation_link = os.environ.get("REDIRECT_TO_ACTIVATE_ACCOUNT_PAGE", "")
 reset_link = os.environ.get("REDIRECT_TO_RESET_PASSWORD_PAGE", "")
 
 
-def __send_email_with_error_handling(email_multi: EmailMultiAlternatives):
+def __send_email_with_error_handling(email_multi: EmailMultiAlternatives) -> int:
     """
     Sends an email and handles any SMTP-related errors.
 
@@ -44,7 +44,7 @@ def __send_email_with_error_handling(email_multi: EmailMultiAlternatives):
         smtplib.SMTPException: For any other SMTP-related errors.
     """
     try:
-        email_multi.send()
+        sent_count: int = email_multi.send()
     except smtplib.SMTPConnectError as e:
         raise smtplib.SMTPConnectError(f"Failed to connect to the SMTP server: {e}")
     except smtplib.SMTPAuthenticationError as e:
@@ -71,6 +71,8 @@ def __send_email_with_error_handling(email_multi: EmailMultiAlternatives):
         )
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(f"An SMTP error occurred: {e}")
+
+    return sent_count
 
 
 def send_change_email_code_by_email(actual_email: str, new_email: str):
