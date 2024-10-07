@@ -5,6 +5,7 @@ from pathlib import Path
 # -----------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+
 # Installed apps
 # -----------------------------------------------------------------------------
 INSTALLED_APPS = [
@@ -18,6 +19,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "user_app",
 ]
+
 
 # Middleware
 # -----------------------------------------------------------------------------
@@ -50,16 +52,20 @@ TEMPLATES = [
         },
     },
 ]
+
+
 # Root URLs and WSGI
 # -----------------------------------------------------------------------------
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
+
 
 # Rest Framework Configurations
 # -----------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "user_app.custom_exception_handler.custom_exception_handler",
 }
+
 
 # Password validation
 # -----------------------------------------------------------------------------
@@ -78,9 +84,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
 # User model configuration
 # -----------------------------------------------------------------------------
 AUTH_USER_MODEL = "user_app.UserProfileModel"
+
 
 # Internationalization
 # -----------------------------------------------------------------------------
@@ -89,9 +97,11 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+
 # Static files
 # -----------------------------------------------------------------------------
 STATIC_URL = "static/"
+
 
 # Default auto field configuration
 # -----------------------------------------------------------------------------

@@ -4,6 +4,7 @@ from .base import *
 # -----------------------------------------------------------------------------
 DEBUG = False
 
+
 # Security
 # -----------------------------------------------------------------------------
 SECRET_KEY = os.environ.get("SECRET_KEY", "secret_insecure_jldsfj5165ser5wg16ae5344*")
@@ -19,6 +20,7 @@ CORS_ALLOWED_ORIGINS: list[str] = [
 TOKEN_SECRET = os.environ.get(
     "TOKEN_SECRET", "secret_token_insecure_jldsfj51dfsd65fsklj564564wg16ae5344*"
 )
+
 
 # URL configurations
 # -----------------------------------------------------------------------------
@@ -38,6 +40,7 @@ DATABASES = {
         "PORT": os.environ.get("POSTGRES_PORT"),
     }
 }
+
 
 # Email settings
 # -----------------------------------------------------------------------------
