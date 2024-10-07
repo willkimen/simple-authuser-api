@@ -21,7 +21,7 @@ User = get_user_model()
 url: str = reverse("change_user_email")
 allow_request = "FivePerMinuteRateLimit.allow_request"
 send_change_email_code_by_email = "send_change_email_code_by_email"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 SECRET = "token_secret"
 NON_EXISTENT_CODE = "non_existent_code"
 OLD_EMAIL = "actual_email@email.com"
@@ -84,18 +84,10 @@ def expired_code(user: User) -> str:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{change_email_view_path}.{allow_request}",
-    return_value=True,
-)
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{change_email_view_path}.{allow_request}", return_value=True)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_do_not_change_email_if_code_does_not_exist(
-    token_secret_mock: MagicMock,
-    mock_allow_request: MagicMock,
-    client: APIClient,
+    mock_allow_request: MagicMock, client: APIClient
 ):
     """
     This test verifies that when a non-existent change email code is provided,
@@ -117,19 +109,10 @@ def test_do_not_change_email_if_code_does_not_exist(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{change_email_view_path}.{allow_request}",
-    return_value=True,
-)
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{change_email_view_path}.{allow_request}", return_value=True)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_do_not_change_email_if_code_is_expired(
-    token_secret_mock: MagicMock,
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    expired_code: str,
+    mock_allow_request: MagicMock, client: APIClient, expired_code: str
 ):
     """
     This test ensures that when an expired email change code is provided,
@@ -151,19 +134,10 @@ def test_do_not_change_email_if_code_is_expired(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{change_email_view_path}.{allow_request}",
-    return_value=True,
-)
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{change_email_view_path}.{allow_request}", return_value=True)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_delete_code_if_expired(
-    token_secret_mock: MagicMock,
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    expired_code: str,
+    mock_allow_request: MagicMock, client: APIClient, expired_code: str
 ):
     """
     When it is verified that the code has expired, it must be
@@ -174,19 +148,10 @@ def test_delete_code_if_expired(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{change_email_view_path}.{allow_request}",
-    return_value=True,
-)
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{change_email_view_path}.{allow_request}", return_value=True)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_change_email_successful(
-    token_secret_mock: MagicMock,
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    code: str,
+    mock_allow_request: MagicMock, client: APIClient, code: str
 ):
     """
     This test ensures that a user's email is successfully updated when a valid
@@ -217,19 +182,10 @@ def test_change_email_successful(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{change_email_view_path}.{allow_request}",
-    return_value=True,
-)
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{change_email_view_path}.{allow_request}", return_value=True)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_delete_code_when_user_email_changed_successfully(
-    token_secret_mock: MagicMock,
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    code: str,
+    mock_allow_request: MagicMock, client: APIClient, code: str
 ):
     """
     After the user's email has been changed, the code must be
@@ -242,13 +198,8 @@ def test_delete_code_when_user_email_changed_successfully(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_does_not_change_email_when_request_limit_is_reached(
-    token_secret_mock: MagicMock, client: APIClient
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_does_not_change_email_when_request_limit_is_reached(client: APIClient):
     """
     This test ensures that the API enforces rate limiting and returns an error when
     the number of allowed requests is exceeded.

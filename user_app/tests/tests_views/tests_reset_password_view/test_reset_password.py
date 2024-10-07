@@ -21,7 +21,7 @@ User = get_user_model()
 url: str = reverse("reset_password")
 allow_request = "FivePerMinuteRateLimit.allow_request"
 revoke_tokens_mock = "revoke_tokens"
-os_environ_get_mock = "os.environ.get"
+token_secret_mock_mock = "settings.TOKEN_SECRET"
 SECRET = "token_secret"
 NON_EXISTENT_CODE = "NON_EXISTENT_CODE"
 OLD_PASSWORD = "FAKEOLDpassword!10"
@@ -214,19 +214,10 @@ def test_after_reset_password_the_code_is_deleted(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
-@patch(
-    f"{token_utils_module_path}.{os_environ_get_mock}",
-    return_value=SECRET,
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
+@patch(f"{token_utils_module_path}.{token_secret_mock_mock}", SECRET)
 def test_reset_password_successful(
-    token_secret_mock: MagicMock,
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    valid_code: str,
+    mock_allow_request: MagicMock, client: APIClient, valid_code: str
 ):
     """
     Tests if the password reset process is successful with a valid code and

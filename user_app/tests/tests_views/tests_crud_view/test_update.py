@@ -5,7 +5,7 @@ which handles the partial update of user information for authenticated users.
 """
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -22,7 +22,7 @@ from user_app.constants.path_for_mock import token_utils_module_path
 User = get_user_model()
 url: str = reverse("update")
 SECRET = "token_secret"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============ Fixtures ================
@@ -57,13 +57,8 @@ def client_auth_header() -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_update_first_name_successfully(
-    token_secret_mock: MagicMock, client_auth_header: APIClient
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_update_first_name_successfully(client_auth_header: APIClient):
     """
     Test that a user can successfully update their first name.
     """
@@ -84,13 +79,8 @@ def test_update_first_name_successfully(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_update_last_name_successfully(
-    token_secret_mock: MagicMock, client_auth_header: APIClient
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_update_last_name_successfully(client_auth_header: APIClient):
     """
     Test that a user can successfully update their last name.
     """
@@ -111,13 +101,8 @@ def test_update_last_name_successfully(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_update_first_and_last_name_successfully(
-    token_secret_mock: MagicMock, client_auth_header: APIClient
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_update_first_and_last_name_successfully(client_auth_header: APIClient):
     """
     Test that a user can successfully update both their first and last names.
     """

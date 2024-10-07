@@ -12,7 +12,7 @@ from user_app.utils.token_utils import create_token
 # ========== Objects and constants ============
 User = get_user_model()
 SECRET = "fake_secret"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 create_payload = "create_payload"
 
 
@@ -40,14 +40,9 @@ def payload(user: User) -> dict:
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 @patch(f"{token_utils_module_path}.{create_payload}")
-def test_token_persisted_in_database(
-    mock_create_payload: MagicMock, mock_secret: MagicMock, payload: dict
-):
+def test_token_persisted_in_database(mock_create_payload: MagicMock, payload: dict):
     """
     Test if a token is correctly persisted in the database.
 

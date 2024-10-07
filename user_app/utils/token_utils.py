@@ -1,9 +1,9 @@
 import hashlib
-import os
 import time
 from datetime import datetime, timedelta
 
 import jwt
+from django.conf import settings
 from django.db.models.query import QuerySet
 from django.utils import timezone
 
@@ -82,7 +82,7 @@ def create_token(user_id: int, is_refresh: bool = False) -> str:
         user_id=user_id, jti=payload["jti"], exp=payload["exp"], typ=payload["typ"]
     )
 
-    return jwt.encode(payload, os.environ.get("TOKEN_SECRET"))
+    return jwt.encode(payload, settings.TOKEN_SECRET)
 
 
 def create_pair_token(user_id: int) -> dict:
@@ -119,9 +119,7 @@ def check_token(token: str) -> dict:
     """
     try:
         payload: dict = jwt.decode(
-            jwt=token,
-            key=os.environ.get("TOKEN_SECRET"),
-            algorithms=["HS256"],
+            jwt=token, key=settings.TOKEN_SECRET, algorithms=["HS256"]
         )
     except jwt.exceptions.ExpiredSignatureError:
         raise ExpiredSignatureException()

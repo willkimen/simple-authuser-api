@@ -24,7 +24,7 @@ USER_DATA = {
     "email": "fake@email.com",
     "password": "FAKEpassword10!",
 }
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============== Fixtures ==============
@@ -110,15 +110,8 @@ def test_user_with_not_activated_account_does_not_return_token_pair(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_returns_token_pair_successfully(
-    mock_get: MagicMock,
-    activated_user: User,
-    client: APIClient,
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_returns_token_pair_successfully(activated_user, client: APIClient):
     """
     Test that logging in with valid credentials for an activated
     account returns a JWT pair successfully.

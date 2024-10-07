@@ -7,7 +7,7 @@ blacklisted tokens, non-existent users, and inactive users.
 """
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -28,7 +28,7 @@ SECRET = "token_secret"
 UID_NON_EXIST = 100
 UID = 1
 INCORRECT_TYP = "access"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============ Fixtures ================
@@ -146,12 +146,9 @@ def valid_refresh_token(payload: dict) -> str:
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_blacklisted_refresh_token_not_generate_new_access_token(
-    mock_secret: MagicMock, client: APIClient, blacklisted_refresh_token: str
+    client: APIClient, blacklisted_refresh_token: str
 ):
     """
     Tests that a blacklisted refresh token does not generate a new access token.
@@ -175,12 +172,9 @@ def test_blacklisted_refresh_token_not_generate_new_access_token(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_non_refresh_token_not_generate_new_access_token(
-    mock_secret: MagicMock, client: APIClient, incorrect_type_token: str
+    client: APIClient, incorrect_type_token: str
 ):
     """
     Tests that a non-refresh token does not generate a new access token.
@@ -204,12 +198,9 @@ def test_non_refresh_token_not_generate_new_access_token(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_nonexistent_user_not_generate_access_token(
-    mock_secret: MagicMock, client: APIClient, refresh_token_for_nonexistent_user: str
+    client: APIClient, refresh_token_for_nonexistent_user: str
 ):
     """
     Tests that a refresh token for a non-existent user does not
@@ -235,12 +226,9 @@ def test_nonexistent_user_not_generate_access_token(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_inactive_user_not_generate_access_token(
-    mock_secret: MagicMock, client: APIClient, refresh_token_for_inactive_user: str
+    client: APIClient, refresh_token_for_inactive_user: str
 ):
     """
     Tests that a refresh token for an inactive user does not generate an access token.
@@ -266,12 +254,9 @@ def test_inactive_user_not_generate_access_token(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_valid_refresh_token_creates_access_token(
-    mock_secret: MagicMock, client: APIClient, valid_refresh_token: str
+    client: APIClient, valid_refresh_token: str
 ):
     """
     Tests that a valid refresh token successfully generates a new access token.

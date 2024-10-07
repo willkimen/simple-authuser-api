@@ -7,7 +7,7 @@ It tests all possible exceptions raised as well as the success scenario.
 import base64
 import json
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -32,12 +32,12 @@ SECRET = "fake_secret"
 INVALID_SECRET = "invalid_secret"
 MALFORMED_TOKEN = "malformed.token.string"
 UID = 1
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============== Fixture ==================
 @pytest.fixture
-def activated_user() -> User:
+def activated_user():
     return User.objects.create_user(
         id=UID,
         first_name="fake_first_name",
@@ -137,11 +137,8 @@ def token_with_invalid_algorithm(payload: dict) -> str:
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_expired_token(token_secret_mock: MagicMock, token_expired: str):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_expired_token(token_expired: str):
     """
     Test if the function raises ExpiredSignatureError when the token is expired.
 
@@ -157,13 +154,8 @@ def test_expired_token(token_secret_mock: MagicMock, token_expired: str):
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_invalid_signature(
-    token_secret_mock: MagicMock, token_with_invalid_secret: str
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_invalid_signature(token_with_invalid_secret: str):
     """
     Test if the function raises InvalidSignatureError when the token has
     an invalid signature.
@@ -180,11 +172,8 @@ def test_invalid_signature(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_decode_error(token_secret_mock: MagicMock, token_malformed: str):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_decode_error(token_malformed: str):
     """
     Test if the function raises DecodeError when the token is malformed.
 
@@ -200,13 +189,8 @@ def test_decode_error(token_secret_mock: MagicMock, token_malformed: str):
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_invalid_algorithm(
-    token_secret_mock: MagicMock, token_with_invalid_algorithm: str
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_invalid_algorithm(token_with_invalid_algorithm: str):
     """
     Test if the function raises InvalidAlgorithmError when the token has
     an invalid algorithm.
@@ -223,11 +207,8 @@ def test_invalid_algorithm(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_token_in_black_list(token_secret_mock: MagicMock, token: str):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_token_in_black_list(token: str):
     """
     Test if the function raises BlacklistTokenException when the token is
     in the blacklist.
@@ -252,11 +233,8 @@ def test_token_in_black_list(token_secret_mock: MagicMock, token: str):
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_success_create_token(token_secret_mock: MagicMock, token: str, payload: dict):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_success_create_token(token: str, payload: dict):
     """
     Test to ensure that a JWT is successfully created and can be decoded to match
     the original payload.

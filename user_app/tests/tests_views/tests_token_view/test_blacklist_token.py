@@ -3,7 +3,7 @@ Tests blacklist_token() view.
 """
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -26,7 +26,7 @@ UID_FOR_DIFFERENT_USER = 100
 JTI_FOR_AUTH = "fake_jti_for_auth_header"
 JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 INCORRECT_TYP = "incorrect_type"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============ Fixtures ================
@@ -63,10 +63,7 @@ def client_auth_header(payload: dict) -> APIClient:
         APIClient: An API client with the Authorization header set to a valid JWT token.
     """
     payload["jti"] = JTI_FOR_AUTH
-    token = jwt.encode(
-        payload,
-        SECRET,
-    )
+    token = jwt.encode(payload, SECRET)
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return client
@@ -138,12 +135,9 @@ def valid_token(payload: dict) -> str:
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_token_already_in_blacklist(
-    mock_secret: MagicMock, client_auth_header: APIClient, blacklisted_token: str
+    client_auth_header: APIClient, blacklisted_token: str
 ):
     """
     Test that a JWT token already blacklisted returns the appropriate error message.
@@ -161,12 +155,9 @@ def test_token_already_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_token_type_must_be_access_or_refresh(
-    mock_secret: MagicMock, client_auth_header: APIClient, incorrect_typ_token: str
+    client_auth_header: APIClient, incorrect_typ_token: str
 ):
     """
     Test that a JWT token with an incorrect type field ("typ") returns the appropriate error.
@@ -186,14 +177,9 @@ def test_token_type_must_be_access_or_refresh(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_user_must_match_token_owner(
-    mock_secret: MagicMock,
-    client_auth_header: APIClient,
-    token_with_different_user_id: str,
+    client_auth_header: APIClient, token_with_different_user_id: str
 ):
     """
     Test that a token's user ID must match the authenticated user's ID for the request to succeed.
@@ -211,15 +197,9 @@ def test_user_must_match_token_owner(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_logout_success_when_valid_token_is_provided(
-    mock_secret: MagicMock,
-    client_auth_header: APIClient,
-    valid_token: str,
-    payload: dict,
+    client_auth_header: APIClient, valid_token: str, payload: dict
 ):
     """
     Test that a valid JWT token allows the user to successfully log out (blacklist the token).

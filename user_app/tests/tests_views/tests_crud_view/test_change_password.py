@@ -16,7 +16,7 @@ from user_app.constants.path_for_mock import crud_view_path, token_utils_module_
 # =========== Objects and constants ==============
 User = get_user_model()
 url: str = reverse("change_password")
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 revoke_tokens_mock = "revoke_tokens"
 SECRET = "token_secret"
 ACTUAL_PASSWORD = "FAKE_actual_password10!"
@@ -63,17 +63,10 @@ def client(user: User) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-@patch(
-    f"{crud_view_path}.{revoke_tokens_mock}",
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{crud_view_path}.{revoke_tokens_mock}")
 def test_password_not_changed_when_actual_password_does_not_match(
-    revoke_tokens_mock: MagicMock,
-    token_secret_mock: MagicMock,
-    client: APIClient,
+    revoke_tokens_mock: MagicMock, client: APIClient
 ):
     """
     Test that the password is not changed when the current password does not match.
@@ -99,18 +92,9 @@ def test_password_not_changed_when_actual_password_does_not_match(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-@patch(
-    f"{crud_view_path}.{revoke_tokens_mock}",
-)
-def test_change_password_successfully(
-    revoke_tokens_mock: MagicMock,
-    token_secret_mock: MagicMock,
-    client: APIClient,
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{crud_view_path}.{revoke_tokens_mock}")
+def test_change_password_successfully(revoke_tokens_mock: MagicMock, client: APIClient):
     """
     Test that the password is changed successfully.
     """
@@ -137,14 +121,8 @@ def test_change_password_successfully(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_new_tokens_returned_when_password_is_changed_successfully(
-    token_secret_mock: MagicMock,
-    client: APIClient,
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_new_tokens_returned_when_password_is_changed_successfully(client: APIClient):
     """
     Test that new tokens are returned when the password is changed successfully.
     """

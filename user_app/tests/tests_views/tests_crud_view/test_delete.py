@@ -5,7 +5,7 @@ The `delete` view allows authenticated users to delete their own accounts.
 """
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -22,7 +22,7 @@ from user_app.constants.path_for_mock import token_utils_module_path
 User = get_user_model()
 url: str = reverse("delete")
 SECRET = "token_secret"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 USER_ID = 100
 
 
@@ -66,12 +66,8 @@ def client_auth_header(user: User) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_user_deletion_successful(
-    token_secret_mock: MagicMock,
     client_auth_header: APIClient,
 ):
     """

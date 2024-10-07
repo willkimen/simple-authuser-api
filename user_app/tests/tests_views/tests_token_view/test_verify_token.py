@@ -17,7 +17,7 @@ from user_app.models import BlacklistTokenModel
 User = get_user_model()
 url: str = reverse("verify_token")
 SECRET = "token_secret"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 INCORRECT_TYP = "incorrect_type"
 
@@ -95,13 +95,8 @@ def valid_token(payload: dict) -> str:
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_token_already_in_blacklist(
-    mock_secret: MagicMock, client: APIClient, blacklisted_token: str
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_token_already_in_blacklist(client: APIClient, blacklisted_token: str):
     """
     Test that a JWT token already blacklisted returns the appropriate error message.
     """
@@ -117,12 +112,9 @@ def test_token_already_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_token_type_must_be_access_or_refresh(
-    mock_secret: MagicMock, client: APIClient, incorrect_typ_token: str
+    client: APIClient, incorrect_typ_token: str
 ):
     """
     Test that a JWT token with an incorrect type field ("typ")
@@ -144,13 +136,8 @@ def test_token_type_must_be_access_or_refresh(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_valid_token_successfully(
-    mock_secret: MagicMock, client: APIClient, valid_token: str
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_valid_token_successfully(client: APIClient, valid_token: str):
     """
     Tests if a valid token is processed successfully.
 

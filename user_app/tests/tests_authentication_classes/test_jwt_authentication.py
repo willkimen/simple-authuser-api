@@ -43,7 +43,7 @@ INCORRECT_TYP = "refresh"
 ID = 1
 SECRET = "fake_secret"
 JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ================== Fixtures ===================
@@ -115,10 +115,7 @@ def token_request_with_deactivated_user(user_data: dict, payload: dict) -> Reque
     payload["uid"] = deactivated_user.id
 
     return Request(
-        factory.get(
-            "/",
-            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload, SECRET)}",
-        )
+        factory.get("/", HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload, SECRET)}")
     )
 
 
@@ -291,12 +288,8 @@ def request_with_incorrect_type_token(payload_with_activated_user: dict) -> Requ
 
 # ================ Tests =======================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_authentication_fails_when_token_type_is_incorrect(
-    mock_token_secret: MagicMock,
     request_with_incorrect_type_token: Request,
 ):
     """
@@ -375,14 +368,8 @@ def test_authentication_fails_when_incorrect_format_auth_header(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_authentication_fails_when_expired_token(
-    mock_token_secret: MagicMock,
-    expired_token_request: Request,
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_authentication_fails_when_expired_token(expired_token_request: Request):
     """
     Test that authentication fails when the JWT is expired.
 
@@ -399,12 +386,8 @@ def test_authentication_fails_when_expired_token(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_authentication_fails_when_invalid_secret_token(
-    mock_token_secret: MagicMock,
     token_request_with_invalid_secret: Request,
 ):
     """
@@ -422,14 +405,8 @@ def test_authentication_fails_when_invalid_secret_token(
     assert expected_error_message == str(e.value)
 
 
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_authentication_fails_when_malformed_token(
-    mock_token_secret: MagicMock,
-    malformed_token_request: Request,
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_authentication_fails_when_malformed_token(malformed_token_request: Request):
     """
     Test that authentication fails when the JWT is malformed.
 
@@ -445,12 +422,8 @@ def test_authentication_fails_when_malformed_token(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_authentication_fails_when_invalid_algorithm_token(
-    mock_token_secret: MagicMock,
     token_request_with_invalid_algorithm: Request,
 ):
     """
@@ -469,12 +442,8 @@ def test_authentication_fails_when_invalid_algorithm_token(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_authentication_fails_when_blacklisted_token(
-    mock_token_secret: MagicMock,
     request_with_blacklisted_token: Request,
 ):
     """
@@ -493,12 +462,8 @@ def test_authentication_fails_when_blacklisted_token(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_authentication_fails_when_nonexistent_user(
-    mock_token_secret: MagicMock,
     token_request_with_nonexistent_user: Request,
 ):
     """
@@ -517,12 +482,8 @@ def test_authentication_fails_when_nonexistent_user(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_authentication_success(
-    mock_token_secret: MagicMock,
     token_request_with_activated_user: Request,
     activated_user: User,
     payload_with_activated_user: dict,
@@ -557,12 +518,8 @@ def test_authentication_success(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_authentication_fails_when_user_with_account_deactivated(
-    mock_token_secret: MagicMock,
     token_request_with_deactivated_user: Request,
 ):
     """

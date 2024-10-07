@@ -1,7 +1,7 @@
-import os
 import smtplib
 from textwrap import dedent
 
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 
 from user_app.constants.prefixes import (
@@ -21,8 +21,6 @@ MESSAGE_24H_EXPIRED = (
     "After that, it will expire, and you'll need to request a new one."
 )
 MESSAGE_SAFELY_IGNORE = "If you haven't requested this email, you can safely ignore it."
-confirmation_link = os.environ.get("REDIRECT_TO_ACTIVATE_ACCOUNT_PAGE", "")
-reset_link = os.environ.get("REDIRECT_TO_RESET_PASSWORD_PAGE", "")
 
 
 def __send_email_with_error_handling(email_multi: EmailMultiAlternatives) -> int:
@@ -152,7 +150,7 @@ def send_activation_code_by_email(user_email: str) -> None:
         {code}
 
         To complete your registration, please visit the following link and submit the code:
-        {confirmation_link}
+        {settings.CONFIRMATION_LINK}
 
         {MESSAGE_24H_EXPIRED}
 
@@ -165,7 +163,7 @@ def send_activation_code_by_email(user_email: str) -> None:
         <p>Your confirmation code is below:</p>
         <h2>{code}</h2>
         <p>To complete your registration, please visit the following link and submit the code:</p>
-        <a href="{confirmation_link}">Activate Account</a>
+        <a href="{settings.CONFIRMATION_LINK}">Activate Account</a>
         <p>{MESSAGE_24H_EXPIRED}</p>
         <p>{MESSAGE_SAFELY_IGNORE}</p>
         """
@@ -210,7 +208,7 @@ def send_reset_password_code_by_email(user_email: str) -> None:
         {code}
 
         To reset your password, please visit the following link and submit the code:
-        {reset_link}
+        {settings.RESET_LINK}
 
         {MESSAGE_24H_EXPIRED}
 
@@ -223,7 +221,7 @@ def send_reset_password_code_by_email(user_email: str) -> None:
         <p>Your password reset code is below:</p>
         <h2>{code}</h2>
         <p>To reset your password, please visit the following link and submit the code:</p>
-        <a href="{reset_link}">Reset Password</a>
+        <a href="{settings.RESET_LINK}">Reset Password</a>
         <p>{MESSAGE_24H_EXPIRED}</p>
         <p>{MESSAGE_SAFELY_IGNORE}</p>
         """

@@ -22,6 +22,12 @@ CORS_ALLOWED_ORIGINS: list[str] = [
     origin.strip() for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
 ]
 
+# ---------- Token Secret ----------------
+TOKEN_SECRET = os.environ.get(
+    "TOKEN_SECRET", "secret_token_insecure_jldsfj51dfsd65fsklj564564wg16ae5344*"
+)
+
+
 # Installed apps
 # -----------------------------------------------------------------------------
 INSTALLED_APPS = [
@@ -52,6 +58,11 @@ MIDDLEWARE = [
 # URL configurations
 # -----------------------------------------------------------------------------
 ROOT_URLCONF = "config.urls"
+
+# ------------- Redirects urls ----------------
+RESET_LINK = os.environ.get("REDIRECT_TO_ACTIVATE_ACCOUNT_PAGE", "")
+CONFIRMATION_LINK = os.environ.get("REDIRECT_TO_RESET_PASSWORD_PAGE", "")
+
 
 # Rest Framework Configurations
 # -----------------------------------------------------------------------------

@@ -22,7 +22,7 @@ url: str = reverse("send_code_to_email_change")
 SECRET = "token_secret"
 LOGGED_USER_EMAIL = "loggeduser@email.com"
 EMAIL_ALREADY_EXISTS = "emailalreadyexists@email.com"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 send_change_email_code_by_email = "send_change_email_code_by_email"
 
 
@@ -65,12 +65,8 @@ def client_auth_header(activated_user) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_do_not_send_code_if_email_is_same_as_logged_in_user(
-    token_secret_mock: MagicMock,
     client_auth_header: APIClient,
 ):
     """
@@ -91,12 +87,8 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_do_not_send_code_if_email_already_exists_in_database(
-    token_secret_mock: MagicMock,
     client_auth_header: APIClient,
 ):
     """
@@ -126,18 +118,13 @@ def test_do_not_send_code_if_email_already_exists_in_database(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 @patch(
     f"{change_email_view_path}.{send_change_email_code_by_email}",
     side_effect=smtplib.SMTPException(),
 )
 def test_do_not_send_code_if_email_sending_fails(
-    token_secret_mock: MagicMock,
-    send_email_mock: MagicMock,
-    client_auth_header: APIClient,
+    send_email_mock: MagicMock, client_auth_header: APIClient
 ):
     """
     Tests the scenario where sending the confirmation email fails.
@@ -157,14 +144,8 @@ def test_do_not_send_code_if_email_sending_fails(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-def test_send_code_successfully(
-    token_secret_mock: MagicMock,
-    client_auth_header: APIClient,
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+def test_send_code_successfully(client_auth_header: APIClient):
     """
     Tests the successful case of sending the confirmation email to
     the new email address.

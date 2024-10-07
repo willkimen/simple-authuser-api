@@ -8,7 +8,7 @@ correct data in the response.
 """
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -24,7 +24,7 @@ from user_app.constants.path_for_mock import token_utils_module_path
 User = get_user_model()
 url: str = reverse("detail")
 SECRET = "token_secret"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============ Fixtures ================
@@ -63,12 +63,9 @@ def client_auth_header(user: User) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_logged_user_returns_their_data_successfully(
-    token_secret_mock: MagicMock, client_auth_header: APIClient, user: User
+    client_auth_header: APIClient, user
 ):
     """
     This test verifies that an authenticated user can successfully retrieve their own

@@ -152,16 +152,9 @@ def payloads(user: User) -> list[dict]:
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-@patch(
-    f"{token_utils_module_path}.{create_pair_token_mock}",
-)
-def test_token_persisted_in_blacklist(
-    create_pair_token_mock: MagicMock, mock_secret: MagicMock, payload: dict
-):
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{token_utils_module_path}.{create_pair_token_mock}")
+def test_token_persisted_in_blacklist(create_pair_token_mock: MagicMock, payload: dict):
     """
     Tests if the token is correctly added to the blacklist.
 
@@ -184,18 +177,10 @@ def test_token_persisted_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-@patch(
-    f"{token_utils_module_path}.{create_pair_token_mock}",
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{token_utils_module_path}.{create_pair_token_mock}")
 def test_expired_token_does_not_persisted_in_blacklist(
-    create_pair_token_mock: MagicMock,
-    mock_secret: MagicMock,
-    payload: dict,
-    expired_payload: ValidTokenModel,
+    create_pair_token_mock: MagicMock, payload: dict, expired_payload: ValidTokenModel
 ):
     """
     Tests if an expired token is NOT added to the blacklist.
@@ -221,18 +206,10 @@ def test_expired_token_does_not_persisted_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{token_utils_module_path}.{os_environ_get}",
-    return_value=SECRET,
-)
-@patch(
-    f"{token_utils_module_path}.{create_pair_token_mock}",
-)
+@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{token_utils_module_path}.{create_pair_token_mock}")
 def test_all_tokens_are_deleted(
-    create_pair_token_mock: MagicMock,
-    mock_secret: MagicMock,
-    payload: dict,
-    payloads: list[dict],
+    create_pair_token_mock: MagicMock, payload: dict, payloads: list[dict]
 ):
     """
     Tests if all  tokens are deleted after revocation.
