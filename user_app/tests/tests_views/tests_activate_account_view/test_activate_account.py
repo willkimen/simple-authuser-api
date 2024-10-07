@@ -34,7 +34,7 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def deactivated_user() -> User:
+def deactivated_user():
     """Create a generic deactivated user."""
     return User.objects.create_user(
         first_name="fake_first_name",
@@ -46,7 +46,7 @@ def deactivated_user() -> User:
 
 
 @pytest.fixture
-def expired_code(deactivated_user: User) -> str:
+def expired_code(deactivated_user) -> str:
     """
     Creates a AccountActivationCodeModel instance with an
     expired date (24h + 1 minute ago compared to now)
@@ -67,7 +67,7 @@ def expired_code(deactivated_user: User) -> str:
 
 
 @pytest.fixture
-def code_for_deactivated_user(deactivated_user: User) -> str:
+def code_for_deactivated_user(deactivated_user) -> str:
     """
     This fixture creates AccountActivationCodeModel instance for account activation.
 
@@ -83,14 +83,11 @@ def code_for_deactivated_user(deactivated_user: User) -> str:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
 def test_successful_account_activation(
     mock_allow_request: MagicMock,
     client: APIClient,
-    deactivated_user: User,
+    deactivated_user,
     code_for_deactivated_user: str,
 ):
     """
@@ -123,14 +120,9 @@ def test_successful_account_activation(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
 def test_successfully_activated_account_removes_the_code_in_the_database(
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    code_for_deactivated_user: str,
+    mock_allow_request: MagicMock, client: APIClient, code_for_deactivated_user: str
 ):
     """
     Test if the activation code is removed from the database after
@@ -152,14 +144,9 @@ def test_successfully_activated_account_removes_the_code_in_the_database(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
 def test_not_activate_account_when_expired_code(
-    mock_allow_request: MagicMock,
-    expired_code: str,
-    client: APIClient,
+    mock_allow_request: MagicMock, expired_code: str, client: APIClient
 ):
     """
     Test if the account activation request returns 410 when the
@@ -186,14 +173,9 @@ def test_not_activate_account_when_expired_code(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
 def test_expired_code_is_removed_from_the_database(
-    mock_allow_request: MagicMock,
-    expired_code: str,
-    client: APIClient,
+    mock_allow_request: MagicMock, expired_code: str, client: APIClient
 ):
     """
     Test if the expired code is removed from the database when verified
@@ -215,10 +197,7 @@ def test_expired_code_is_removed_from_the_database(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
 def test_not_activate_account_when_code_field_does_not_exists(
     mock_allow_request: MagicMock, client: APIClient
 ):

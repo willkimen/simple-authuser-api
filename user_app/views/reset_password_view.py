@@ -91,19 +91,13 @@ def reset_password(request):
             code=reset_serializer.data["code"]
         )
     except ResetPasswordCodeModel.DoesNotExist:
-        return Response(
-            CODE_NOT_FOUND,
-            status=status.HTTP_404_NOT_FOUND,
-        )
+        return Response(CODE_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
     # Checks if the code is expired
     now: datetime = timezone.now()
     if reset_password_code.expires_at < now:
         reset_password_code.delete()  # Delete the code as it is no longer useful.
-        return Response(
-            CODE_EXPIRED,
-            status=status.HTTP_410_GONE,
-        )
+        return Response(CODE_EXPIRED, status=status.HTTP_410_GONE)
 
     # Change use passsoword
     user = User.objects.get(id=reset_password_code.user.id)
@@ -117,6 +111,5 @@ def reset_password(request):
     new_token_pair: dict[str, str] = revoke_tokens(user.id)
 
     return Response(
-        merge_dict(USER_PASSWORD_RESET, new_token_pair),
-        status=status.HTTP_200_OK,
+        merge_dict(USER_PASSWORD_RESET, new_token_pair), status=status.HTTP_200_OK
     )

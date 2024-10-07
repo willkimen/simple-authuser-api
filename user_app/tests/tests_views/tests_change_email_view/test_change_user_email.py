@@ -30,7 +30,7 @@ NEW_EMAIL = "new_email@email.com"
 
 # ============ Fixtures ================
 @pytest.fixture
-def user() -> User:
+def user():
     """Creates and returns a User object for use in tests."""
     return User.objects.create_user(
         first_name="fake_first_name",
@@ -42,7 +42,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def client(user: User) -> APIClient:
+def client(user) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -64,21 +64,22 @@ def client(user: User) -> APIClient:
 
 
 @pytest.fixture
-def code(user: User) -> str:
-    """Creates and returns a valid confirmation code for changing the user's email."""
-    return ChangeEmailCodeModel.objects.create(
-        user=user,
-        new_email=NEW_EMAIL,
-    ).code
+def code(user) -> str:
+    """
+    Creates and returns a valid confirmation code
+    for changing the user's email.
+    """
+    return ChangeEmailCodeModel.objects.create(user=user, new_email=NEW_EMAIL).code
 
 
 @pytest.fixture
-def expired_code(user: User) -> str:
-    """Creates and returns an expired confirmation code for testing expiration scenarios."""
+def expired_code(user) -> str:
+    """
+    Creates and returns an expired confirmation code for
+    testing expiration scenarios.
+    """
     return ChangeEmailCodeModel.objects.create(
-        user=user,
-        new_email=NEW_EMAIL,
-        expires_at=timezone.now() - timedelta(minutes=1),
+        user=user, new_email=NEW_EMAIL, expires_at=timezone.now() - timedelta(minutes=1)
     ).code
 
 

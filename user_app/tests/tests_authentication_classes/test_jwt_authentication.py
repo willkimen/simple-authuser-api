@@ -16,7 +16,7 @@ It uses the `pytest` and `unittest.mock` libraries.
 import base64
 import json
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -72,13 +72,13 @@ def payload() -> dict:
 
 
 @pytest.fixture
-def activated_user(user_data: dict) -> User:
+def activated_user(user_data: dict):
     """Create and persisted activated user."""
     return User.objects.create_user(**user_data)
 
 
 @pytest.fixture
-def payload_with_activated_user(activated_user: User, payload: dict) -> dict:
+def payload_with_activated_user(activated_user, payload: dict) -> dict:
     """Create a payload with activated user."""
     payload["uid"] = activated_user.id
     return payload
@@ -252,7 +252,7 @@ def token_request_with_invalid_algorithm(payload_with_activated_user: dict) -> R
 
 
 @pytest.fixture
-def request_with_blacklisted_token(payload_with_activated_user: User) -> Request:
+def request_with_blacklisted_token(payload_with_activated_user) -> Request:
     """
     Create a request object with a JWT token that is blacklisted.
 
@@ -485,7 +485,7 @@ def test_authentication_fails_when_nonexistent_user(
 @patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
 def test_authentication_success(
     token_request_with_activated_user: Request,
-    activated_user: User,
+    activated_user,
     payload_with_activated_user: dict,
 ):
     """
@@ -535,7 +535,9 @@ def test_authentication_fails_when_user_with_account_deactivated(
         The authentication fails with the appropriate error message
         indicating the user's account is not activated.
     """
-    expected_error_message = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED["detail"]
+    expected_error_message = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED[
+        "detail"
+    ]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(token_request_with_deactivated_user)
 

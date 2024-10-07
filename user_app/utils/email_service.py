@@ -122,9 +122,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str):
         raise smtplib.SMTPException(str(e))
 
     ChangeEmailCodeModel.objects.create(
-        code=code,
-        user_id=actual_email,
-        new_email=new_email,
+        code=code, user_id=actual_email, new_email=new_email
     )
 
 
@@ -179,10 +177,7 @@ def send_activation_code_by_email(user_email: str) -> None:
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
-    AccountActivationCodeModel.objects.create(
-        code=code,
-        user_id=user_email,
-    )
+    AccountActivationCodeModel.objects.create(code=code, user_id=user_email)
 
 
 def send_reset_password_code_by_email(user_email: str) -> None:
@@ -237,7 +232,4 @@ def send_reset_password_code_by_email(user_email: str) -> None:
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
-    ResetPasswordCodeModel.objects.create(
-        code=code,
-        user_id=user_email,
-    )
+    ResetPasswordCodeModel.objects.create(code=code, user_id=user_email)

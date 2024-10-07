@@ -44,7 +44,7 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def activated_user() -> User:
+def activated_user():
     return User.objects.create(
         id=UID,
         first_name="fake_first_name",
@@ -55,7 +55,7 @@ def activated_user() -> User:
 
 
 @pytest.fixture
-def payload(activated_user: User) -> dict:
+def payload(activated_user) -> dict:
     return {
         "uid": activated_user.id,
         "typ": "refresh",

@@ -91,10 +91,7 @@ def change_user_email(request):
     now: datetime = timezone.now()
     if change_email_code.expires_at < now:
         change_email_code.delete()
-        return Response(
-            CODE_EXPIRED,
-            status=status.HTTP_410_GONE,
-        )
+        return Response(CODE_EXPIRED, status=status.HTTP_410_GONE)
 
     # Change email
     request.user.email = change_email_code.new_email

@@ -163,10 +163,7 @@ def revoke_tokens(user_id: int) -> dict[str, str]:
     if tokens_not_expired:
         [
             BlacklistTokenModel.objects.create(
-                user_id=token.user_id,
-                typ=token.typ,
-                jti=token.jti,
-                exp=token.exp,
+                user_id=token.user_id, typ=token.typ, jti=token.jti, exp=token.exp
             )
             for token in tokens_not_expired
         ]

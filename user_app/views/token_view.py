@@ -41,17 +41,11 @@ def obtain_token_pair(request):
     try:
         user = User.objects.get(email=email, password=password)
     except User.DoesNotExist:
-        return Response(
-            USER_NOT_FOUND,
-            status=status.HTTP_404_NOT_FOUND,
-        )
+        return Response(USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
     # Verify if user has activated account
     if user.is_active is False:
-        return Response(
-            USER_ACCOUNT_NOT_ACTIVATED,
-            status=status.HTTP_403_FORBIDDEN,
-        )
+        return Response(USER_ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
 
     return Response(
         merge_dict(LOGIN_SUCCESSFUL, create_pair_token(user.id)),
@@ -82,17 +76,11 @@ def refresh_token_access(request):
     try:
         user = User.objects.get(id=payload["uid"])
     except User.DoesNotExist:
-        return Response(
-            USER_NOT_FOUND,
-            status=status.HTTP_404_NOT_FOUND,
-        )
+        return Response(USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
     # Checks if the user does not have an activated account
     if user.is_active is False:
-        return Response(
-            USER_ACCOUNT_NOT_ACTIVATED,
-            status=status.HTTP_403_FORBIDDEN,
-        )
+        return Response(USER_ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
 
     return Response(
         merge_dict(TOKEN_ACCESS_CREATED, {"access": create_token(payload["uid"])}),

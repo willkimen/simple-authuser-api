@@ -64,7 +64,9 @@ def test_update_first_name_successfully(client_auth_header: APIClient):
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["detail"]
+    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY[
+        "detail"
+    ]
     expected_new_first_name = "new_first_name"
 
     actual_response = client_auth_header.patch(
@@ -86,7 +88,9 @@ def test_update_last_name_successfully(client_auth_header: APIClient):
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["detail"]
+    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY[
+        "detail"
+    ]
     expected_new_last_name = "new_last_name"
 
     actual_response = client_auth_header.patch(
@@ -108,7 +112,9 @@ def test_update_first_and_last_name_successfully(client_auth_header: APIClient):
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["detail"]
+    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY[
+        "detail"
+    ]
     expected_new_first_name = "new_first_name"
     expected_new_last_name = "new_last_name"
 

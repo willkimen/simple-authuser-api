@@ -49,7 +49,7 @@ def activated_user():
 
 
 @pytest.fixture
-def payload(activated_user: User) -> dict:
+def payload(activated_user) -> dict:
     return {
         "uid": activated_user.id,
         "typ": "fake_jti",

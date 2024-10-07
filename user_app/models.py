@@ -134,12 +134,7 @@ class ConfirmationCodeBaseModel(models.Model):
     """
 
     _prefix = ""
-    code = models.CharField(
-        max_length=16,
-        unique=True,
-        null=False,
-        blank=False,
-    )
+    code = models.CharField(max_length=16, unique=True, null=False, blank=False)
     created_at = models.DateTimeField()
     expires_at = models.DateTimeField()
 

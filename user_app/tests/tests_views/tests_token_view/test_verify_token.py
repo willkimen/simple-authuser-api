@@ -24,7 +24,7 @@ INCORRECT_TYP = "incorrect_type"
 
 # ============ Fixtures ================
 @pytest.fixture
-def user() -> User:
+def user():
     """Generic user instance."""
     return User.objects.create_user(
         first_name="fake_first_name",
@@ -36,7 +36,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def payload(user: User) -> dict:
+def payload(user) -> dict:
     """Generic payload."""
     return {
         "uid": user.id,

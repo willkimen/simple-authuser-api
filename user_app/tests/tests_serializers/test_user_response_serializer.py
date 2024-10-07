@@ -23,13 +23,13 @@ def valid_user_data() -> dict[str, str]:
 
 
 @pytest.fixture
-def user(valid_user_data: dict) -> User:
+def user(valid_user_data: dict):
     return User.objects.create_user(**valid_user_data)
 
 
 # ============== Tests ==================
 @pytest.mark.django_db
-def test_should_return_the_correct_fields(user: User):
+def test_should_return_the_correct_fields(user):
     serializer = UserResponseSerializer(instance=user)
 
     assert user.id == serializer.data["id"]

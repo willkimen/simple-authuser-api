@@ -29,7 +29,7 @@ token_secret_mock = "settings.TOKEN_SECRET"
 
 # ============ Fixtures ================
 @pytest.fixture
-def user() -> User:
+def user():
     return User.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
@@ -40,7 +40,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def client_auth_header(user: User) -> APIClient:
+def client_auth_header(user) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 

@@ -28,7 +28,7 @@ USER_ID = 100
 
 # ============ Fixtures ================
 @pytest.fixture
-def user() -> User:
+def user():
     """
     Provides a activated user object that is persisted in the database.
     """
@@ -43,7 +43,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def client_auth_header(user: User) -> APIClient:
+def client_auth_header(user) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 

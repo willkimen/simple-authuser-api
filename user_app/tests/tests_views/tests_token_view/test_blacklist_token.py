@@ -31,7 +31,7 @@ token_secret_mock = "settings.TOKEN_SECRET"
 
 # ============ Fixtures ================
 @pytest.fixture
-def user() -> User:
+def user():
     """Generic user instance."""
     return User.objects.create_user(
         id=UID,
@@ -44,7 +44,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def payload(user: User) -> dict:
+def payload(user) -> dict:
     """Generic payload."""
     return {
         "uid": user.id,
@@ -160,11 +160,12 @@ def test_token_type_must_be_access_or_refresh(
     client_auth_header: APIClient, incorrect_typ_token: str
 ):
     """
-    Test that a JWT token with an incorrect type field ("typ") returns the appropriate error.
+    Test that a JWT token with an incorrect type field ("typ") returns
+    the appropriate error.
     """
-    expected_detail_message = response_codes_and_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN[
-        "detail"
-    ]
+    expected_detail_message = (
+        response_codes_and_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN["detail"]
+    )
     expected_code = response_codes_and_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
@@ -182,7 +183,8 @@ def test_user_must_match_token_owner(
     client_auth_header: APIClient, token_with_different_user_id: str
 ):
     """
-    Test that a token's user ID must match the authenticated user's ID for the request to succeed.
+    Test that a token's user ID must match the authenticated user's ID
+    for the request to succeed.
     """
     expected_detail_message = response_codes_and_messages.USER_TOKEN_MISMATCH["detail"]
     expected_code = response_codes_and_messages.USER_TOKEN_MISMATCH["code"]

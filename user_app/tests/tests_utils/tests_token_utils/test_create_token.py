@@ -18,7 +18,7 @@ create_payload = "create_payload"
 
 # ============== Fixture ==================
 @pytest.fixture
-def user() -> User:
+def user():
     return User.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
@@ -29,7 +29,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def payload(user: User) -> dict:
+def payload(user) -> dict:
     return {
         "uid": user.id,
         "typ": "refresh",

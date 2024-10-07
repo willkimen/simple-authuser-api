@@ -28,7 +28,7 @@ send_change_email_code_by_email = "send_change_email_code_by_email"
 
 # ============ Fixtures ================
 @pytest.fixture
-def activated_user() -> User:
+def activated_user():
     """
     Provides a user object that is persisted in the database.
     """
@@ -153,9 +153,9 @@ def test_send_code_successfully(client_auth_header: APIClient):
     """
     expected_status_code = status.HTTP_200_OK
     expected_code = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY[
-        "detail"
-    ]
+    expected_detail_message = (
+        response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
+    )
 
     actual_response = client_auth_header.post(
         url, data={"email": "fake_email@email.com"}, format="json"

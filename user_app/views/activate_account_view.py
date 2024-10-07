@@ -39,19 +39,13 @@ def activate_account(request):
     try:
         account_activation_code = AccountActivationCodeModel.objects.get(code=code)
     except AccountActivationCodeModel.DoesNotExist:
-        return Response(
-            CODE_NOT_FOUND,
-            status=status.HTTP_404_NOT_FOUND,
-        )
+        return Response(CODE_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
     # Checks if the code is expired
     now: datetime = timezone.now()
     if account_activation_code.expires_at < now:
         account_activation_code.delete()  # Delete the code as it is no longer useful.
-        return Response(
-            CODE_EXPIRED,
-            status=status.HTTP_410_GONE,
-        )
+        return Response(CODE_EXPIRED, status=status.HTTP_410_GONE)
 
     # Activate user and save in the database
     user = User.objects.get(email=account_activation_code.user.email)
@@ -81,17 +75,11 @@ def send_code_to_activate_account(request):
     try:
         user = User.objects.get(email=serializer.validated_data["email"])
     except User.DoesNotExist:
-        return Response(
-            USER_NOT_FOUND,
-            status=status.HTTP_404_NOT_FOUND,
-        )
+        return Response(USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
     # Checks if the user already has the account activated
     if user.is_active == True:
-        return Response(
-            USER_HAS_ALREADY_ACTIVATED,
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response(USER_HAS_ALREADY_ACTIVATED, status=status.HTTP_400_BAD_REQUEST)
 
     # Send code to user email
     try:
@@ -102,7 +90,4 @@ def send_code_to_activate_account(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    return Response(
-        EMAIL_SEND_TO_USER_SUCCESSFULLY,
-        status=status.HTTP_200_OK,
-    )
+    return Response(EMAIL_SEND_TO_USER_SUCCESSFULLY, status=status.HTTP_200_OK)

@@ -40,7 +40,7 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def activated_user() -> User:
+def activated_user():
     """
     Fixture to create and return an activated User object.
     """
@@ -55,18 +55,15 @@ def activated_user() -> User:
 
 
 @pytest.fixture
-def expired_code(activated_user: User) -> str:
+def expired_code(activated_user) -> str:
     return ResetPasswordCodeModel.objects.create(
-        user=activated_user,
-        expires_at=timezone.now() - timedelta(minutes=1),
+        user=activated_user, expires_at=timezone.now() - timedelta(minutes=1)
     ).code
 
 
 @pytest.fixture
-def valid_code(activated_user: User) -> str:
-    return ResetPasswordCodeModel.objects.create(
-        user=activated_user,
-    ).code
+def valid_code(activated_user) -> str:
+    return ResetPasswordCodeModel.objects.create(user=activated_user).code
 
 
 # ============ Tests ================
@@ -91,10 +88,7 @@ def test_does_not_send_code_when_request_limit_is_reached(client: APIClient):
 
 
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
 def test_does_not_reset_when_non_existent_code(
     mock_allow_request: MagicMock, client: APIClient
 ):
@@ -122,10 +116,7 @@ def test_does_not_reset_when_non_existent_code(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
 def test_does_not_reset_when_expired_code(
     mock_allow_request: MagicMock, client: APIClient, expired_code: str
 ):
@@ -153,10 +144,7 @@ def test_does_not_reset_when_expired_code(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
 def test_expired_code_is_deleted(
     mock_allow_request: MagicMock, client: APIClient, expired_code: str
 ):
@@ -179,13 +167,8 @@ def test_expired_code_is_deleted(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
-@patch(
-    f"{reset_password_view}.{revoke_tokens_mock}",
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
+@patch(f"{reset_password_view}.{revoke_tokens_mock}")
 def test_after_reset_password_the_code_is_deleted(
     revoke_tokens_mock: MagicMock,
     mock_allow_request: MagicMock,

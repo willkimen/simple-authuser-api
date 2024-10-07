@@ -49,10 +49,7 @@ def active_user_email() -> str:
         str: The email address of the user with the activated account.
     """
 
-    return User.objects.create_user(
-        **FAKE_USER_DATA,
-        is_active=True,
-    ).email
+    return User.objects.create_user(**FAKE_USER_DATA, is_active=True).email
 
 
 @pytest.fixture
@@ -97,10 +94,7 @@ def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
 def test_does_not_send_email_when_email_field_is_empty(
     mock_allow_request: MagicMock, client: APIClient
 ):
@@ -129,10 +123,7 @@ def test_does_not_send_email_when_email_field_is_empty(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
 def test_does_not_send_email_when_email_field_is_null(
     mock_allow_request: MagicMock, client: APIClient
 ):
@@ -177,10 +168,7 @@ def test_does_not_send_email_when_email_field_is_null(
     ],
 )
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
 def test_does_not_send_email_with_invalid_email_format(
     mock_allow_request: MagicMock, invalid_email_format, client: APIClient
 ):
@@ -211,10 +199,7 @@ def test_does_not_send_email_with_invalid_email_format(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
 def test_does_not_send_email_when_user_does_not_exists(
     mock_allow_request: MagicMock, client: APIClient
 ):
@@ -240,14 +225,9 @@ def test_does_not_send_email_when_user_does_not_exists(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
 def test_does_not_send_email_when_user_has_already_activated(
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    active_user_email: str,
+    mock_allow_request: MagicMock, client: APIClient, active_user_email: str
 ):
     """
     Test if the email sending request returns 400 when the user has already activated their account.
@@ -274,10 +254,7 @@ def test_does_not_send_email_when_user_has_already_activated(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
 @patch(
     f"{activate_account_view_path}.{send_email_path_for_mock}",
     side_effect=smtplib.SMTPException(),
@@ -314,10 +291,7 @@ def test_failed_to_send_email(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{activate_account_view_path}.{allow_request_path_for_mock}",
-    return_value=True,
-)
+@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
 @patch(f"{activate_account_view_path}.{send_email_path_for_mock}")
 def test_send_email_successfully(
     mock_send_email: MagicMock,
@@ -338,9 +312,9 @@ def test_send_email_successfully(
     success message when the activation email is sent successfully.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_detail_message = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY[
-        "detail"
-    ]
+    expected_detail_message = (
+        response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
+    )
     expected_code = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
 
     actual_response = client.post(

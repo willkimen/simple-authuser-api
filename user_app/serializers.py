@@ -30,9 +30,7 @@ class UserRequestSerializer(serializers.ModelSerializer):
             "confirmation_password",
         ]
         # Set fields as write_only so they are not displayed in responses
-        extra_kwargs = {
-            "password": {"write_only": True},
-        }
+        extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
         """

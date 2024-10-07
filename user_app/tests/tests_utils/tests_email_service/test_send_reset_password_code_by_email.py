@@ -16,7 +16,7 @@ generate_random_code = "generate_random_code"
 
 # =============== Fixtures ================
 @pytest.fixture
-def deactivated_user() -> User:
+def deactivated_user():
     """
     Fixture to create and return a deactivated User object.
     """
@@ -31,10 +31,7 @@ def deactivated_user() -> User:
 # =============== Tests ================
 @pytest.mark.django_db
 @patch(f"{email_service_module_path}.{email_multi_class}")
-def test_success_send_email(
-    MockEmailMultiAlternatives: MagicMock,
-    deactivated_user: User,
-):
+def test_success_send_email(MockEmailMultiAlternatives: MagicMock, deactivated_user):
     # Returns a mocked instance of the EmailMultiAlternatives class
     mock_email_multi_instance = MockEmailMultiAlternatives.return_value
 
@@ -45,14 +42,11 @@ def test_success_send_email(
 
 @pytest.mark.django_db
 @patch(f"{email_service_module_path}.{email_multi_class}")
-@patch(
-    f"{email_service_module_path}.{generate_random_code}",
-    return_value=CODE,
-)
+@patch(f"{email_service_module_path}.{generate_random_code}", return_value=CODE)
 def test_success_send_email_create_code_in_database(
     mock_generate_random_code: MagicMock,
     MockEmailMultiAlternatives: MagicMock,
-    deactivated_user: User,
+    deactivated_user,
 ):
     # Returns a mocked instance of the EmailMultiAlternatives class
     mock_email_multi_instance = MockEmailMultiAlternatives.return_value

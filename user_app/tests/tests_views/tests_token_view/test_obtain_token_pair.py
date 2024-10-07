@@ -41,13 +41,13 @@ def data_user_nonexistent() -> dict[str:str]:
 
 
 @pytest.fixture
-def deactivated_user() -> User:
+def deactivated_user():
     """returns user instance without activated account"""
     return User.objects.create_user(**USER_DATA, is_active=False)
 
 
 @pytest.fixture
-def activated_user() -> User:
+def activated_user():
     """returns user instance without activated account"""
     return User.objects.create_user(**USER_DATA, is_active=True)
 
@@ -77,8 +77,7 @@ def test_nonexistent_user_does_not_return_token_pair(
 
 @pytest.mark.django_db
 def test_user_with_not_activated_account_does_not_return_token_pair(
-    deactivated_user: User,
-    client: APIClient,
+    deactivated_user, client: APIClient
 ):
     """
     Test that attempting to log in with an account that has not

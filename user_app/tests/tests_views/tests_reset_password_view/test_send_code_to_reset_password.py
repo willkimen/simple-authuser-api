@@ -28,7 +28,7 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def deactivate_user() -> User:
+def deactivate_user():
     """
     Fixture to create and return a deactivated User object.
     """
@@ -42,7 +42,7 @@ def deactivate_user() -> User:
 
 
 @pytest.fixture
-def activate_user() -> User:
+def activate_user():
     """
     Fixture to create and return an activated User object.
     """
@@ -57,10 +57,7 @@ def activate_user() -> User:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
 def test_does_not_send_code_when_non_existent_email_in_database(
     mock_allow_request: MagicMock, client: APIClient
 ):
@@ -82,10 +79,7 @@ def test_does_not_send_code_when_non_existent_email_in_database(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
 def test_does_not_send_code_when_deactivate_user(
     mock_allow_request: MagicMock, client: APIClient, deactivate_user
 ):
@@ -109,10 +103,7 @@ def test_does_not_send_code_when_deactivate_user(
 
 
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
 @patch(
     f"{reset_password_view}.{send_reset_password_code_by_email_mock}",
     side_effect=smtplib.SMTPException(),
@@ -161,14 +152,9 @@ def test_does_not_send_code_when_request_limit_is_reached(client: APIClient):
 
 
 @pytest.mark.django_db
-@patch(
-    f"{reset_password_view}.{allow_request}",
-    return_value=True,
-)
+@patch(f"{reset_password_view}.{allow_request}", return_value=True)
 def test_sends_the_code_to_the_user_email_successfully(
-    mock_allow_request: MagicMock,
-    client: APIClient,
-    activate_user,
+    mock_allow_request: MagicMock, client: APIClient, activate_user
 ):
     """
     Tests that the system successfully sends the password reset code to the user's email

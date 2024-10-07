@@ -27,11 +27,7 @@ urlpatterns = [
     # Change user password
     path("user/change_passoword/", change_password, name="change_password"),
     # Activate user account
-    path(
-        "user/activate/",
-        activate_account,
-        name="activate_account",
-    ),
+    path("user/activate/", activate_account, name="activate_account"),
     path(
         "user/email/send_code/activate_account/",
         send_code_to_activate_account,
@@ -43,22 +39,14 @@ urlpatterns = [
         send_code_to_email_change,
         name="send_code_to_email_change",
     ),
-    path(
-        "user/change_email/",
-        change_user_email,
-        name="change_user_email",
-    ),
+    path("user/change_email/", change_user_email, name="change_user_email"),
     # Reset user password
     path(
         "user/send_code/reset_password/",
         send_code_to_reset_password,
         name="send_code_to_reset_password",
     ),
-    path(
-        "user/reset_password/",
-        reset_password,
-        name="reset_password",
-    ),
+    path("user/reset_password/", reset_password, name="reset_password"),
     # =============== JWT Endpoints =================
     # Endpoint to obtain a JWT pair (access and refresh tokens) after successful login.
     path("token/pair/", obtain_token_pair, name="obtain_token_pair"),

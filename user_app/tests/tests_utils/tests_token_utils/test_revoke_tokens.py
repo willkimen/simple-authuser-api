@@ -12,7 +12,7 @@ from user_app.utils.token_utils import revoke_tokens
 # ========== Objects, auxiliary functions and constants ============
 User = get_user_model()
 SECRET = "fake_secret"
-os_environ_get = "os.environ.get"
+token_secret_mock = "settings.TOKEN_SECRET"
 create_pair_token_mock = "create_pair_token"
 
 
@@ -22,7 +22,7 @@ def convert_unix_timestamp_to_aware_datetime(unix_timestamp: int) -> datetime:
 
 # ============== Fixtures ==================
 @pytest.fixture
-def user() -> User:
+def user():
     """
     Creates and returns a fake user to be used in tests.
 
@@ -39,7 +39,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def payload(user: User) -> dict:
+def payload(user) -> dict:
     """
     Creates an token paylaod and saves it in the database.
 
@@ -68,7 +68,7 @@ def payload(user: User) -> dict:
 
 
 @pytest.fixture
-def expired_payload(user: User) -> dict:
+def expired_payload(user) -> dict:
     """
     Creates an expired token payload and saves it in the database.
 
@@ -96,7 +96,7 @@ def expired_payload(user: User) -> dict:
 
 
 @pytest.fixture
-def payloads(user: User) -> list[dict]:
+def payloads(user) -> list[dict]:
     """
     Creates a list of tokens, some expired and others valid,
     and saves them in the database.

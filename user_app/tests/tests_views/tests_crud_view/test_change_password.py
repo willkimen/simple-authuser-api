@@ -27,7 +27,7 @@ USER_ID = 1
 
 # ============ Fixtures ================
 @pytest.fixture
-def user() -> User:
+def user():
     """Creates and returns a User object for use in tests."""
     return User.objects.create_user(
         id=USER_ID,
@@ -40,7 +40,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def client(user: User) -> APIClient:
+def client(user) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
