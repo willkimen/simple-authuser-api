@@ -2,31 +2,8 @@ import os
 from pathlib import Path
 
 # Project base directory
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Security
 # -----------------------------------------------------------------------------
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", "secret_insecure_jldsfj5165ser5wg16ae5344*")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-# ----- Allowed hosts -----
-ALLOWED_HOSTS: list[str] = [
-    host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",")
-]
-
-# ---- Cors ----
-CORS_ALLOWED_ORIGINS: list[str] = [
-    origin.strip() for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
-]
-
-# ---------- Token Secret ----------------
-TOKEN_SECRET = os.environ.get(
-    "TOKEN_SECRET", "secret_token_insecure_jldsfj51dfsd65fsklj564564wg16ae5344*"
-)
-
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Installed apps
 # -----------------------------------------------------------------------------
@@ -55,20 +32,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# URL configurations
-# -----------------------------------------------------------------------------
-ROOT_URLCONF = "config.urls"
-
-# ------------- Redirects urls ----------------
-RESET_LINK = os.environ.get("REDIRECT_TO_ACTIVATE_ACCOUNT_PAGE", "")
-CONFIRMATION_LINK = os.environ.get("REDIRECT_TO_RESET_PASSWORD_PAGE", "")
-
-
-# Rest Framework Configurations
-# -----------------------------------------------------------------------------
-REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "user_app.custom_exception_handler.custom_exception_handler",
-}
 
 # Templates
 # -----------------------------------------------------------------------------
@@ -87,31 +50,16 @@ TEMPLATES = [
         },
     },
 ]
-
-# WSGI
+# Root URLs and WSGI
 # -----------------------------------------------------------------------------
+ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Database
+# Rest Framework Configurations
 # -----------------------------------------------------------------------------
-DATABASES = {
-    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "user_app.custom_exception_handler.custom_exception_handler",
 }
-
-
-# Configuration for developing with PostgreSQL container
-"""
-DATABASES = {
-    "default": {
-        "ENGINE": os.environ.get("DB_ENGINE"),
-        "NAME": os.environ.get("POSTGRES_DB"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
-        "HOST": os.environ.get("POSTGRES_HOST"),
-        "PORT": os.environ.get("POSTGRES_PORT"),
-    }
-}
-"""
 
 # Password validation
 # -----------------------------------------------------------------------------
@@ -148,28 +96,3 @@ STATIC_URL = "static/"
 # Default auto field configuration
 # -----------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# Email settings
-# -----------------------------------------------------------------------------
-
-# Define the email backend to be used by Django. In this case, the SMTP backend.
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-
-# Get the SMTP server host from environment variables.
-EMAIL_HOST = os.environ.get("EMAIL_HOST")
-
-# Get the SMTP server port from environment variables.
-EMAIL_PORT = os.environ.get("EMAIL_PORT")
-
-# Define whether TLS (Transport Layer Security) should be used.
-# Convert the environment variable from string to boolean.
-EMAIL_USE_TLS: bool = True if os.environ.get("TLS") == "True" else False
-
-# Get the username for SMTP server authentication from environment variables.
-EMAIL_HOST_USER = os.environ.get("USER_CREDENTIAL_SMTP")
-
-# Get the password for SMTP server authentication from environment variables.
-EMAIL_HOST_PASSWORD = os.environ.get("PASSWORD_CREDENTIAL_SMTP")
-
-# Get the default email address to be used as the sender in sent messages.
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_EMAIL")
