@@ -2,6 +2,7 @@
 This module tests the function for sending an email with an account confirmation code.
 """
 
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,6 +17,7 @@ User = get_user_model()
 CODE = "mocked_code"
 email_multi_class = "EmailMultiAlternatives"
 generate_random_code = "generate_random_code"
+actual_environment = os.environ.get("DJANGO_ENV", "development")
 
 
 # =============== Fixtures ================
@@ -33,15 +35,37 @@ def deactivated_user():
 
 
 # =============== Tests ================
+@pytest.mark.skipif(
+    actual_environment != "development",
+    reason="Test ignored. Not in development environment.",
+)
 @pytest.mark.django_db
-@patch(f"{email_service_module_path}.{email_multi_class}")
-def test_success_send_email(MockEmailMultiAlternatives: MagicMock, deactivated_user):
-    # Returns a mocked instance of the MockEmailMultiAlternatives class
-    mock_email_multi_instance = MockEmailMultiAlternatives.return_value
+def test_success_send_email_development(deactivated_user):
+    """
+    Test to verify email sending in the development environment.
 
-    send_activation_code_by_email(deactivated_user.email)
+    This test uses Django's 'console.EmailBackend', which simulates sending emails
+    by displaying the content in the console instead of actually sending them. The
+    purpose of this test is to ensure that the function is working correctly and
+    that it returns the expected number of emails sent.
 
-    mock_email_multi_instance.send.assert_called()
+    **Pre-conditions**:
+    - The environment must be configured as "development".
+    - A user (deactivated_user) must be provided for the test.
+
+    **Expected Results**:
+    - The test passes if the function returns the correct number of emails sent
+      (1). If the returned number is different, the test fails, indicating that
+      there was an issue with sending the email.
+
+    **Notes**:
+    - This test should not be executed in environments other than
+      development, as the goal is to validate the email sending logic
+      in a safe environment without the risk of sending real emails.
+    """
+    expected_send_count = 1
+    actual_sent_count = send_activation_code_by_email(deactivated_user.email)
+    assert expected_send_count == actual_sent_count
 
 
 @pytest.mark.django_db
