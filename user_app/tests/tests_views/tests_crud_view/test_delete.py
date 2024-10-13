@@ -67,14 +67,11 @@ def client_auth_header(user) -> APIClient:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
-def test_user_deletion_successful(
-    client_auth_header: APIClient,
-):
+def test_user_deletion_successful(client_auth_header: APIClient):
     """
     Tests that the user can successfully delete their own account.
 
     Args:
-        token_secret_mock (MagicMock): Mocked environment variable for JWT secret.
         client_auth_header (APIClient): API client with valid JWT authentication.
     """
     expected_status_code = status.HTTP_200_OK

@@ -51,7 +51,6 @@ def test_token_persisted_in_database(mock_create_payload: MagicMock, payload: di
 
     Args:
         mock_create_payload (MagicMock): Mocked version of the create_payload function.
-        mock_secret (MagicMock): Mock a secret to create tokens, for testing.
         payload (dict): Mock the create_payload() function which is used internally
                         by the create_token() function, to return a fake payload.
     """

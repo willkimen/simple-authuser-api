@@ -296,9 +296,7 @@ def test_authentication_fails_when_token_type_is_incorrect(
     Test that authentication fails when the JWT token type ("typ") is incorrect.
 
     Args:
-        mock_token_secret (MagicMock): Mock object for retrieving the JWT
-                                       secret from environment variables.
-        request_with_incorrect_type_token (Request): The request fixture containing a
+          request_with_incorrect_type_token (Request): The request fixture containing a
                                                      JWT token with an incorrect type.
     """
     expected_error_message = response_codes_and_messages.IS_NOT_ACCESS_TOKEN["detail"]
@@ -374,7 +372,6 @@ def test_authentication_fails_when_expired_token(expired_token_request: Request)
     Test that authentication fails when the JWT is expired.
 
     Args:
-        mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
         expired_token_request (Request): Request object with an expired
                                          JWT in the Authorization header.
     """
@@ -394,7 +391,6 @@ def test_authentication_fails_when_invalid_secret_token(
     Test that authentication fails when the JWT has an invalid secret.
 
     Args:
-        mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
         token_request_with_invalid_secret (Request): Request object with a JWT
                                                      encoded using an incorrect secret.
     """
@@ -411,7 +407,6 @@ def test_authentication_fails_when_malformed_token(malformed_token_request: Requ
     Test that authentication fails when the JWT is malformed.
 
     Args:
-        mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
         malformed_token_request (Request): Request object with a malformed JWT.
     """
     expected_error_message = token_exception_messages.DECODE_ERROR["detail"]
@@ -430,7 +425,6 @@ def test_authentication_fails_when_invalid_algorithm_token(
     Test to ensure that authentication fails when the JWT uses an invalid algorithm.
 
     Args:
-        mock_token_secret: Mocked environment variable for JWT secret.
         token_request_with_invalid_algorithm (Request): Request object containing a
                                                         JWT with an invalid algorithm.
     """
@@ -450,7 +444,6 @@ def test_authentication_fails_when_blacklisted_token(
     Test that authentication fails when the JWT is blacklisted.
 
     Args:
-        mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
         request_with_blacklisted_token (Request): Request object with a blacklisted JWT.
     """
 
@@ -470,7 +463,6 @@ def test_authentication_fails_when_nonexistent_user(
     Test that authentication fails when the JWT is for a nonexistent user.
 
     Args:
-        mock_token_secret (MagicMock): Mocked environment variable for JWT secret.
         token_request_with_nonexistent_user (Request): Request object with a
                                                        JWT for a nonexistent user.
     """
@@ -492,8 +484,6 @@ def test_authentication_success(
     Test that the authentication succeeds for an activated user.
 
     Args:
-        mock_token_secret (MagicMock): Mock for the environment variable
-                                       holding the JWT secret.
         token_request_with_activated_user (Request): The request containing a
                                                      JWT for an activated user.
         activated_user (User): The activated user instance.
@@ -526,8 +516,6 @@ def test_authentication_fails_when_user_with_account_deactivated(
     Test that authentication fails when the user account is deactivated.
 
     Args:
-        mock_token_secret (MagicMock): Mock for the environment variable
-                                       holding the JWT secret.
         token_request_with_deactivated_user (Request): The request containing a
                                                         JWT for a deactivated user.
 

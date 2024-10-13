@@ -1,7 +1,7 @@
-import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from user_app.constants.path_for_mock import email_service_module_path
@@ -13,7 +13,7 @@ User = get_user_model()
 CODE = "mocked_code"
 email_multi_class = "EmailMultiAlternatives"
 generate_random_code = "generate_random_code"
-actual_environment = os.environ.get("DJANGO_ENV", "development")
+actual_environment = settings.ENVIRONMENT
 
 
 # =============== Fixtures ================
@@ -32,7 +32,7 @@ def deactivated_user():
 
 # =============== Tests ================
 @pytest.mark.skipif(
-    actual_environment != "development",
+    actual_environment != settings.DEVELOPMENT,
     reason="Test ignored. Not in development environment.",
 )
 @pytest.mark.django_db
@@ -72,6 +72,13 @@ def test_success_send_email_create_code_in_database(
     MockEmailMultiAlternatives: MagicMock,
     deactivated_user,
 ):
+    """
+    Tests if the password reset code is successfully sent via email
+    and if the code is created in the database.
+
+    Verifies that the email sending function is called and that the
+    password reset code has been stored in the ResetPasswordCodeModel table.
+    """
     # Returns a mocked instance of the EmailMultiAlternatives class
     mock_email_multi_instance = MockEmailMultiAlternatives.return_value
 

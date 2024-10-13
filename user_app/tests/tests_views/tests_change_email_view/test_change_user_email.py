@@ -96,7 +96,7 @@ def test_do_not_change_email_if_code_does_not_exist(
 
     Mocked elements:
     - allow_request: Mocks the rate limit allowing the request to proceed.
-    - os.environ.get: Mocks the secret key for token creation.
+    - settings.TOKEN_SECRET: Mocks the secret key for token creation.
     """
     expected_detail_message = response_codes_and_messages.CODE_NOT_FOUND["detail"]
     expected_code = response_codes_and_messages.CODE_NOT_FOUND["code"]
@@ -121,7 +121,8 @@ def test_do_not_change_email_if_code_is_expired(
 
     Mocked elements:
     - allow_request: Mocks the rate limit, allowing the request to proceed.
-    - os.environ.get: Mocks the secret key retrieval from environment variables.
+    - settings.TOKEN_SECRET: Mocks the secret key for token creation.
+
     """
     expected_detail_message = response_codes_and_messages.CODE_EXPIRED["detail"]
     expected_code = response_codes_and_messages.CODE_EXPIRED["code"]
@@ -160,7 +161,6 @@ def test_change_email_successful(
 
     Mocked elements:
     - allow_request: Mocks the rate limit, allowing the request to proceed.
-    - os.environ.get: Mocks the secret key retrieval from environment variables.
     """
     expected_detail_message = response_codes_and_messages.USER_EMAIL_CHANGED["detail"]
     expected_code = response_codes_and_messages.USER_EMAIL_CHANGED["code"]
@@ -206,7 +206,7 @@ def test_does_not_change_email_when_request_limit_is_reached(client: APIClient):
     the number of allowed requests is exceeded.
 
     Mocked elements:
-    - os.environ.get: Mocks the secret key retrieval from environment variables.
+    - settings.TOKEN_SECRET: Mocks the secret key for token creation.
     """
     expected_status_code = status.HTTP_429_TOO_MANY_REQUESTS
     expected_detail_message = "Request was throttled."

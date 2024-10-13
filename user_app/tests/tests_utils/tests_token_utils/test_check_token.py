@@ -178,7 +178,6 @@ def test_decode_error(token_malformed: str):
     Test if the function raises DecodeError when the token is malformed.
 
     Args:
-        token_secret_mock: Mocked environment variable for JWT secret.
         token_malformed (str): The malformed JWT.
     """
     expected_dict_with_code_and_detail = token_exception_messages.DECODE_ERROR
@@ -196,7 +195,6 @@ def test_invalid_algorithm(token_with_invalid_algorithm: str):
     an invalid algorithm.
 
     Args:
-        token_secret_mock: Mocked environment variable for JWT secret.
         token_with_invalid_algorithm (str): The JWT with an invalid algorithm.
     """
     expected_dict_with_code_and_detail = token_exception_messages.INVALID_ALGORITHM
@@ -214,7 +212,6 @@ def test_token_in_black_list(token: str):
     in the blacklist.
 
     Args:
-        token_secret_mock: Mocked environment variable for JWT secret.
         token (str): The JWT.
     """
     expected_dict_with_code_and_detail = token_exception_messages.TOKEN_IN_BLACKLIST
@@ -240,7 +237,6 @@ def test_success_create_token(token: str, payload: dict):
     the original payload.
 
     Args:
-        token_secret_mock (MagicMock): Mocked environment variable for JWT secret.
         token (str): JWT token that has been created for the test.
         payload (dict): Original payload used to create the JWT token.
     """
