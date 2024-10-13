@@ -23,7 +23,24 @@ RESET_LINK = "domain.com/reset/password/"
 CONFIRMATION_LINK = "domain.com/confirmation/email/"
 
 
-# Database
+# Database (Use if you want postgres with docker container.)
+# -----------------------------------------------------------------------------
+
+"""
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "HOST": os.environ.get("POSTGRES_HOST"),
+        "PORT": os.environ.get("POSTGRES_PORT"),
+    }
+}
+
+"""
+
+# Database (User if you want it locally on your host machine.)
 # -----------------------------------------------------------------------------
 DATABASES = {
     "default": {

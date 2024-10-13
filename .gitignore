@@ -111,6 +111,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env.development
+.env.production
+.env.base
 
 # mkdocs documentation
 /site
