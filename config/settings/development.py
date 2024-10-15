@@ -25,8 +25,6 @@ CONFIRMATION_LINK = "domain.com/confirmation/email/"
 
 # Database (Use if you want postgres with docker container.)
 # -----------------------------------------------------------------------------
-
-"""
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -38,8 +36,8 @@ DATABASES = {
     }
 }
 
-"""
 
+"""
 # Database (User if you want it locally on your host machine.)
 # -----------------------------------------------------------------------------
 DATABASES = {
@@ -48,6 +46,7 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+"""
 
 
 # Email settings for development
