@@ -11,9 +11,9 @@ services:
     volumes:
       - ./:/api  # Mounts the current directory to /api in the container for synchronization.
     env_file:
-      - .env.base  # Base environment variables file.
-      - .env.development  # Development environment variables file.
-    command: ["sh", "-c", "chmod -R +x /api/scripts && ./scripts/commands.sh"]  # Executes the command script with appropriate permissions.
+      - environments/.env.base  # Base environment variables file.
+      - environments/.env.development  # Development environment variables file.
+    command: ["sh", "-c", "chmod -R +x /api/scripts && commands.sh"]  # Executes the command script with appropriate permissions.
     depends_on:
       - psql  # This service depends on the psql container.
 
@@ -23,7 +23,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/  # Mounts a persistent volume for PostgreSQL data.
     env_file:
-      - .env.development  # Development environment variables file for PostgreSQL.
+      - environments/.env.development  # Development environment variables file for PostgreSQL.
     ports:
       - 5432:5432  # Maps port 5432 of the container to port 5432 of the host.
 
