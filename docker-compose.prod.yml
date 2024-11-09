@@ -13,6 +13,8 @@ services:
     command: ["sh", "-c", "chmod -R +x /api/scripts && commands.sh"]  # Executes the command script with appropriate permissions.
     depends_on:
       - psql  # This service depends on the psql container.
+    networks:
+        - db_api
 
   psql:
     container_name: psql  # Name of the container for the PostgreSQL service.
@@ -23,6 +25,12 @@ services:
       - environments/.env.production  # Production environment variables file for PostgreSQL.
     ports:
       - 5432:5432  # Maps port 5432 of the container to port 5432 of the host.
+    networks:
+        - db_api
 
 volumes:
   postgres_data:  # Persistent volume to store PostgreSQL data.
+
+networks:
+  db_api:
+    driver: bridge
