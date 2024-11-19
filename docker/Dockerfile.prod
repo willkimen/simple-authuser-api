@@ -6,10 +6,10 @@ FROM python:3.10-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-COPY . /api
+COPY ./ /api/
 
 # Set the working directory where commands will be executed
-WORKDIR /api
+WORKDIR /api/
 
 # Expose port 8000 to allow access to the application via HTTP
 EXPOSE 8000

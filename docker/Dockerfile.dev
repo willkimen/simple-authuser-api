@@ -12,17 +12,16 @@ ENV PYTHONUNBUFFERED=1
 
 # Copy the requirements.txt file, containing Python dependencies, 
 # to the /api working directory
-COPY requirements.txt /api/
+COPY ./requirements.txt /api/
 
 # Set the working directory where commands will be executed
-WORKDIR /api
+WORKDIR /api/
 
 # Expose port 8000 to allow access to the application via HTTP
 EXPOSE 8000
 
 # Create a virtual environment in the /venv directory, 
-# upgrade pip, 
-# and install the dependencies listed in requirements.txt
+# upgrade pip, and install the dependencies listed in requirements.txt
 RUN python -m venv /venv && \
     /venv/bin/pip install --upgrade pip && \
     /venv/bin/pip install -r /api/requirements.txt

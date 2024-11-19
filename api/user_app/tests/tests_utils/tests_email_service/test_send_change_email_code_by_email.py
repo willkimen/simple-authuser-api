@@ -3,17 +3,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
-
 from user_app.constants.path_for_mock import email_service_module_path
-from user_app.models import ResetPasswordCodeModel
-from user_app.utils.email_service import send_reset_password_code_by_email
+from user_app.models import ChangeEmailCodeModel
+from user_app.utils.email_service import send_change_email_code_by_email
 
 # ========== Objects and constants ============
 User = get_user_model()
 CODE = "mocked_code"
-email_multi_class = "EmailMultiAlternatives"
+email_multi_class_mock = "EmailMultiAlternatives"
 generate_random_code = "generate_random_code"
-actual_environment = settings.ENVIRONMENT
+NEW_EMAIL = "fakenewemail@email.com"
 
 
 # =============== Fixtures ================
@@ -32,7 +31,7 @@ def deactivated_user():
 
 # =============== Tests ================
 @pytest.mark.skipif(
-    actual_environment != settings.DEVELOPMENT,
+    settings.DEBUG != True,
     reason="Test ignored. Not in development environment.",
 )
 @pytest.mark.django_db
@@ -60,12 +59,14 @@ def test_success_send_email_development(deactivated_user):
       in a safe environment without the risk of sending real emails.
     """
     expected_send_count = 1
-    actual_sent_count = send_reset_password_code_by_email(deactivated_user.email)
+    actual_sent_count = send_change_email_code_by_email(
+        deactivated_user.email, NEW_EMAIL
+    )
     assert expected_send_count == actual_sent_count
 
 
 @pytest.mark.django_db
-@patch(f"{email_service_module_path}.{email_multi_class}")
+@patch(f"{email_service_module_path}.{email_multi_class_mock}")
 @patch(f"{email_service_module_path}.{generate_random_code}", return_value=CODE)
 def test_success_send_email_create_code_in_database(
     mock_generate_random_code: MagicMock,
@@ -73,17 +74,17 @@ def test_success_send_email_create_code_in_database(
     deactivated_user,
 ):
     """
-    Tests if the password reset code is successfully sent via email
+    Tests if the email change code is successfully sent via email
     and if the code is created in the database.
 
     Verifies that the email sending function is called and that the
-    password reset code has been stored in the ResetPasswordCodeModel table.
+    email change code has been stored in the ChangeEmailCodeModel table.
     """
     # Returns a mocked instance of the EmailMultiAlternatives class
     mock_email_multi_instance = MockEmailMultiAlternatives.return_value
 
-    send_reset_password_code_by_email(deactivated_user.email)
+    send_change_email_code_by_email(deactivated_user.email, NEW_EMAIL)
 
     mock_email_multi_instance.send.assert_called()
 
-    assert ResetPasswordCodeModel.objects.filter(code=CODE).exists()
+    assert ChangeEmailCodeModel.objects.filter(code=CODE).exists()
