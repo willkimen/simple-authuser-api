@@ -1,19 +1,18 @@
-# docker-compose.yml used to set up the application services, including a Django server and a PostgreSQL database.
 services:
   apiprod:
-    container_name: apiprod  # Name of the container for the API service.
+    container_name: apiprod
     build:
       context: ./../api/  
-      dockerfile: ./../docker/Dockerfile.prod  # Name of the Dockerfile to be used for building the image.
+      dockerfile: ./../docker/Dockerfile.prod
     ports:
-      - 8000:8000  # Maps port 8000 of the container to port 8000 of the host.
+      - 8000:8000
     env_file:
-      - ./../api/environments/.env.production  # Production environment variables file.
-    command: ["sh", "-c", "chmod -R +x /api/scripts && commands.sh"]  # Executes the command script with appropriate permissions.
-    depends_on:
-      - psql  # This service depends on the psql container.
+      - ./../api/environments/.env.production
+    command: ["sh", "-c", "chmod -R +x /api/scripts && commands.sh"]
     networks:
         - db_api
+    depends_on:
+      - psql
 
   psql:
     container_name: psql
@@ -22,18 +21,17 @@ services:
       dockerfile: ./../docker/Dockerfile.prod-postgres
       args:
         DB_NAME: auth_db # set database name for Dockerfile.prod-postgres 
-    container_name: psql  # Name of the container for the PostgreSQL service.
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/  # Mounts a persistent volume for PostgreSQL data.
-    env_file:
-      - ./../api/environments/.env.production  # Production environment variables file for PostgreSQL.
     ports:
-      - 5432:5432  # Maps port 5432 of the container to port 5432 of the host.
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./../api/environments/.env.production
     networks:
         - db_api
 
 volumes:
-  postgres_data:  # Persistent volume to store PostgreSQL data.
+  postgres_data:
 
 networks:
   db_api:
