@@ -19,8 +19,8 @@ services:
         - db_api
 
   psql:
+    image: postgres:16-alpine
     container_name: psql  # Name of the container for the PostgreSQL service.
-    image: postgres:17-alpine  # Image of PostgreSQL to be used.
     volumes:
       - postgres_data:/var/lib/postgresql/data/  # Mounts a persistent volume for PostgreSQL data.
     env_file:

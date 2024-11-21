@@ -16,8 +16,13 @@ services:
         - db_api
 
   psql:
+    container_name: psql
+    build:
+      context: ./../api/  
+      dockerfile: ./../docker/Dockerfile.prod-postgres
+      args:
+        DB_NAME: auth_db # set database name for Dockerfile.prod-postgres 
     container_name: psql  # Name of the container for the PostgreSQL service.
-    image: postgres:17-alpine  # Image of PostgreSQL to be used.
     volumes:
       - postgres_data:/var/lib/postgresql/data/  # Mounts a persistent volume for PostgreSQL data.
     env_file:
