@@ -18,7 +18,7 @@ services:
 
   psql:
     container_name: psql
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:

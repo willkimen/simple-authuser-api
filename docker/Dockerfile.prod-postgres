@@ -1,9 +1,0 @@
-FROM postgres:16
-
-ARG DB_NAME=default_db
-
-RUN apt-get update && apt-get install -y postgresql-16-cron && \
-    echo "shared_preload_libraries='pg_cron'" >> /usr/share/postgresql/postgresql.conf.sample && \
-    echo "cron.database_name='${DB_NAME}'" >> /usr/share/postgresql/postgresql.conf.sample
-
-EXPOSE 5432
