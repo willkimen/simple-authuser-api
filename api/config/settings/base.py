@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "user_app",
+    "django_celery_beat",
 ]
 
 
@@ -106,3 +107,10 @@ STATIC_URL = "static/"
 # Default auto field configuration
 # -----------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Configuration Celery
+# -----------------------------------------------------------------------------
+CELERY_BROKER_URL = "redis://redis-broker:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
