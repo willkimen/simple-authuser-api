@@ -18,6 +18,10 @@ Dependencies:
 import json
 
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
+from user_app.constants.periodic_tasks_names import (
+    REMOVE_EXPIRED_CODE_TASK_NAME,
+    REMOVE_EXPIRED_TOKENS_TASK_NAME,
+)
 
 
 def create_periodic_task_for_expired_codes_removal(apps, schema_editor):
@@ -39,10 +43,10 @@ def create_periodic_task_for_expired_codes_removal(apps, schema_editor):
         month_of_year="*",
     )
 
-    if not PeriodicTask.objects.filter(name="Remove Expired Codes Task").exists():
+    if not PeriodicTask.objects.filter(name=REMOVE_EXPIRED_CODE_TASK_NAME).exists():
         PeriodicTask.objects.create(
             crontab=schedule,
-            name="Remove Expired Codes Task",
+            name=REMOVE_EXPIRED_CODE_TASK_NAME,
             task="teste_app.tasks.task_remove_exp_code",
             args=json.dumps([]),
         )
@@ -67,10 +71,10 @@ def create_periodic_task_for_expired_tokens_removal(apps, schema_editor):
         month_of_year="*",
     )
 
-    if not PeriodicTask.objects.filter(name="Remove Expired Tokens Task").exists():
+    if not PeriodicTask.objects.filter(name=REMOVE_EXPIRED_TOKENS_TASK_NAME).exists():
         PeriodicTask.objects.create(
             crontab=schedule,
-            name="Remove Expired Tokens Task",
+            name=REMOVE_EXPIRED_TOKENS_TASK_NAME,
             task="teste_app.tasks.task_remove_exp_token",
             args=json.dumps([]),
         )
