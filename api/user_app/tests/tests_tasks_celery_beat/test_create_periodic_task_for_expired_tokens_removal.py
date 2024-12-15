@@ -1,0 +1,25 @@
+"""
+Test for the `create_periodic_task_for_expired_tokens_removal` function.
+
+This test ensures that the `create_periodic_task_for_expired_tokens_removal` function correctly creates 
+a periodic task in the database for removing expired tokens.
+
+Scenario:
+- The function is called to register a periodic task in Celery Beat.
+- The task should be scheduled to run daily at 03:00 (hour and minute defined in the crontab).
+"""
+
+import pytest
+from django_celery_beat.models import PeriodicTask
+from user_app.constants.periodic_tasks_names import REMOVE_EXPIRED_TOKENS_TASK_NAME
+from user_app.periodic_tasks import create_periodic_task_for_expired_tokens_removal
+
+
+@pytest.mark.django_db
+def test_create_periodic_task_for_expired_tokens_removal():
+    create_periodic_task_for_expired_tokens_removal(None, None)
+
+    task = PeriodicTask.objects.filter(name=REMOVE_EXPIRED_TOKENS_TASK_NAME).first()
+    assert task is not None
+    assert task.crontab.minute == "0"
+    assert task.crontab.hour == "3"
