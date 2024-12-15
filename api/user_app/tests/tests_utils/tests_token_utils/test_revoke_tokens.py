@@ -2,44 +2,25 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.utils import timezone
-
-from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import BlacklistTokenModel, ValidTokenModel
+from user_app.tests.constants import (
+    CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH,
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+)
 from user_app.utils.token_utils import revoke_tokens
 
+
 # ========== Objects, auxiliary functions and constants ============
-User = get_user_model()
-SECRET = "fake_secret"
-token_secret_mock = "settings.TOKEN_SECRET"
-create_pair_token_mock = "create_pair_token"
-
-
 def convert_unix_timestamp_to_aware_datetime(unix_timestamp: int) -> datetime:
     return timezone.make_aware(datetime.fromtimestamp(unix_timestamp))
 
 
 # ============== Fixtures ==================
 @pytest.fixture
-def user():
-    """
-    Creates and returns a fake user to be used in tests.
-
-    Returns:
-        User: A Django user object with default attributes.
-    """
-    return User.objects.create_user(
-        first_name="fake_first_name",
-        last_name="fake_last_name",
-        email="fake@email.com",
-        password="FAKEpassword10!",
-        is_active=True,
-    )
-
-
-@pytest.fixture
-def payload(user) -> dict:
+def persisted_valid_payload(activated_user) -> dict:
     """
     Creates an token paylaod and saves it in the database.
 
@@ -51,7 +32,7 @@ def payload(user) -> dict:
         JTI, and expiration.
     """
     payload = {
-        "uid": user.id,
+        "uid": activated_user.id,
         "typ": "access",
         "jti": "fake_access_jti",
         "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -68,7 +49,7 @@ def payload(user) -> dict:
 
 
 @pytest.fixture
-def expired_payload(user) -> dict:
+def expired_payload(activated_user) -> dict:
     """
     Creates an expired token payload and saves it in the database.
 
@@ -79,7 +60,7 @@ def expired_payload(user) -> dict:
         dict: Dictionary representing the expired token payload.
     """
     expired_payload = {
-        "uid": user.id,
+        "uid": activated_user.id,
         "typ": "refresh",
         "jti": "fake_expired_refresh_jti",
         "exp": int((timezone.now() - timedelta(seconds=60)).timestamp()),
@@ -96,7 +77,7 @@ def expired_payload(user) -> dict:
 
 
 @pytest.fixture
-def payloads(user) -> list[dict]:
+def payloads(activated_user) -> list[dict]:
     """
     Creates a list of tokens, some expired and others valid,
     and saves them in the database.
@@ -112,25 +93,25 @@ def payloads(user) -> list[dict]:
 
     payloads = [
         {
-            "uid": user.id,
+            "uid": activated_user.id,
             "typ": "access",
             "jti": "jti_1",
             "exp": expired_date,
         },
         {
-            "uid": user.id,
+            "uid": activated_user.id,
             "typ": "access",
             "jti": "jti_2",
             "exp": date,
         },
         {
-            "uid": user.id,
+            "uid": activated_user.id,
             "typ": "refresh",
             "jti": "jti_3",
             "exp": expired_date,
         },
         {
-            "uid": user.id,
+            "uid": activated_user.id,
             "typ": "refresh",
             "jti": "jti_4",
             "exp": date,
@@ -152,9 +133,11 @@ def payloads(user) -> list[dict]:
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
-@patch(f"{token_utils_module_path}.{create_pair_token_mock}")
-def test_token_persisted_in_blacklist(create_pair_token_mock: MagicMock, payload: dict):
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
+def test_token_persisted_in_blacklist(
+    create_pair_token_function_mock: MagicMock, persisted_valid_payload: dict
+):
     """
     Tests if the token is correctly added to the blacklist.
 
@@ -162,25 +145,29 @@ def test_token_persisted_in_blacklist(create_pair_token_mock: MagicMock, payload
     - That the token has been persisted in the blacklist table.
     - That the function to create a new token pair was called.
     """
-    payload["exp"] = convert_unix_timestamp_to_aware_datetime(payload["exp"])
+    persisted_valid_payload["exp"] = convert_unix_timestamp_to_aware_datetime(
+        persisted_valid_payload["exp"]
+    )
 
-    revoke_tokens(payload["uid"])
+    revoke_tokens(persisted_valid_payload["uid"])
 
     assert BlacklistTokenModel.objects.filter(
-        user_id=payload["uid"],
-        typ=payload["typ"],
-        jti=payload["jti"],
-        exp=payload["exp"],
+        user_id=persisted_valid_payload["uid"],
+        typ=persisted_valid_payload["typ"],
+        jti=persisted_valid_payload["jti"],
+        exp=persisted_valid_payload["exp"],
     ).exists()
 
-    create_pair_token_mock.assert_called()
+    create_pair_token_function_mock.assert_called()
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
-@patch(f"{token_utils_module_path}.{create_pair_token_mock}")
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
 def test_expired_token_does_not_persisted_in_blacklist(
-    create_pair_token_mock: MagicMock, payload: dict, expired_payload: ValidTokenModel
+    create_pair_token_function_mock: MagicMock,
+    persisted_valid_payload: dict,
+    expired_payload: ValidTokenModel,
 ):
     """
     Tests if an expired token is NOT added to the blacklist.
@@ -193,7 +180,7 @@ def test_expired_token_does_not_persisted_in_blacklist(
         expired_payload["exp"]
     )
 
-    revoke_tokens(payload["uid"])
+    revoke_tokens(persisted_valid_payload["uid"])
 
     assert not BlacklistTokenModel.objects.filter(
         user_id=expired_payload["uid"],
@@ -202,14 +189,16 @@ def test_expired_token_does_not_persisted_in_blacklist(
         exp=expired_payload["exp"],
     ).exists()
 
-    create_pair_token_mock.assert_called()
+    create_pair_token_function_mock.assert_called()
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
-@patch(f"{token_utils_module_path}.{create_pair_token_mock}")
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
 def test_all_tokens_are_deleted(
-    create_pair_token_mock: MagicMock, payload: dict, payloads: list[dict]
+    create_pair_token_function_mock: MagicMock,
+    persisted_valid_payload: dict,
+    payloads: list[dict],
 ):
     """
     Tests if all  tokens are deleted after revocation.
@@ -219,9 +208,9 @@ def test_all_tokens_are_deleted(
       from the database.
     - That the function to create a new token pair was called.
     """
-    revoke_tokens(payload["uid"])
+    revoke_tokens(persisted_valid_payload["uid"])
     assert not ValidTokenModel.objects.filter(
-        user_id=payload["uid"],
+        user_id=persisted_valid_payload["uid"],
     ).exists()
 
-    create_pair_token_mock.assert_called()
+    create_pair_token_function_mock.assert_called()

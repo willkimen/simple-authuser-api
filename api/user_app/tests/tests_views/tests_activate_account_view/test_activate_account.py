@@ -9,30 +9,23 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages
-from user_app.constants.path_for_mock import activate_account_view_path
 from user_app.models import AccountActivationCodeModel
+from user_app.tests.constants import (
+    ACTIVATE_ACCOUNT_VIEW_MODULE_PATH,
+    ALLOW_REQUEST_FUNCTION_TO_PATCH,
+    User,
+)
 
 # ========== Objects and constants ============
-User = get_user_model()
 url: str = reverse("activate_account")
 CODE_NOT_EXISTS = "code_not_exists"
-allow_request = "FivePerMinuteRateLimit.allow_request"
 
 
 # ============ Fixture ================
-@pytest.fixture
-def client() -> APIClient:
-    """Returns an API client to make requests."""
-
-    return APIClient()
-
-
 @pytest.fixture
 def deactivated_user():
     """Create a generic deactivated user."""
@@ -83,9 +76,12 @@ def code_for_deactivated_user(deactivated_user) -> str:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_successful_account_activation(
-    mock_allow_request: MagicMock,
+    allow_request_function_mock: MagicMock,
     client: APIClient,
     deactivated_user,
     code_for_deactivated_user: str,
@@ -94,7 +90,7 @@ def test_successful_account_activation(
     Test if the account activation request successfully activates the account.
 
     Args:
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         deactivated_user (User): An instance of a disabled user.
         code_for_deactivated_user: Code belonging to a deactivated user.
         client (APIClient): The API client used to make requests.
@@ -120,16 +116,21 @@ def test_successful_account_activation(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_successfully_activated_account_removes_the_code_in_the_database(
-    mock_allow_request: MagicMock, client: APIClient, code_for_deactivated_user: str
+    allow_request_function_mock: MagicMock,
+    client: APIClient,
+    code_for_deactivated_user: str,
 ):
     """
     Test if the activation code is removed from the database after
     successful activation.
 
     Args:
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         deactivated_user (User): An instance of a disabled user.
         code_for_deactivated_user: Code belonging to a deactivated user.
         client (APIClient): The API client used to make requests.
@@ -144,17 +145,20 @@ def test_successfully_activated_account_removes_the_code_in_the_database(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_not_activate_account_when_expired_code(
-    mock_allow_request: MagicMock, expired_code: str, client: APIClient
+    allow_request_function_mock: MagicMock, expired_code: str, client: APIClient
 ):
     """
     Test if the account activation request returns 410 when the
     provided code is expired.
 
     Args:
-        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass
-                                           rate limiting.
+        allow_request_function_mock (MagicMock): Mocked throttle classes to bypass
+                                                 rate limiting.
         expired_code (str): The expired activation code.
         client (APIClient): The API client used to make requests.
 
@@ -173,16 +177,19 @@ def test_not_activate_account_when_expired_code(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_expired_code_is_removed_from_the_database(
-    mock_allow_request: MagicMock, expired_code: str, client: APIClient
+    allow_request_function_mock: MagicMock, expired_code: str, client: APIClient
 ):
     """
     Test if the expired code is removed from the database when verified
     that it is expired.
 
     Args:
-        mock_throttle_classes (MagicMock): Mocked throttle classes to bypass
+        allow_request_function_mock (MagicMock): Mocked throttle classes to bypass
                                            rate limiting.
         expired_code (str): The expired activation code.
         client (APIClient): The API client used to make requests.
@@ -197,17 +204,20 @@ def test_expired_code_is_removed_from_the_database(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_not_activate_account_when_code_field_does_not_exists(
-    mock_allow_request: MagicMock, client: APIClient
+    allow_request_function_mock: MagicMock, client: APIClient
 ):
     """
     Test if the account activation request returns 404 when
     the provided code does not exist.
 
     Args:
-        mock_throttle_classes (MagicMock): Mocked throttle classes to
-                                           bypass rate limiting.
+        allow_request_function_mock (MagicMock): Mocked throttle classes to bypass
+                                           rate limiting.
 
         client (APIClient): The API client used to make requests.
 

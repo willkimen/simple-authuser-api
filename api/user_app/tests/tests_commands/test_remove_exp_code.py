@@ -14,7 +14,6 @@ Command tested:
 from datetime import timedelta
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.utils import timezone
 from user_app.models import (
@@ -22,25 +21,6 @@ from user_app.models import (
     ChangeEmailCodeModel,
     ResetPasswordCodeModel,
 )
-
-# ========== Objects and constants ============
-User = get_user_model()
-
-
-# ============== Fixtures  ======================
-@pytest.fixture
-def user():
-    """
-    Creates and returns a mock user object for testing purposes.
-    """
-    user_data = {
-        "email": "fake@email.com",
-        "password": "1234_!Fake",
-        "first_name": "fake_first_name",
-        "last_name": "fake_last_name",
-    }
-
-    return User.objects.create_user(**user_data)
 
 
 # ============== Tests ==================

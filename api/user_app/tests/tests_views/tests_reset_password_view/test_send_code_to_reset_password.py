@@ -2,31 +2,23 @@ import smtplib
 from unittest.mock import MagicMock, patch
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages
-from user_app.constants.path_for_mock import reset_password_view
+from user_app.tests.constants import (
+    ALLOW_REQUEST_FUNCTION_TO_PATCH,
+    RESET_PASSWORD_VIEW_MODULE_PATH,
+    SEND_RESET_PASSWORD_CODE_BY_EMAIL_FUNCTION_TO_PATCH,
+    User,
+)
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("send_code_to_reset_password")
-allow_request = "FivePerMinuteRateLimit.allow_request"
-send_reset_password_code_by_email_mock = "send_reset_password_code_by_email"
 NON_EXISTENT_EMAIL = "nonexistent@email.com"
 
 
 # ============ Fixtures ================
-@pytest.fixture
-def client() -> APIClient:
-    """
-    This client is used to send HTTP requests in the tests.
-    """
-    return APIClient()
-
-
 @pytest.fixture
 def deactivate_user():
     """
@@ -57,9 +49,12 @@ def activate_user():
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_send_code_when_non_existent_email_in_database(
-    mock_allow_request: MagicMock, client: APIClient
+    allow_request_function_mock: MagicMock, client: APIClient
 ):
     """
     Tests that the system does not send a password reset code when the provided email
@@ -79,9 +74,12 @@ def test_does_not_send_code_when_non_existent_email_in_database(
 
 
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_send_code_when_deactivate_user(
-    mock_allow_request: MagicMock, client: APIClient, deactivate_user
+    allow_request_function_mock: MagicMock, client: APIClient, deactivate_user
 ):
     """
     Tests that the system does not send a password reset code when the user's account is
@@ -103,14 +101,17 @@ def test_does_not_send_code_when_deactivate_user(
 
 
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
 @patch(
-    f"{reset_password_view}.{send_reset_password_code_by_email_mock}",
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{SEND_RESET_PASSWORD_CODE_BY_EMAIL_FUNCTION_TO_PATCH}",
     side_effect=smtplib.SMTPException(),
 )
 def test_does_not_send_code_when_failed_to_send_email(
-    send_code_mock: MagicMock,
-    mock_allow_request: MagicMock,
+    send_code_function_mock: MagicMock,
+    allow_request_function_mock: MagicMock,
     client: APIClient,
     activate_user,
 ):
@@ -152,9 +153,12 @@ def test_does_not_send_code_when_request_limit_is_reached(client: APIClient):
 
 
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_sends_the_code_to_the_user_email_successfully(
-    mock_allow_request: MagicMock, client: APIClient, activate_user
+    allow_request_function_mock: MagicMock, client: APIClient, activate_user
 ):
     """
     Tests that the system successfully sends the password reset code to the user's email

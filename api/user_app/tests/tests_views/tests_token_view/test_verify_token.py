@@ -1,23 +1,24 @@
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages, token_exception_messages
-from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import BlacklistTokenModel
+from user_app.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("verify_token")
-SECRET = "token_secret"
-token_secret_mock = "settings.TOKEN_SECRET"
+FAKE_SECRET = "token_secret"
 JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 INCORRECT_TYP = "incorrect_type"
 
@@ -70,7 +71,7 @@ def blacklisted_token(payload: dict) -> str:
         exp=payload["exp"],
     )
 
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -82,7 +83,7 @@ def incorrect_typ_token(payload: dict) -> str:
         str: A JWT token with an incorrect type field ("typ").
     """
     payload["typ"] = INCORRECT_TYP
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -90,12 +91,12 @@ def valid_token(payload: dict) -> str:
     """
     Provides a valid JWT token.
     """
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_already_in_blacklist(client: APIClient, blacklisted_token: str):
     """
     Test that a JWT token already blacklisted returns the appropriate error message.
@@ -112,7 +113,7 @@ def test_token_already_in_blacklist(client: APIClient, blacklisted_token: str):
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_type_must_be_access_or_refresh(
     client: APIClient, incorrect_typ_token: str
 ):
@@ -136,7 +137,7 @@ def test_token_type_must_be_access_or_refresh(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_valid_token_successfully(client: APIClient, valid_token: str):
     """
     Tests if a valid token is processed successfully.

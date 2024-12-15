@@ -2,27 +2,25 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages
-from user_app.constants.path_for_mock import (
-    reset_password_view,
-    token_utils_module_path,
-)
 from user_app.models import ResetPasswordCodeModel
+from user_app.tests.constants import (
+    ALLOW_REQUEST_FUNCTION_TO_PATCH,
+    FAKE_SECRET,
+    RESET_PASSWORD_VIEW_MODULE_PATH,
+    REVOKE_TOKENS_FUNCTION_TO_PATCH,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("reset_password")
-allow_request = "FivePerMinuteRateLimit.allow_request"
-revoke_tokens_mock = "revoke_tokens"
-token_secret_mock_mock = "settings.TOKEN_SECRET"
-SECRET = "token_secret"
 NON_EXISTENT_CODE = "NON_EXISTENT_CODE"
 OLD_PASSWORD = "FAKEOLDpassword!10"
 NEW_PASSWORD = "FAKEpassword!10"
@@ -31,14 +29,6 @@ USER_ID = 100
 
 
 # ============ Fixtures ================
-@pytest.fixture
-def client() -> APIClient:
-    """
-    This client is used to send HTTP requests in the tests.
-    """
-    return APIClient()
-
-
 @pytest.fixture
 def activated_user():
     """
@@ -88,9 +78,12 @@ def test_does_not_send_code_when_request_limit_is_reached(client: APIClient):
 
 
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_reset_when_non_existent_code(
-    mock_allow_request: MagicMock, client: APIClient
+    allow_request_function_mock: MagicMock, client: APIClient
 ):
     """
     Tests if the system returns an error when attempting to
@@ -116,9 +109,12 @@ def test_does_not_reset_when_non_existent_code(
 
 
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_reset_when_expired_code(
-    mock_allow_request: MagicMock, client: APIClient, expired_code: str
+    allow_request_function_mock: MagicMock, client: APIClient, expired_code: str
 ):
     """
     Tests if the system returns an error when attempting to reset the password with
@@ -144,9 +140,12 @@ def test_does_not_reset_when_expired_code(
 
 
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_expired_code_is_deleted(
-    mock_allow_request: MagicMock, client: APIClient, expired_code: str
+    allow_request_function_mock: MagicMock, client: APIClient, expired_code: str
 ):
     """
     Tests if the expired code is deleted after being used.
@@ -167,11 +166,14 @@ def test_expired_code_is_deleted(
 
 
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
-@patch(f"{reset_password_view}.{revoke_tokens_mock}")
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
+@patch(f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
 def test_after_reset_password_the_code_is_deleted(
-    revoke_tokens_mock: MagicMock,
-    mock_allow_request: MagicMock,
+    revoke_tokens_function_mock: MagicMock,
+    allow_request_function_mock: MagicMock,
     client: APIClient,
     valid_code: str,
 ):
@@ -193,14 +195,17 @@ def test_after_reset_password_the_code_is_deleted(
 
     assert not ResetPasswordCodeModel.objects.filter(code=valid_code).exists()
 
-    revoke_tokens_mock.assert_called()
+    revoke_tokens_function_mock.assert_called()
 
 
 @pytest.mark.django_db
-@patch(f"{reset_password_view}.{allow_request}", return_value=True)
-@patch(f"{token_utils_module_path}.{token_secret_mock_mock}", SECRET)
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_reset_password_successful(
-    mock_allow_request: MagicMock, client: APIClient, valid_code: str
+    allow_request_function_mock: MagicMock, client: APIClient, valid_code: str
 ):
     """
     Tests if the password reset process is successful with a valid code and

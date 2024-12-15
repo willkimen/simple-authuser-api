@@ -3,22 +3,23 @@ from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages
-from user_app.constants.path_for_mock import crud_view_path, token_utils_module_path
+from user_app.tests.constants import (
+    CRUD_VIEW_MODULE_PATH,
+    FAKE_SECRET,
+    REVOKE_TOKENS_FUNCTION_TO_PATCH,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("change_password")
-token_secret_mock = "settings.TOKEN_SECRET"
-revoke_tokens_mock = "revoke_tokens"
-SECRET = "token_secret"
 ACTUAL_PASSWORD = "FAKE_actual_password10!"
 NEW_PASSWORD = "FAKE_new_password10!"
 DIFFERENT_ACTUAL_PASSWORD = "FAKE_different_password10!"
@@ -54,7 +55,7 @@ def client(user) -> APIClient:
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        SECRET,
+        FAKE_SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -63,10 +64,10 @@ def client(user) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
-@patch(f"{crud_view_path}.{revoke_tokens_mock}")
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{CRUD_VIEW_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
 def test_password_not_changed_when_actual_password_does_not_match(
-    revoke_tokens_mock: MagicMock, client: APIClient
+    revoke_tokens_function_mock: MagicMock, client: APIClient
 ):
     """
     Test that the password is not changed when the current password does not match.
@@ -92,9 +93,11 @@ def test_password_not_changed_when_actual_password_does_not_match(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
-@patch(f"{crud_view_path}.{revoke_tokens_mock}")
-def test_change_password_successfully(revoke_tokens_mock: MagicMock, client: APIClient):
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{CRUD_VIEW_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
+def test_change_password_successfully(
+    revoke_tokens_function_mock: MagicMock, client: APIClient
+):
     """
     Test that the password is changed successfully.
     """
@@ -121,7 +124,7 @@ def test_change_password_successfully(revoke_tokens_mock: MagicMock, client: API
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_new_tokens_returned_when_password_is_changed_successfully(client: APIClient):
     """
     Test that new tokens are returned when the password is changed successfully.

@@ -4,26 +4,24 @@ from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages
-from user_app.constants.path_for_mock import (
-    change_email_view_path,
-    token_utils_module_path,
+from user_app.tests.constants import (
+    CHANGE_EMAIL_VIEW_MODULE_PATH,
+    FAKE_SECRET,
+    SEND_CHANGE_EMAIL_CODE_BY_EMAIL_FUNCTION_TO_PATCH,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
 )
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("send_code_to_email_change")
-SECRET = "token_secret"
 LOGGED_USER_EMAIL = "loggeduser@email.com"
 EMAIL_ALREADY_EXISTS = "emailalreadyexists@email.com"
-token_secret_mock = "settings.TOKEN_SECRET"
-send_change_email_code_by_email = "send_change_email_code_by_email"
 
 
 # ============ Fixtures ================
@@ -56,7 +54,7 @@ def client_auth_header(activated_user) -> APIClient:
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        SECRET,
+        FAKE_SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -65,7 +63,7 @@ def client_auth_header(activated_user) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_do_not_send_code_if_email_is_same_as_logged_in_user(
     client_auth_header: APIClient,
 ):
@@ -87,7 +85,7 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_do_not_send_code_if_email_already_exists_in_database(
     client_auth_header: APIClient,
 ):
@@ -118,13 +116,14 @@ def test_do_not_send_code_if_email_already_exists_in_database(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 @patch(
-    f"{change_email_view_path}.{send_change_email_code_by_email}",
+    f"{CHANGE_EMAIL_VIEW_MODULE_PATH}.{SEND_CHANGE_EMAIL_CODE_BY_EMAIL_FUNCTION_TO_PATCH}",
     side_effect=smtplib.SMTPException(),
 )
 def test_do_not_send_code_if_email_sending_fails(
-    send_email_mock: MagicMock, client_auth_header: APIClient
+    send_email_change_code_by_email_function_mock: MagicMock,
+    client_auth_header: APIClient,
 ):
     """
     Tests the scenario where sending the confirmation email fails.
@@ -144,7 +143,7 @@ def test_do_not_send_code_if_email_sending_fails(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_send_code_successfully(client_auth_header: APIClient):
     """
     Tests the successful case of sending the confirmation email to

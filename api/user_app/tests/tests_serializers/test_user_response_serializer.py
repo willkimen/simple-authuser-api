@@ -1,10 +1,6 @@
 import pytest
-from django.contrib.auth import get_user_model
-
 from user_app.serializers import UserResponseSerializer
-
-# ========== Objects and constants ============
-User = get_user_model()
+from user_app.tests.constants import User
 
 
 # ============== Fixtures  ======================

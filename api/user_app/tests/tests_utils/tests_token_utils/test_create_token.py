@@ -1,48 +1,25 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.utils import timezone
-
-from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import ValidTokenModel
+from user_app.tests.constants import (
+    CREATE_PAYLOAD_FUNCTION_TO_PATCH,
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+)
 from user_app.utils.token_utils import create_token
-
-# ========== Objects and constants ============
-User = get_user_model()
-SECRET = "fake_secret"
-token_secret_mock = "settings.TOKEN_SECRET"
-create_payload = "create_payload"
-
-
-# ============== Fixture ==================
-@pytest.fixture
-def user():
-    return User.objects.create_user(
-        first_name="fake_first_name",
-        last_name="fake_last_name",
-        email="fakeemail@email.com",
-        password="1344",
-        is_active=True,
-    )
-
-
-@pytest.fixture
-def payload(user) -> dict:
-    return {
-        "uid": user.id,
-        "typ": "refresh",
-        "jti": "fake_jti",
-        "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
-    }
 
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
-@patch(f"{token_utils_module_path}.{create_payload}")
-def test_token_persisted_in_database(mock_create_payload: MagicMock, payload: dict):
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{CREATE_PAYLOAD_FUNCTION_TO_PATCH}")
+def test_token_persisted_in_database(
+    create_payload_function_mock: MagicMock, payload: dict
+):
     """
     Test if a token is correctly persisted in the database.
 
@@ -50,12 +27,13 @@ def test_token_persisted_in_database(mock_create_payload: MagicMock, payload: di
     checks whether the corresponding token is stored in the ValidTokenModel.
 
     Args:
-        mock_create_payload (MagicMock): Mocked version of the create_payload function.
+        create_payload_function_mock (MagicMock): Mocked version of the
+                                                  create_payload function.
         payload (dict): Mock the create_payload() function which is used internally
                         by the create_token() function, to return a fake payload.
     """
     # Mock a create payload function to return a default payload.
-    mock_create_payload.return_value = payload
+    create_payload_function_mock.return_value = payload
 
     create_token(user_id=payload["uid"], is_refresh=True)
 

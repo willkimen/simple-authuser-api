@@ -20,30 +20,30 @@ from unittest.mock import patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from django.utils import timezone
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
-
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants import (
     authentication_error_messages,
     response_codes_and_messages,
     token_exception_messages,
 )
-from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import BlacklistTokenModel
+from user_app.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # ============== Objects and constants ===============
-User = get_user_model()
 factory = RequestFactory()
 jwt_authentication = JWTAuthentication()
 INCORRECT_TYP = "refresh"
 ID = 1
-SECRET = "fake_secret"
 JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
-token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ================== Fixtures ===================
@@ -96,7 +96,7 @@ def token_request_with_activated_user(payload_with_activated_user: dict) -> Requ
     return Request(
         factory.get(
             "/",
-            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload_with_activated_user, SECRET)}",
+            HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload_with_activated_user, FAKE_SECRET)}",
         )
     )
 
@@ -115,7 +115,9 @@ def token_request_with_deactivated_user(user_data: dict, payload: dict) -> Reque
     payload["uid"] = deactivated_user.id
 
     return Request(
-        factory.get("/", HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload, SECRET)}")
+        factory.get(
+            "/", HTTP_AUTHORIZATION=f"Bearer {jwt.encode(payload, FAKE_SECRET)}"
+        )
     )
 
 
@@ -164,7 +166,7 @@ def token_request_with_nonexistent_user(payload: dict) -> Request:
         Request: A request object with a JWT token in the Authorization header.
     """
 
-    token = jwt.encode(payload, SECRET)
+    token = jwt.encode(payload, FAKE_SECRET)
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
@@ -181,7 +183,7 @@ def expired_token_request(payload_with_activated_user: dict) -> Request:
     exp_expired = int((timezone.now() - timedelta(seconds=10)).timestamp())
     payload_with_activated_user["exp"] = exp_expired
 
-    token = jwt.encode(payload_with_activated_user, SECRET)
+    token = jwt.encode(payload_with_activated_user, FAKE_SECRET)
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
@@ -223,7 +225,7 @@ def token_request_with_invalid_algorithm(payload_with_activated_user: dict) -> R
     """
 
     # Encode the payload into a JWT token with the correct secret
-    token = jwt.encode(payload_with_activated_user, SECRET)
+    token = jwt.encode(payload_with_activated_user, FAKE_SECRET)
 
     # Split the token into its components: header, payload, and signature
     header, payload, signature = token.split(".")
@@ -262,7 +264,7 @@ def request_with_blacklisted_token(payload_with_activated_user) -> Request:
 
     payload_with_activated_user["jti"] = JTI_IN_BLACKLIST
 
-    token = jwt.encode(payload_with_activated_user, SECRET)
+    token = jwt.encode(payload_with_activated_user, FAKE_SECRET)
 
     BlacklistTokenModel.objects.create(
         user_id=payload_with_activated_user["uid"],
@@ -281,14 +283,14 @@ def request_with_incorrect_type_token(payload_with_activated_user: dict) -> Requ
     """
     payload_with_activated_user["typ"] = INCORRECT_TYP
 
-    token = jwt.encode(payload_with_activated_user, SECRET)
+    token = jwt.encode(payload_with_activated_user, FAKE_SECRET)
 
     return Request(factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}"))
 
 
 # ================ Tests =======================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_token_type_is_incorrect(
     request_with_incorrect_type_token: Request,
 ):
@@ -366,7 +368,7 @@ def test_authentication_fails_when_incorrect_format_auth_header(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_expired_token(expired_token_request: Request):
     """
     Test that authentication fails when the JWT is expired.
@@ -383,7 +385,7 @@ def test_authentication_fails_when_expired_token(expired_token_request: Request)
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_invalid_secret_token(
     token_request_with_invalid_secret: Request,
 ):
@@ -401,7 +403,7 @@ def test_authentication_fails_when_invalid_secret_token(
     assert expected_error_message == str(e.value)
 
 
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_malformed_token(malformed_token_request: Request):
     """
     Test that authentication fails when the JWT is malformed.
@@ -417,7 +419,7 @@ def test_authentication_fails_when_malformed_token(malformed_token_request: Requ
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_invalid_algorithm_token(
     token_request_with_invalid_algorithm: Request,
 ):
@@ -436,7 +438,7 @@ def test_authentication_fails_when_invalid_algorithm_token(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_blacklisted_token(
     request_with_blacklisted_token: Request,
 ):
@@ -455,7 +457,7 @@ def test_authentication_fails_when_blacklisted_token(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_nonexistent_user(
     token_request_with_nonexistent_user: Request,
 ):
@@ -474,7 +476,7 @@ def test_authentication_fails_when_nonexistent_user(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_success(
     token_request_with_activated_user: Request,
     activated_user,
@@ -508,7 +510,7 @@ def test_authentication_success(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_user_with_account_deactivated(
     token_request_with_deactivated_user: Request,
 ):

@@ -2,21 +2,22 @@
 This module tests the login() view, which expects to receive a 
 user's email and password, and returns a access and refresh JWT in the response."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages
-from user_app.constants.path_for_mock import token_utils_module_path
+from user_app.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # ========== Objects and constants ============
-User = get_user_model()
 url: str = reverse("obtain_token_pair")
-SECRET = "token_secret"
 NONEXISTENT_EMAIL = "nonexistent@email.com"
 USER_DATA = {
     "first_name": "fake_first_name",
@@ -24,7 +25,6 @@ USER_DATA = {
     "email": "fake@email.com",
     "password": "FAKEpassword10!",
 }
-token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============== Fixtures ==============
@@ -109,14 +109,13 @@ def test_user_with_not_activated_account_does_not_return_token_pair(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_returns_token_pair_successfully(activated_user, client: APIClient):
     """
     Test that logging in with valid credentials for an activated
     account returns a JWT pair successfully.
 
     Args:
-        mock_get (MagicMock): Mock object for environment variable retrieval.
         user_with_activated_account (User): A user instance with an activated account.
         client (APIClient): The test client used to make HTTP requests.
     """

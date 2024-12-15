@@ -11,24 +11,24 @@ from unittest.mock import patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages, token_exception_messages
-from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import BlacklistTokenModel
+from user_app.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("refresh_token_access")
-SECRET = "token_secret"
 UID_NON_EXIST = 100
 UID = 1
 INCORRECT_TYP = "access"
-token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============ Fixtures ================
@@ -80,7 +80,7 @@ def blacklisted_refresh_token(payload: dict) -> str:
         exp=payload["exp"],
     )
 
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -96,7 +96,7 @@ def incorrect_type_token(payload: dict) -> str:
         str: An encoded JWT token with an incorrect type.
     """
     payload["typ"] = INCORRECT_TYP
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -108,7 +108,7 @@ def refresh_token_for_nonexistent_user(payload: dict) -> str:
         str: An encoded JWT refresh token for a non-existent user.
     """
     payload["uid"] = UID_NON_EXIST
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -128,7 +128,7 @@ def refresh_token_for_inactive_user(payload: dict) -> str:
     )
     payload["uid"] = inactive_user.id
 
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -141,12 +141,12 @@ def valid_refresh_token(payload: dict) -> str:
     Returns:
         str: An encoded JWT refresh token for an active user.
     """
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_blacklisted_refresh_token_not_generate_new_access_token(
     client: APIClient, blacklisted_refresh_token: str
 ):
@@ -154,7 +154,6 @@ def test_blacklisted_refresh_token_not_generate_new_access_token(
     Tests that a blacklisted refresh token does not generate a new access token.
 
     Args:
-        mock_secret (MagicMock): Mocked JWT secret environment variable.
         client (APIClient): The test client used to make HTTP requests.
         blacklisted_refresh_token (str): The refresh token that is blacklisted.
     """
@@ -172,7 +171,7 @@ def test_blacklisted_refresh_token_not_generate_new_access_token(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_non_refresh_token_not_generate_new_access_token(
     client: APIClient, incorrect_type_token: str
 ):
@@ -180,7 +179,6 @@ def test_non_refresh_token_not_generate_new_access_token(
     Tests that a non-refresh token does not generate a new access token.
 
     Args:
-        mock_secret (MagicMock): Mocked JWT secret environment variable.
         client (APIClient): The test client used to make HTTP requests.
         incorrect_type_token (str): The JWT access token provided as a refresh token.
     """
@@ -198,7 +196,7 @@ def test_non_refresh_token_not_generate_new_access_token(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_nonexistent_user_not_generate_access_token(
     client: APIClient, refresh_token_for_nonexistent_user: str
 ):
@@ -207,7 +205,6 @@ def test_nonexistent_user_not_generate_access_token(
     generate an access token.
 
     Args:
-        mock_secret (MagicMock): Mocked JWT secret environment variable.
         client (APIClient): The test client used to make HTTP requests.
         refresh_token_for_nonexistent_user (str): The refresh token for a
                                                   non-existent user.
@@ -226,7 +223,7 @@ def test_nonexistent_user_not_generate_access_token(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_inactive_user_not_generate_access_token(
     client: APIClient, refresh_token_for_inactive_user: str
 ):
@@ -234,7 +231,6 @@ def test_inactive_user_not_generate_access_token(
     Tests that a refresh token for an inactive user does not generate an access token.
 
     Args:
-        mock_secret (MagicMock): Mocked JWT secret environment variable.
         client (APIClient): The test client used to make HTTP requests.
         refresh_token_for_inactive_user (str): The refresh token for an inactive user.
     """
@@ -254,7 +250,7 @@ def test_inactive_user_not_generate_access_token(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_valid_refresh_token_creates_access_token(
     client: APIClient, valid_refresh_token: str
 ):
@@ -262,7 +258,6 @@ def test_valid_refresh_token_creates_access_token(
     Tests that a valid refresh token successfully generates a new access token.
 
     Args:
-        mock_secret (MagicMock): Mocked JWT secret environment variable.
         client (APIClient): The test client used to make HTTP requests.
         valid_refresh_token (str): The valid refresh token.
     """
@@ -281,7 +276,7 @@ def test_valid_refresh_token_creates_access_token(
     assert expected_status_code == actual_response.status_code
 
     actual_payload = jwt.decode(
-        actual_response.data["access"], SECRET, algorithms="HS256"
+        actual_response.data["access"], FAKE_SECRET, algorithms="HS256"
     )
     assert expected_typ_payload == actual_payload["typ"]
     assert expected_uid_payload == actual_payload["uid"]

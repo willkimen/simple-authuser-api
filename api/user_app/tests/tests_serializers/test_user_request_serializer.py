@@ -4,14 +4,12 @@ User data, using UserSerializer.
 """
 
 import pytest
-from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ErrorDetail
-
 from user_app.constants import validation_error_messages
 from user_app.serializers import UserRequestSerializer
+from user_app.tests.constants import User
 
 # ========== Objects and constants ============
-User = get_user_model()
 CONFIRMATION_PASSWORD_DIFFERENCE = "1234_!Fake_difference"
 INVALID_PASSWORD = "1234"
 
@@ -37,7 +35,6 @@ def user_data_with_mismatched_passwords(valid_user_data: dict) -> dict[str, str]
     """
     Returns user data where the passwords do not match.
     """
-
     valid_user_data["confirmation_password"] = CONFIRMATION_PASSWORD_DIFFERENCE
     return valid_user_data
 
@@ -47,12 +44,10 @@ def user_data_with_invalid_passwords(valid_user_data: dict) -> dict[str, str]:
     """
     Returns user data with an invalid password.
     """
-
     # Set an invalid password for both keys on the same line.
     valid_user_data["password"] = valid_user_data["confirmation_password"] = (
         INVALID_PASSWORD
     )
-
     return valid_user_data
 
 

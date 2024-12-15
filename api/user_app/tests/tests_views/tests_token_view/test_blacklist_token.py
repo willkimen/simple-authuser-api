@@ -7,26 +7,26 @@ from unittest.mock import patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages, token_exception_messages
-from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.models import BlacklistTokenModel
+from user_app.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("blacklist_token")
-SECRET = "token_secret"
 UID = 1
 UID_FOR_DIFFERENT_USER = 100
 JTI_FOR_AUTH = "fake_jti_for_auth_header"
 JTI_IN_BLACKLIST = "fake_jti_in_blacklist"
 INCORRECT_TYP = "incorrect_type"
-token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============ Fixtures ================
@@ -63,7 +63,7 @@ def client_auth_header(payload: dict) -> APIClient:
         APIClient: An API client with the Authorization header set to a valid JWT token.
     """
     payload["jti"] = JTI_FOR_AUTH
-    token = jwt.encode(payload, SECRET)
+    token = jwt.encode(payload, FAKE_SECRET)
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return client
@@ -85,7 +85,7 @@ def blacklisted_token(payload: dict) -> str:
         exp=payload["exp"],
     )
 
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -97,7 +97,7 @@ def incorrect_typ_token(payload: dict) -> str:
         str: A JWT token with an incorrect type field ("typ").
     """
     payload["typ"] = INCORRECT_TYP
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -118,7 +118,7 @@ def token_with_different_user_id(payload: dict) -> str:
     different_user = User.objects.create_user(**USER_DATA, is_active=True)
     payload["uid"] = different_user.id
 
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -130,12 +130,12 @@ def valid_token(payload: dict) -> str:
         str: A valid JWT token for an active user.
     """
 
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_already_in_blacklist(
     client_auth_header: APIClient, blacklisted_token: str
 ):
@@ -155,7 +155,7 @@ def test_token_already_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_type_must_be_access_or_refresh(
     client_auth_header: APIClient, incorrect_typ_token: str
 ):
@@ -178,7 +178,7 @@ def test_token_type_must_be_access_or_refresh(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_user_must_match_token_owner(
     client_auth_header: APIClient, token_with_different_user_id: str
 ):
@@ -199,7 +199,7 @@ def test_user_must_match_token_owner(
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_logout_success_when_valid_token_is_provided(
     client_auth_header: APIClient, valid_token: str, payload: dict
 ):

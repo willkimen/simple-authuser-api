@@ -6,30 +6,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from user_app.constants.path_for_mock import email_service_module_path
 from user_app.models import AccountActivationCodeModel
+from user_app.tests.constants import (
+    EMAIL_MULTI_CLASS_TO_PATCH,
+    EMAIL_SERVICE_MODULE_PATH,
+    FAKE_CODE,
+    GENERATE_RANDOM_CODE_FUNCTION_TO_PATCH,
+)
 from user_app.utils.email_service import send_activation_code_by_email
-
-# ========== Objects and constants ============
-User = get_user_model()
-CODE = "mocked_code"
-email_multi_class = "EmailMultiAlternatives"
-generate_random_code = "generate_random_code"
-
-
-# =============== Fixtures ================
-@pytest.fixture
-def deactivated_user():
-    """
-    Fixture to create and return a deactivated User object.
-    """
-    return User.objects.create_user(
-        first_name="fake_first_name",
-        last_name="fake_last_name",
-        email="fakeemail@email.com",
-        password="FAKEpassword10!",
-    )
 
 
 # =============== Tests ================
@@ -67,11 +51,14 @@ def test_success_send_email_development(deactivated_user):
 
 
 @pytest.mark.django_db
-@patch(f"{email_service_module_path}.{email_multi_class}")
-@patch(f"{email_service_module_path}.{generate_random_code}", return_value=CODE)
+@patch(f"{EMAIL_SERVICE_MODULE_PATH}.{EMAIL_MULTI_CLASS_TO_PATCH}")
+@patch(
+    f"{EMAIL_SERVICE_MODULE_PATH}.{GENERATE_RANDOM_CODE_FUNCTION_TO_PATCH}",
+    return_value=FAKE_CODE,
+)
 def test_success_send_email_create_code_in_database(
-    mock_generate_random_code: MagicMock,
-    MockEmailMultiAlternatives: MagicMock,
+    generate_random_code_function_mock: MagicMock,
+    EmailMultiAlternativesMock: MagicMock,
     deactivated_user,
 ):
     """
@@ -82,10 +69,10 @@ def test_success_send_email_create_code_in_database(
     activation code has been stored in the AccountActivationCodeModel table.
     """
     # Returns a mocked instance of the MockEmailMultiAlternatives class
-    mock_email_multi_instance = MockEmailMultiAlternatives.return_value
+    email_multi_instance_mock = EmailMultiAlternativesMock.return_value
 
     send_activation_code_by_email(deactivated_user.email)
 
-    mock_email_multi_instance.send.assert_called()
+    email_multi_instance_mock.send.assert_called()
 
-    assert AccountActivationCodeModel.objects.filter(code=CODE).exists()
+    assert AccountActivationCodeModel.objects.filter(code=FAKE_CODE).exists()

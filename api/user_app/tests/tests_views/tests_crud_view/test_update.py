@@ -9,20 +9,20 @@ from unittest.mock import patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages
-from user_app.constants.path_for_mock import token_utils_module_path
+from user_app.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("update")
-SECRET = "token_secret"
-token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============ Fixtures ================
@@ -48,7 +48,7 @@ def client_auth_header() -> APIClient:
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        SECRET,
+        FAKE_SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -57,7 +57,7 @@ def client_auth_header() -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_first_name_successfully(client_auth_header: APIClient):
     """
     Test that a user can successfully update their first name.
@@ -81,7 +81,7 @@ def test_update_first_name_successfully(client_auth_header: APIClient):
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_last_name_successfully(client_auth_header: APIClient):
     """
     Test that a user can successfully update their last name.
@@ -105,7 +105,7 @@ def test_update_last_name_successfully(client_auth_header: APIClient):
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_first_and_last_name_successfully(client_auth_header: APIClient):
     """
     Test that a user can successfully update both their first and last names.

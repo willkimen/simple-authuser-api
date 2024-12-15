@@ -12,19 +12,19 @@ from unittest.mock import patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from user_app.constants.path_for_mock import token_utils_module_path
+from user_app.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+    User,
+)
 
 # =========== Objects and constants ==============
-User = get_user_model()
 url: str = reverse("detail")
-SECRET = "token_secret"
-token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============ Fixtures ================
@@ -54,7 +54,7 @@ def client_auth_header(user) -> APIClient:
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
         },
-        SECRET,
+        FAKE_SECRET,
     )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -63,7 +63,7 @@ def client_auth_header(user) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_logged_user_returns_their_data_successfully(
     client_auth_header: APIClient, user
 ):

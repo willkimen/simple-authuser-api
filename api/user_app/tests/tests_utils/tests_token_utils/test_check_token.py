@@ -11,11 +11,8 @@ from unittest.mock import patch
 
 import jwt
 import pytest
-from django.contrib.auth import get_user_model
 from django.utils import timezone
-
 from user_app.constants import token_exception_messages
-from user_app.constants.path_for_mock import token_utils_module_path
 from user_app.exceptions import (
     BlacklistTokenException,
     DecodeException,
@@ -24,40 +21,19 @@ from user_app.exceptions import (
     InvalidSignatureException,
 )
 from user_app.models import BlacklistTokenModel
+from user_app.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_UTILS_MODULE_PATH,
+)
 from user_app.utils.token_utils import check_token
 
 # ========== Objects and constants ============
-User = get_user_model()
-SECRET = "fake_secret"
 INVALID_SECRET = "invalid_secret"
 MALFORMED_TOKEN = "malformed.token.string"
-UID = 1
-token_secret_mock = "settings.TOKEN_SECRET"
 
 
 # ============== Fixture ==================
-@pytest.fixture
-def activated_user():
-    return User.objects.create_user(
-        id=UID,
-        first_name="fake_first_name",
-        last_name="fake_last_name",
-        email="fake_email@email.com",
-        password="Fake!_password10",
-        is_active=True,
-    )
-
-
-@pytest.fixture
-def payload(activated_user) -> dict:
-    return {
-        "uid": activated_user.id,
-        "typ": "fake_jti",
-        "jti": "fake_jti",
-        "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
-    }
-
-
 @pytest.fixture
 def token_expired(payload: dict) -> str:
     """
@@ -68,7 +44,7 @@ def token_expired(payload: dict) -> str:
     """
     payload["exp"] = int((timezone.now() - timedelta(seconds=60)).timestamp())
 
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -101,7 +77,7 @@ def token(payload: dict) -> str:
     Returns:
         str: The valid JWT.
     """
-    return jwt.encode(payload, SECRET)
+    return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
@@ -113,7 +89,7 @@ def token_with_invalid_algorithm(payload: dict) -> str:
         str: The JWT with an invalid algorithm.
     """
     # Encode the payload into a JWT token with the correct secret
-    token = jwt.encode(payload, SECRET)
+    token = jwt.encode(payload, FAKE_SECRET)
 
     # Split the token into its components: header, payload, and signature
     header, payload, signature = token.split(".")
@@ -137,13 +113,12 @@ def token_with_invalid_algorithm(payload: dict) -> str:
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_expired_token(token_expired: str):
     """
     Test if the function raises ExpiredSignatureError when the token is expired.
 
     Args:
-        token_secret_mock: Mocked environment variable for JWT secret.
         token_expired (str): The expired JWT.
     """
     expected_dict_with_code_and_detail = token_exception_messages.EXPIRED_SIGNATURE
@@ -154,14 +129,13 @@ def test_expired_token(token_expired: str):
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_invalid_signature(token_with_invalid_secret: str):
     """
     Test if the function raises InvalidSignatureError when the token has
     an invalid signature.
 
     Args:
-        token_secret_mock: Mocked environment variable for JWT secret.
         token_with_invalid_secret (str): The JWT with an incorrect secret.
     """
     expected_dict_with_code_and_detail = token_exception_messages.INVALID_SIGNATURE
@@ -172,7 +146,7 @@ def test_invalid_signature(token_with_invalid_secret: str):
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_decode_error(token_malformed: str):
     """
     Test if the function raises DecodeError when the token is malformed.
@@ -188,7 +162,7 @@ def test_decode_error(token_malformed: str):
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_invalid_algorithm(token_with_invalid_algorithm: str):
     """
     Test if the function raises InvalidAlgorithmError when the token has
@@ -205,7 +179,7 @@ def test_invalid_algorithm(token_with_invalid_algorithm: str):
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_in_black_list(token: str):
     """
     Test if the function raises BlacklistTokenException when the token is
@@ -215,10 +189,10 @@ def test_token_in_black_list(token: str):
         token (str): The JWT.
     """
     expected_dict_with_code_and_detail = token_exception_messages.TOKEN_IN_BLACKLIST
-    payload: dict = jwt.decode(token, SECRET, algorithms="HS256")
+    payload: dict = jwt.decode(token, FAKE_SECRET, algorithms="HS256")
 
     BlacklistTokenModel.objects.create(
-        user_id=UID,
+        user_id=payload["uid"],
         jti=payload["jti"],
         exp=payload["exp"],
         typ=payload["typ"],
@@ -230,7 +204,7 @@ def test_token_in_black_list(token: str):
 
 
 @pytest.mark.django_db
-@patch(f"{token_utils_module_path}.{token_secret_mock}", SECRET)
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_success_create_token(token: str, payload: dict):
     """
     Test to ensure that a JWT is successfully created and can be decoded to match

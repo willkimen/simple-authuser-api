@@ -7,16 +7,18 @@ import smtplib
 from unittest.mock import MagicMock, patch
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from user_app.constants import response_codes_and_messages, validation_error_messages
-from user_app.constants.path_for_mock import activate_account_view_path
+from user_app.tests.constants import (
+    ACTIVATE_ACCOUNT_VIEW_MODULE_PATH,
+    ALLOW_REQUEST_FUNCTION_TO_PATCH,
+    SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH,
+    User,
+)
 
 # ========== Objects and constants ============
-User = get_user_model()
 url: str = reverse("send_code_to_activate_account")
 FAKE_USER_DATA = {
     "first_name": "fake_first_name",
@@ -25,18 +27,9 @@ FAKE_USER_DATA = {
     "password": "FAKEpassowrd1234!",
 }
 EMAIL_NONEXISTENT = "nonexistent@email.com"
-allow_request_path_for_mock = "FivePerMinuteRateLimit.allow_request"
-send_email_path_for_mock = "send_activation_code_by_email"
 
 
 # ================= Fixtures ===============
-@pytest.fixture
-def client() -> APIClient:
-    """Returns an API client to make requests."""
-
-    return APIClient()
-
-
 @pytest.fixture
 def active_user_email() -> str:
     """
@@ -94,19 +87,22 @@ def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_send_email_when_email_field_is_empty(
-    mock_allow_request: MagicMock, client: APIClient
+    allow_request_function_mock: MagicMock, client: APIClient
 ):
     """
     Test if the email sending request returns 400 when the email field is empty.
 
     Args:
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
 
-    This test checks that the server returns a 400 Bad Request status code and an appropriate
-    error message when the email field is empty in the request.
+    This test checks that the server returns a 400 Bad Request status code and
+    an appropriate error message when the email field is empty in the request.
     """
 
     expected_status_code = status.HTTP_400_BAD_REQUEST
@@ -123,19 +119,22 @@ def test_does_not_send_email_when_email_field_is_empty(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_send_email_when_email_field_is_null(
-    mock_allow_request: MagicMock, client: APIClient
+    allow_request_function_mock: MagicMock, client: APIClient
 ):
     """
     Test if the email sending request returns 400 when the email field is null.
 
     Args:
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
 
-    This test checks that the server returns a 400 Bad Request status code and an appropriate
-    error message when the email field is null in the request.
+    This test checks that the server returns a 400 Bad Request status code and
+    an appropriate error message when the email field is null in the request.
     """
     expected_error_message_field = validation_error_messages.NULL_FIELD
     expected_status_code = status.HTTP_400_BAD_REQUEST
@@ -168,20 +167,23 @@ def test_does_not_send_email_when_email_field_is_null(
     ],
 )
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_send_email_with_invalid_email_format(
-    mock_allow_request: MagicMock, invalid_email_format, client: APIClient
+    allow_request_function_mock: MagicMock, invalid_email_format, client: APIClient
 ):
     """
     Test if the email sending request returns 400 when the email format is invalid.
 
     Args:
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         invalid_email_format (str): Invalid email format to test.
         client (APIClient): The API client used to make requests.
 
-    This test checks that the server returns a 400 Bad Request status code and an appropriate
-    error message when the email field contains an invalid email format.
+    This test checks that the server returns a 400 Bad Request status code and
+    an appropriate error message when the email field contains an invalid email format.
     """
     expected_error_message_filed = validation_error_messages.INVALID_FORMAT_EMAIL
     expected_status_code = status.HTTP_400_BAD_REQUEST
@@ -199,19 +201,23 @@ def test_does_not_send_email_with_invalid_email_format(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_send_email_when_user_does_not_exists(
-    mock_allow_request: MagicMock, client: APIClient
+    allow_request_function_mock: MagicMock, client: APIClient
 ):
     """
     Test if the email sending request returns 404 when the user does not exist.
 
     Args:
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
 
-    This test checks that the server returns a 404 Not Found status code and an appropriate
-    error message when the email field contains an email address that does not belong to any user.
+    This test checks that the server returns a 404 Not Found status code and
+    an appropriate error message when the email field contains
+    an email address that does not belong to any user.
     """
     expected_detail_message = response_codes_and_messages.USER_NOT_FOUND["detail"]
     expected_code = response_codes_and_messages.USER_NOT_FOUND["code"]
@@ -225,20 +231,26 @@ def test_does_not_send_email_when_user_does_not_exists(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
 def test_does_not_send_email_when_user_has_already_activated(
-    mock_allow_request: MagicMock, client: APIClient, active_user_email: str
+    allow_request_function_mock: MagicMock, client: APIClient, active_user_email: str
 ):
     """
-    Test if the email sending request returns 400 when the user has already activated their account.
+    Test if the email sending request returns 400 when the user
+    has already activated their account.
 
     Args:
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        active_user_email (str): The email address of the user with an activated account.
+        active_user_email (str): The email address of the user with
+                                 an activated account.
 
-    This test checks that the server returns a 400 Bad Request status code and an appropriate
-    error message when the email field contains an email address of a user who has already activated their account.
+    This test checks that the server returns a 400 Bad Request status code and
+    an appropriate error message when the email field contains an email address
+    of a user who has already activated their account.
     """
     expected_detail_message = response_codes_and_messages.USER_HAS_ALREADY_ACTIVATED[
         "detail"
@@ -254,28 +266,35 @@ def test_does_not_send_email_when_user_has_already_activated(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
 @patch(
-    f"{activate_account_view_path}.{send_email_path_for_mock}",
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH}",
     side_effect=smtplib.SMTPException(),
 )
 def test_failed_to_send_email(
-    mock_send_email: MagicMock,
-    mock_allow_request: MagicMock,
+    send_email_function_mock: MagicMock,
+    allow_request_function_mock: MagicMock,
     client: APIClient,
     deactive_user_email: str,
 ):
     """
-    Test if the email sending request returns 500 when there is an error sending the email.
+    Test if the email sending request returns 500 when there is
+    an error sending the email.
 
     Args:
-        mock_send_email (MagicMock): Mocked method to simulate an SMTP exception.
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        send_email_function_mock (MagicMock): Mocked method to simulate an
+                                              SMTP exception.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        deactive_user_email (str): The email address of the user with a deactivated account.
+        deactive_user_email (str): The email address of the user with
+                                   a deactivated account.
 
-    This test checks that the server returns a 500 Internal Server Error status code and an appropriate
-    error message when there is an SMTP exception while sending the activation email.
+    This test checks that the server returns a 500 Internal Server Error status code
+    and an appropriate error message when there is an SMTP exception while sending
+    the activation email.
     """
     expected_detail_message = response_codes_and_messages.ERROR_SENDING_EMAIL["detail"]
     expected_code = response_codes_and_messages.ERROR_SENDING_EMAIL["code"]
@@ -291,11 +310,16 @@ def test_failed_to_send_email(
 
 
 @pytest.mark.django_db
-@patch(f"{activate_account_view_path}.{allow_request_path_for_mock}", return_value=True)
-@patch(f"{activate_account_view_path}.{send_email_path_for_mock}")
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH}"
+)
 def test_send_email_successfully(
-    mock_send_email: MagicMock,
-    mock_allow_request: MagicMock,
+    send_email_function_mock: MagicMock,
+    allow_request_function_mock: MagicMock,
     client: APIClient,
     deactive_user_email: str,
 ):
@@ -303,10 +327,12 @@ def test_send_email_successfully(
     Test if the email sending request returns 200 when the email is sent successfully.
 
     Args:
-        mock_send_email (MagicMock): Mocked method to simulate successful email sending.
-        mock_allow_request (MagicMock): Mocked method to bypass rate limiting.
+        send_email_function_mock (MagicMock): Mocked method to simulate
+                                              successful email sending.
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        deactive_user_email (str): The email address of the user with a deactivated account.
+        deactive_user_email (str): The email address of the user with a
+                                   deactivated account.
 
     This test checks that the server returns a 200 OK status code and an appropriate
     success message when the activation email is sent successfully.
