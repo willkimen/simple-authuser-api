@@ -1,4 +1,36 @@
 services:
+  psql:
+    container_name: psql
+    image: postgres:17-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - 5432:5432
+    env_file:
+      - ./../api/environments/.env.development
+    networks:
+      - db_api_net
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -d $POSTGRES_DB -U $POSTGRES_USER']
+      interval: 10s
+      timeout: 5s
+      retries: 2
+
+  redis_broker:
+    container_name: redis_broker
+    image: redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - redis_api_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+
   apidev:
     container_name: apidev
     build:
@@ -12,26 +44,64 @@ services:
       - ./../api/environments/.env.development
     command: ["sh", "-c", "chmod -R +x /api/scripts && commands.sh"]
     depends_on:
-      - psql
+      psql:
+        condition: service_healthy
+      redis_broker:
+        condition: service_healthy
     networks:
-        - db_api
+      - db_api_net
+      - redis_api_net
+    healthcheck:
+      test: ["CMD", "sh", "-c", "grep -q 'MIGRATED=True' /etc/environment"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
 
-  psql:
-    container_name: psql
-    image: postgres:17-alpine
+  celery_worker:
+    container_name: celery_worker
+    build:
+      context: ./../api/  
+      dockerfile: ./../docker/Dockerfile.dev  
+    command: ["sh", "-c", "celery -A config worker --loglevel=debug"]
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - ./../api/:/api
     env_file:
       - ./../api/environments/.env.development
-    ports:
-      - 5432:5432
+    depends_on:
+      apidev:
+        condition: service_healthy
     networks:
-        - db_api
+      - db_api_net
+      - redis_api_net
+    healthcheck:
+      test: ["CMD", "celery", "-A", "config", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+
+  celery_beat:
+    container_name: celery_beat
+    build:
+      context: ./../api/  
+      dockerfile: ./../docker/Dockerfile.dev  
+    command: ["sh", "-c", "celery -A config beat --scheduler django --loglevel=debug"]
+    volumes:
+      - ./../api/:/api
+    env_file:
+      - ./../api/environments/.env.development
+    depends_on:
+      celery_worker:
+        condition: service_healthy
+    networks:
+      - db_api_net
+      - redis_api_net
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
-  db_api:
+  db_api_net:
     driver: bridge
-
+  redis_api_net:
+    driver: bridge

@@ -13,6 +13,9 @@ echo "Applying migrations..."
 python manage.py makemigrations --noinput
 python manage.py migrate --noinput
 
+echo "MIGRATED=True" >> /etc/environment
+echo "MIGRATED environment variable set to True"
+
 if [ "$API_ENV" = "production" ]; then
     echo "Starting Gunicorn for production..."
     gunicorn --bind 0.0.0.0:8000 config.wsgi
