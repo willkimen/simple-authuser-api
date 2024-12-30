@@ -20,7 +20,7 @@ EXPOSE 8000
 RUN apt-get update && apt-get install -y netcat-openbsd && \
     python -m venv /venv && \
     /venv/bin/pip install --upgrade pip && \
-    /venv/bin/pip install -r /api/requirements.txt && \
+    /venv/bin/pip install -r /api/requirements-prod.txt && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the PATH to include the application scripts and the virtual environment
