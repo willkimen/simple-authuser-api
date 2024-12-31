@@ -40,7 +40,7 @@ services:
       - 8000:8000
     env_file:
       - ./../api/environments/.env.production
-    command: ["sh", "-c", "chmod -R +x /api/scripts && commands.sh"]
+    command: ["sh", "-c", "commands.sh"]
     depends_on:
       psql:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
       - db_api_net
       - redis_api_net
     healthcheck:
-      test: ["CMD", "sh", "-c", "grep -q 'MIGRATED=True' /etc/environment"]
+      test: ["CMD", "sh", "-c", "grep -q 'MIGRATED=True' /home/djuser/my_environment"]
       interval: 10s
       timeout: 5s
       retries: 2

@@ -21,13 +21,15 @@ WORKDIR /api/
 EXPOSE 8000
 
 # Create a virtual environment in the /venv directory, 
-# upgrade pip, and install the dependencies listed in requirements.txt
+# upgrade pip, and install the dependencies listed in requirements-dev.txt
 RUN python -m venv /venv && \
     /venv/bin/pip install --upgrade pip && \
-    /venv/bin/pip install -r /api/requirements-dev.txt
+    /venv/bin/pip install -r requirements-dev.txt && \
+    adduser --disabled-password djuser && \
+    chown -R djuser:djuser /venv
+
 
 # Set the PATH to include the application scripts and the virtual environment
 ENV PATH="/api/scripts:/venv/bin:$PATH"
 
-# Final command to start the Django development server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+USER djuser

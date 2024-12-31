@@ -13,7 +13,8 @@ echo "Applying migrations..."
 python manage.py makemigrations --noinput
 python manage.py migrate --noinput
 
-echo "MIGRATED=True" >> /etc/environment
+touch /home/djuser/my_environment
+echo "MIGRATED=True" >> /home/djuser/my_environment
 echo "MIGRATED environment variable set to True"
 
 if [ "$API_ENV" = "production" ]; then

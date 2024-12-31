@@ -16,15 +16,17 @@ EXPOSE 8000
 
 # Create a virtual environment in the /venv directory, 
 # upgrade pip, 
-# and install the dependencies listed in requirements.txt
+# and install the dependencies listed in requirements-prod.txt
 RUN apt-get update && apt-get install -y netcat-openbsd && \
     python -m venv /venv && \
     /venv/bin/pip install --upgrade pip && \
     /venv/bin/pip install -r /api/requirements-prod.txt && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*  && \
+    adduser --disabled-password djuser && \
+    chown -R djuser:djuser /venv  && \
+    chmod -R +x /api/scripts
 
 # Set the PATH to include the application scripts and the virtual environment
 ENV PATH="/api/scripts:/venv/bin:$PATH"
 
-# Final command to start the Django production server
-CMD ["gunicorn", "--bind", "0.0.0.0:8000" "config.wsgi"]
+USER djuser
