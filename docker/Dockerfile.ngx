@@ -1,0 +1,25 @@
+FROM nginx:1.27.3-alpine3.20
+
+COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
+
+RUN apk add --no-cache openssl && mkdir -p /etc/nginx/ssl && \
+    openssl req -new -x509 -days 365 -nodes \
+        -subj "/CN=localhost" \
+        -keyout /etc/nginx/ssl/key.pem \
+        -out /etc/nginx/ssl/crt.pem  && \
+      chown -R nginx:nginx /etc/nginx/ssl && \
+      chmod 600 /etc/nginx/ssl/key.pem /etc/nginx/ssl/crt.pem  && \
+      mkdir -p /var/cache/nginx && \
+      chown -R nginx:nginx /var/cache/nginx && \
+      chown -R nginx:nginx /var/log/nginx && \
+      chown -R nginx:nginx /etc/nginx/conf.d && \
+      chmod 644 /etc/nginx/conf.d/*.conf && \
+      touch /var/run/nginx.pid && \
+      chown nginx:nginx /var/run/nginx.pid  && \
+      chown -R nginx:nginx /etc/nginx && \
+      chmod 644 /etc/nginx/nginx.conf
+
+USER nginx
+
+EXPOSE 80
+EXPOSE 443

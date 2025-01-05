@@ -15,7 +15,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 2
-
+  # ====================================
   redis_broker:
     container_name: redis_broker
     image: redis
@@ -30,14 +30,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 2
-
-  apidev:
-    container_name: apidev
+  # ====================================
+  api:
+    container_name: api
     build:
       context: ./../api/  
       dockerfile: ./../docker/Dockerfile.dev  
-    ports:
-      - 8000:8000
     volumes:
       - ./../api/:/api
     env_file:
@@ -51,12 +49,26 @@ services:
     networks:
       - db_api_net
       - redis_api_net
+      - nginx_network
     healthcheck:
       test: ["CMD", "sh", "-c", "grep -q 'MIGRATED=True' /home/djuser/my_environment"]
       interval: 10s
       timeout: 5s
       retries: 2
-
+  # ====================================
+  nginx:
+    container_name: nginx
+    build:
+      context: ./../api/  
+      dockerfile: ./../docker/Dockerfile.ngx 
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+    networks:
+      - nginx_network
+  # ====================================
   celery_worker:
     container_name: celery_worker
     build:
@@ -68,7 +80,7 @@ services:
     env_file:
       - ./../api/environments/.env.development
     depends_on:
-      apidev:
+      api:
         condition: service_healthy
     networks:
       - db_api_net
@@ -78,7 +90,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 2
-
+  # ====================================
   celery_beat:
     container_name: celery_beat
     build:
@@ -95,13 +107,15 @@ services:
     networks:
       - db_api_net
       - redis_api_net
-
+# ====================================
 volumes:
   postgres_data:
   redis_data:
-
+# ====================================
 networks:
   db_api_net:
     driver: bridge
   redis_api_net:
+    driver: bridge
+  nginx_network:
     driver: bridge
