@@ -10,7 +10,6 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, throttle_classes
 from rest_framework.response import Response
-
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants.response_codes_and_messages import (
     CODE_EXPIRED,
@@ -68,6 +67,18 @@ def send_code_to_email_change(request):
             merge_dict(ERROR_SENDING_EMAIL, {"error": str(e)}),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+    # Remove the old change code whenever the user requests
+    # a new one, ensuring that only the most recent codes are kept.
+    # Retrieve the oldest record for the given user, ordered by the "created_at" field
+    oldest_code = (
+        ChangeEmailCodeModel.objects.filter(user_id=request.user.email)
+        .order_by("created_at")
+        .first()
+    )
+    # If a record exists (i.e., the query is not empty), delete the oldest record
+    if oldest_code is not None:
+        oldest_code.delete()
 
     return Response(EMAIL_SEND_TO_USER_SUCCESSFULLY, status=status.HTTP_200_OK)
 

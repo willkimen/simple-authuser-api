@@ -6,6 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages
+from user_app.models.code_models import ResetPasswordCodeModel
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
     RESET_PASSWORD_VIEW_MODULE_PATH,
@@ -15,7 +16,9 @@ from user_app.tests.constants import (
 
 # =========== Objects and constants ==============
 url: str = reverse("send_code_to_reset_password")
+USER_EMAIL = "fakeemail@email.com"
 NON_EXISTENT_EMAIL = "nonexistent@email.com"
+OLD_CODE = "fake_old_code"
 
 
 # ============ Fixtures ================
@@ -27,7 +30,7 @@ def deactivate_user():
     return User.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
-        email="fakeemail@email.com",
+        email=USER_EMAIL,
         password="1234@!AA",
         is_active=False,
     )
@@ -41,10 +44,18 @@ def activate_user():
     return User.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
-        email="fakeemail@email.com",
+        email=USER_EMAIL,
         password="1234@!AA",
         is_active=True,
     )
+
+
+@pytest.fixture
+def add_reset_code_for_user(activate_user):
+    """
+    Persists an reset code for that user in the database.
+    """
+    ResetPasswordCodeModel.objects.create(code=OLD_CODE, user=activate_user)
 
 
 # ============ Tests ================
@@ -150,6 +161,41 @@ def test_does_not_send_code_when_request_limit_is_reached(client: APIClient):
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message in actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
+
+
+@pytest.mark.django_db
+@patch(
+    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
+def test_when_a_new_code_is_created_the_old_code_is_removed(
+    allow_request_function_mock: MagicMock, client: APIClient, add_reset_code_for_user
+):
+    """
+    Tests the system behavior when creating a new reset code.
+
+    - An inactive user already has an reset code associated with their account.
+    - When the client makes a POST request to the endpoint that sends the reset
+      code via email, a new code is generated.
+    - The system should ensure that the old code is removed.
+
+
+    Args:
+      allow_request_function_mock: Mock for the function that allows the
+                                     request to proceed.
+      client: API client used to simulate the POST request.
+      add_reset_code_for_user: Persists an reset code for that user in the database.
+    """
+
+    # Ensure that the old activation code exists in the database before the request.
+    assert ResetPasswordCodeModel.objects.filter(code=OLD_CODE).exists()
+
+    client.post(url, data={"email": USER_EMAIL}, format="json")
+
+    # After creating a new activation code, verify that the old one has been removed.
+    assert not ResetPasswordCodeModel.objects.filter(code=OLD_CODE).exists()
+    # Veryfy that exists new code.
+    assert ResetPasswordCodeModel.objects.filter(user_id=USER_EMAIL).count() == 1
 
 
 @pytest.mark.django_db
