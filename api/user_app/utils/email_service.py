@@ -3,7 +3,6 @@ from textwrap import dedent
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-
 from user_app.constants.prefixes import (
     ACTIVATE_ACCOUNT_PREFIX,
     CHANGE_EMAIL_PREFIX,
@@ -16,11 +15,28 @@ from user_app.models import (
 )
 from user_app.utils.random_code import generate_random_code
 
-MESSAGE_24H_EXPIRED = (
-    "Please note that this code is valid for 24 hours. "
-    "After that, it will expire, and you'll need to request a new one."
+MESSAGE_EXPIRED = (
+    f"Please note that this code is valid for {settings.EXPIRATION_CODE_TIME_IN_HOURS} "
+    "hours. After that, it will expire, and you'll need to request a new one."
 )
+
 MESSAGE_SAFELY_IGNORE = "If you haven't requested this email, you can safely ignore it."
+
+
+def _verify_and_return_new_code(prefix: str) -> str:
+    code: str = generate_random_code(prefix=prefix)
+    while ChangeEmailCodeModel.objects.filter(code=code).exists():
+        code: str = generate_random_code(prefix=prefix)
+    return code
+
+
+def _email_multi_alternatives_factory(
+    subject: str, body: str, to: str, html_body: str
+) -> EmailMultiAlternatives:
+    email_multi = EmailMultiAlternatives(subject=subject, body=body, to=[to])
+    email_multi.content_subtype = "html"  # Make the email HTML-friendly
+    email_multi.attach_alternative(html_body, "text/html")
+    return email_multi
 
 
 def __send_email_with_error_handling(email_multi: EmailMultiAlternatives) -> int:
@@ -83,9 +99,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
     subject = "Confirm your email address change"
 
     # Creates code and verify if already exists in database
-    code: str = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
-    while ChangeEmailCodeModel.objects.filter(code=code).exists():
-        code: str = generate_random_code(prefix=CHANGE_EMAIL_PREFIX)
+    code: str = _verify_and_return_new_code(prefix=CHANGE_EMAIL_PREFIX)
 
     body = dedent(
         f"""
@@ -95,7 +109,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
 
     {code}
 
-    {MESSAGE_24H_EXPIRED}
+    {MESSAGE_EXPIRED}
 
     {MESSAGE_SAFELY_IGNORE}
     """
@@ -103,18 +117,19 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
 
     html_body = dedent(
         f"""
-        <p>You requested to change your email from <strong>{actual_email}</strong> to <strong>{new_email}</strong>.</p>
+        <p>You requested to change your email from <strong>{actual_email}</strong> to 
+        <strong>{new_email}</strong>.</p>
         <p>To confirm this change, please use the confirmation code below:</p>
         <h2>{code}</h2>
-        <p>{MESSAGE_24H_EXPIRED}</p>
+        <p>{MESSAGE_EXPIRED}</p>
         <p>{MESSAGE_SAFELY_IGNORE}</p>
         """
     )
 
     # Create the email message object
-    email_multi = EmailMultiAlternatives(subject=subject, body=body, to=[new_email])
-    email_multi.content_subtype = "html"  # Make the email HTML-friendly
-    email_multi.attach_alternative(html_body, "text/html")
+    email_multi = _email_multi_alternatives_factory(
+        subject=subject, body=body, to=new_email, html_body=html_body
+    )
 
     try:
         sent_count: int = __send_email_with_error_handling(email_multi)
@@ -139,9 +154,7 @@ def send_activation_code_by_email(user_email: str) -> None:
     subject = "Confirm your email address"
 
     # Creates code and verify if already exists in database
-    code: str = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
-    while AccountActivationCodeModel.objects.filter(code=code).exists():
-        code: str = generate_random_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
+    code: str = _verify_and_return_new_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
 
     body = dedent(
         f"""
@@ -149,10 +162,14 @@ def send_activation_code_by_email(user_email: str) -> None:
 
         {code}
 
-        To complete your registration, please visit the following link and submit the code:
+        To complete your registration, please visit the following link and submit the
+        code:
         {settings.CONFIRMATION_LINK}
 
-        {MESSAGE_24H_EXPIRED}
+        Note: You have 7 days to activate your account. If you do not activate it within
+        this period, your account will be removed.
+
+        {MESSAGE_EXPIRED}
 
         {MESSAGE_SAFELY_IGNORE}
         """
@@ -162,17 +179,20 @@ def send_activation_code_by_email(user_email: str) -> None:
         f"""
         <p>Your confirmation code is below:</p>
         <h2>{code}</h2>
-        <p>To complete your registration, please visit the following link and submit the code:</p>
+        <p>To complete your registration, please visit the following link and submit
+        the code:</p>
         <a href="{settings.CONFIRMATION_LINK}">Activate Account</a>
-        <p>{MESSAGE_24H_EXPIRED}</p>
+        <p><strong>Note:</strong> You have 7 days to activate your account. If you do
+        not activate it within this period, your account will be removed.</p>
+        <p>{MESSAGE_EXPIRED}</p>
         <p>{MESSAGE_SAFELY_IGNORE}</p>
         """
     )
 
     # Create the email message object
-    email_multi = EmailMultiAlternatives(subject=subject, body=body, to=[user_email])
-    email_multi.content_subtype = "html"  # Make the email HTML-friendly
-    email_multi.attach_alternative(html_body, "text/html")
+    email_multi = _email_multi_alternatives_factory(
+        subject=subject, body=body, to=user_email, html_body=html_body
+    )
 
     try:
         sent_count: int = __send_email_with_error_handling(email_multi)
@@ -196,9 +216,7 @@ def send_reset_password_code_by_email(user_email: str) -> None:
     subject = "Reset Your Account Password"
 
     # Creates code and verify if already exists in database
-    code: str = generate_random_code(prefix=RESET_PASSWORD_PREFIX)
-    while ResetPasswordCodeModel.objects.filter(code=code).exists():
-        code: str = generate_random_code(prefix=RESET_PASSWORD_PREFIX)
+    code: str = _verify_and_return_new_code(prefix=RESET_PASSWORD_PREFIX)
 
     body = dedent(
         f"""
@@ -209,7 +227,7 @@ def send_reset_password_code_by_email(user_email: str) -> None:
         To reset your password, please visit the following link and submit the code:
         {settings.RESET_LINK}
 
-        {MESSAGE_24H_EXPIRED}
+        {MESSAGE_EXPIRED}
 
         {MESSAGE_SAFELY_IGNORE}
         """
@@ -219,17 +237,18 @@ def send_reset_password_code_by_email(user_email: str) -> None:
         f"""
         <p>Your password reset code is below:</p>
         <h2>{code}</h2>
-        <p>To reset your password, please visit the following link and submit the code:</p>
+        <p>To reset your password, please visit the following link and submit 
+        the code:</p>
         <a href="{settings.RESET_LINK}">Reset Password</a>
-        <p>{MESSAGE_24H_EXPIRED}</p>
+        <p>{MESSAGE_EXPIRED}</p>
         <p>{MESSAGE_SAFELY_IGNORE}</p>
         """
     )
 
     # Create the email message object
-    email_multi = EmailMultiAlternatives(subject=subject, body=body, to=[user_email])
-    email_multi.content_subtype = "html"  # Make the email HTML-friendly
-    email_multi.attach_alternative(html_body, "text/html")
+    email_multi = _email_multi_alternatives_factory(
+        subject=subject, body=body, to=user_email, html_body=html_body
+    )
 
     try:
         sent_count: int = __send_email_with_error_handling(email_multi)

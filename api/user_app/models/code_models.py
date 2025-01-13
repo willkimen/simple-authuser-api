@@ -11,7 +11,6 @@ Insert an integer representing the number of hours to define the expiration
 time for the confirmation code, which will be used for various cases:
 user account activation, password change, and password reset.
 """
-EXPIRATION_TIME_IN_HOURS = 24
 
 
 class ConfirmationCodeBaseModel(models.Model):
@@ -59,7 +58,7 @@ class ConfirmationCodeBaseModel(models.Model):
 
             if self.expires_at is None:
                 self.expires_at: datetime = self.created_at + timedelta(
-                    hours=EXPIRATION_TIME_IN_HOURS
+                    hours=settings.EXPIRATION_CODE_TIME_IN_HOURS
                 )
 
             if not self.code:
