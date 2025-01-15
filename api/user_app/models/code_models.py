@@ -6,11 +6,47 @@ from django.utils import timezone
 from user_app.constants import prefixes
 from user_app.utils.random_code import generate_random_code
 
-""" 
-Insert an integer representing the number of hours to define the expiration
-time for the confirmation code, which will be used for various cases:
-user account activation, password change, and password reset.
-"""
+
+class ConfirmationCodeManager(models.Manager):
+    def keep_latest_code(self, user_email: str):
+        """
+        Removes all confirmation codes for a user, except the most recent one.
+
+        This method retrieves all records associated with the given user's email,
+        ordered by the "created_at" field in descending order. It keeps the most
+        recent record and deletes the rest.
+
+        Args:
+            user_email (str): The email of the user whose older codes should be removed.
+
+        Returns:
+            None
+        """
+        codes = self.model.objects.filter(user_id=user_email).order_by("-created_at")
+        if codes.count() > 1:
+            # Exclude the most recent code and delete the rest
+            codes.exclude(pk=codes.first().pk).delete()
+
+    def verify_and_return_new_code(self, prefix: str) -> str:
+        """
+        Generates a unique confirmation code with the specified prefix.
+
+        This method generates a new confirmation code using a provided prefix and
+        ensures its uniqueness by verifying that it does not already exist
+        in the database.
+        If the generated code already exists, the method will generate another one until
+        a unique code is found.
+
+        Args:
+            prefix (str): The prefix to use for the confirmation code.
+
+        Returns:
+            str: A unique confirmation code.
+        """
+        code: str = generate_random_code(prefix=prefix)
+        while self.model.objects.filter(code=code).exists():
+            code: str = generate_random_code(prefix=prefix)
+        return code
 
 
 class ConfirmationCodeBaseModel(models.Model):
@@ -42,6 +78,7 @@ class ConfirmationCodeBaseModel(models.Model):
     - The class attribute __prefix is private and should not be set.
     """
 
+    objects = ConfirmationCodeManager()
     _prefix = ""
     code = models.CharField(max_length=16, unique=True, null=False, blank=False)
     created_at = models.DateTimeField()

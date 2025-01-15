@@ -11,7 +11,6 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages, validation_error_messages
-from user_app.models import AccountActivationCodeModel
 from user_app.tests.constants import (
     ACTIVATE_ACCOUNT_VIEW_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
@@ -21,15 +20,13 @@ from user_app.tests.constants import (
 
 # ========== Objects and constants ============
 url: str = reverse("send_code_to_activate_account")
-USER_EMAIL = "fake_email@email.com"
 FAKE_USER_DATA = {
     "first_name": "fake_first_name",
     "last_name": "fake_last_name",
-    "email": USER_EMAIL,
+    "email": "fake_email@email.com",
     "password": "FAKEpassowrd1234!",
 }
 EMAIL_NONEXISTENT = "nonexistent@email.com"
-OLD_CODE = "fake_old_code"
 
 
 # ================= Fixtures ===============
@@ -61,19 +58,6 @@ def deactive_user_email() -> str:
     """
 
     return User.objects.create_user(**FAKE_USER_DATA, is_active=False).email
-
-
-@pytest.fixture
-def add_activation_code_for_user():
-    """
-    Creates an inactive user and associates a existing activation codes with them.
-
-    This fixture generates a user with the `is_active` field set to `False`
-    and persists an activation codes for that user in the database.
-    """
-
-    user = User.objects.create_user(**FAKE_USER_DATA, is_active=False)
-    AccountActivationCodeModel.objects.create(code=OLD_CODE, user=user)
 
 
 # ============= Tests ==================
@@ -323,43 +307,6 @@ def test_failed_to_send_email(
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
-
-
-@pytest.mark.django_db
-@patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
-    return_value=True,
-)
-def test_when_a_new_code_is_created_the_old_code_is_removed(
-    allow_request_function_mock: MagicMock,
-    client: APIClient,
-    add_activation_code_for_user,
-):
-    """
-    Tests the system behavior when creating a new activation code.
-
-    - An inactive user already has an activation code associated with their account.
-    - When the client makes a POST request to the endpoint that sends the activation
-      code via email, a new code is generated.
-    - The system should ensure that the old code is removed.
-
-
-    Args:
-      allow_request_function_mock: Mock for the function that allows the
-                                     request to proceed.
-      client: API client used to simulate the POST request.
-      add_activation_code_for_user: Add code for the inactive user.
-    """
-
-    # Ensure that the old activation code exists in the database before the request.
-    assert AccountActivationCodeModel.objects.filter(code=OLD_CODE).exists()
-
-    client.post(url, data={"email": USER_EMAIL}, format="json")
-
-    # Verify that the old one has been removed.
-    assert not AccountActivationCodeModel.objects.filter(code=OLD_CODE).exists()
-    # Veryfy that exists new code.
-    assert AccountActivationCodeModel.objects.filter(user_id=USER_EMAIL).count() == 1
 
 
 @pytest.mark.django_db

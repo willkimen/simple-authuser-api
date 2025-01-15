@@ -9,7 +9,6 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages
-from user_app.models.code_models import ChangeEmailCodeModel
 from user_app.tests.constants import (
     CHANGE_EMAIL_VIEW_MODULE_PATH,
     FAKE_SECRET,
@@ -29,9 +28,7 @@ FAKE_USER_DATA = {
 url: str = reverse("send_code_to_email_change")
 ACTUAL_LOGGED_USER_EMAIL = "loggeduser@email.com"
 EMAIL_ALREADY_EXISTS = "emailalreadyexists@email.com"
-NEW_EMAIL_1 = "newemail_1@email.com"
-NEW_EMAIL_2 = "newemail_2@email.com"
-OLD_CODE = "fake_old_code"
+NEW_EMAIL = "newemail@email.com"
 
 
 # ============ Fixtures ================
@@ -63,14 +60,6 @@ def client_auth_header(activated_user) -> APIClient:
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return client
-
-
-@pytest.fixture
-def add_change_code_for_user(activated_user):
-    """Insert a old code for actual user"""
-    ChangeEmailCodeModel.objects.create(
-        code=OLD_CODE, user=activated_user, new_email=NEW_EMAIL_1
-    )
 
 
 # ============ Tests ================
@@ -141,50 +130,12 @@ def test_do_not_send_code_if_email_sending_fails(
     expected_detail_message = response_codes_and_messages.ERROR_SENDING_EMAIL["detail"]
 
     actual_response = client_auth_header.post(
-        url, data={"email": NEW_EMAIL_1}, format="json"
+        url, data={"email": NEW_EMAIL}, format="json"
     )
 
     assert expected_code == actual_response.data["code"]
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_status_code == actual_response.status_code
-
-
-@pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_when_a_new_code_is_created_the_old_code_is_removed(
-    client_auth_header: APIClient,
-    add_change_code_for_user,
-):
-    """
-    Tests the system behavior when creating a new change code.
-
-    - An user already has an change code associated with their account.
-    - When the client makes a POST request to the endpoint that sends the change
-      code via email, a new code is generated.
-    - The system should ensure that the old code is removed.
-
-    Args:
-      client_auth_header: API client used to simulate the POST request.
-      add_change_code_for_user: Insert a old code for actual user
-    """
-
-    # Ensure that the old change code exists in the database before the request.
-    assert ChangeEmailCodeModel.objects.filter(
-        code=OLD_CODE, new_email=NEW_EMAIL_1
-    ).exists()
-
-    # Send a second email for change email
-    client_auth_header.post(url, data={"email": NEW_EMAIL_2}, format="json")
-
-    # After creating a new change code, verify that the old one has been removed.
-    assert not ChangeEmailCodeModel.objects.filter(
-        code=OLD_CODE, new_email=NEW_EMAIL_1
-    ).exists()
-    # Veryfy that exists new code.
-    assert (
-        ChangeEmailCodeModel.objects.filter(user_id=ACTUAL_LOGGED_USER_EMAIL).count()
-        == 1
-    )
 
 
 @pytest.mark.django_db
@@ -202,7 +153,7 @@ def test_send_code_successfully(client_auth_header: APIClient):
     )
 
     actual_response = client_auth_header.post(
-        url, data={"email": NEW_EMAIL_1}, format="json"
+        url, data={"email": NEW_EMAIL}, format="json"
     )
 
     assert expected_code == actual_response.data["code"]

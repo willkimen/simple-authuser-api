@@ -13,7 +13,6 @@ from user_app.models import (
     ChangeEmailCodeModel,
     ResetPasswordCodeModel,
 )
-from user_app.utils.random_code import generate_random_code
 
 MESSAGE_EXPIRED = (
     f"Please note that this code is valid for {settings.EXPIRATION_CODE_TIME_IN_HOURS} "
@@ -21,13 +20,6 @@ MESSAGE_EXPIRED = (
 )
 
 MESSAGE_SAFELY_IGNORE = "If you haven't requested this email, you can safely ignore it."
-
-
-def _verify_and_return_new_code(prefix: str) -> str:
-    code: str = generate_random_code(prefix=prefix)
-    while ChangeEmailCodeModel.objects.filter(code=code).exists():
-        code: str = generate_random_code(prefix=prefix)
-    return code
 
 
 def _email_multi_alternatives_factory(
@@ -99,7 +91,9 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
     subject = "Confirm your email address change"
 
     # Creates code and verify if already exists in database
-    code: str = _verify_and_return_new_code(prefix=CHANGE_EMAIL_PREFIX)
+    code: str = ChangeEmailCodeModel.objects.verify_and_return_new_code(
+        prefix=CHANGE_EMAIL_PREFIX
+    )
 
     body = dedent(
         f"""
@@ -139,6 +133,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
     ChangeEmailCodeModel.objects.create(
         code=code, user_id=actual_email, new_email=new_email
     )
+    ChangeEmailCodeModel.objects.keep_latest_code(actual_email)
 
     return sent_count
 
@@ -154,7 +149,9 @@ def send_activation_code_by_email(user_email: str) -> None:
     subject = "Confirm your email address"
 
     # Creates code and verify if already exists in database
-    code: str = _verify_and_return_new_code(prefix=ACTIVATE_ACCOUNT_PREFIX)
+    code: str = AccountActivationCodeModel.objects.verify_and_return_new_code(
+        prefix=ACTIVATE_ACCOUNT_PREFIX
+    )
 
     body = dedent(
         f"""
@@ -200,6 +197,7 @@ def send_activation_code_by_email(user_email: str) -> None:
         raise smtplib.SMTPException(str(e))
 
     AccountActivationCodeModel.objects.create(code=code, user_id=user_email)
+    AccountActivationCodeModel.objects.keep_latest_code(user_email)
 
     return sent_count
 
@@ -216,7 +214,9 @@ def send_reset_password_code_by_email(user_email: str) -> None:
     subject = "Reset Your Account Password"
 
     # Creates code and verify if already exists in database
-    code: str = _verify_and_return_new_code(prefix=RESET_PASSWORD_PREFIX)
+    code: str = ResetPasswordCodeModel.objects.verify_and_return_new_code(
+        prefix=RESET_PASSWORD_PREFIX
+    )
 
     body = dedent(
         f"""
@@ -256,5 +256,6 @@ def send_reset_password_code_by_email(user_email: str) -> None:
         raise smtplib.SMTPException(str(e))
 
     ResetPasswordCodeModel.objects.create(code=code, user_id=user_email)
+    ResetPasswordCodeModel.objects.keep_latest_code(user_email)
 
     return sent_count

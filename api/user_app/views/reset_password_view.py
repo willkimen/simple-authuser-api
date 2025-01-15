@@ -59,16 +59,6 @@ def send_code_to_reset_password(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    # Remove the old reset code whenever the user requests
-    # a new one, ensuring that only the most recent codes are kept.
-    # Retrieve the oldest record for the given user, ordered by the "created_at" field
-    oldest_code = (
-        ResetPasswordCodeModel.objects.filter(user=user).order_by("created_at").first()
-    )
-    # If a record exists (i.e., the query is not empty), delete the oldest record
-    if oldest_code is not None:
-        oldest_code.delete()
-
     return Response(EMAIL_SEND_TO_USER_SUCCESSFULLY, status=status.HTTP_200_OK)
 
 
