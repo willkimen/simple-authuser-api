@@ -11,7 +11,7 @@ Scenario:
 
 import pytest
 from django_celery_beat.models import PeriodicTask
-from user_app.constants.periodic_tasks_names import REMOVE_EXPIRED_CODE_TASK_NAME
+from user_app.constants.celery_constants import REMOVE_EXPIRED_CODE_TASK_NAME
 from user_app.periodic_tasks import create_periodic_task_for_expired_codes_removal
 
 

@@ -18,7 +18,7 @@ Dependencies:
 import json
 
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
-from user_app.constants.periodic_tasks_names import (
+from user_app.constants.celery_constants import (
     REMOVE_EXPIRED_CODE_TASK_NAME,
     REMOVE_EXPIRED_TOKENS_TASK_NAME,
 )
