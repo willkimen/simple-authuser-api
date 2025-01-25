@@ -2,7 +2,6 @@
 This module provides views related to user email changes.
 """
 
-import smtplib
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
@@ -17,15 +16,14 @@ from user_app.constants.response_codes_and_messages import (
     EMAIL_ALREADY_EXISTS,
     EMAIL_ALREADY_IN_USE,
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
-    ERROR_SENDING_EMAIL,
     USER_EMAIL_CHANGED,
     VALIDATION_ERRORS,
 )
 from user_app.models import ChangeEmailCodeModel
 from user_app.serializers import EmailSerializer
+from user_app.tasks import task_send_change_email_code_by_email
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
-from user_app.utils.email_service import send_change_email_code_by_email
 from user_app.utils.token_utils import revoke_tokens
 
 User = get_user_model()
@@ -59,14 +57,8 @@ def send_code_to_email_change(request):
     if User.objects.filter(email=new_email).exists():
         return Response(EMAIL_ALREADY_EXISTS, status=status.HTTP_409_CONFLICT)
 
-    # Try sending an email.
-    try:
-        send_change_email_code_by_email(request.user.email, new_email)
-    except smtplib.SMTPException as e:
-        return Response(
-            merge_dict(ERROR_SENDING_EMAIL, {"error": str(e)}),
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    # Send code to user email
+    task_send_change_email_code_by_email.delay(request.user.email, new_email)
 
     return Response(EMAIL_SEND_TO_USER_SUCCESSFULLY, status=status.HTTP_200_OK)
 

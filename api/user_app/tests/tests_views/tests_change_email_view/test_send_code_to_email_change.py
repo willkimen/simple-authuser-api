@@ -1,6 +1,5 @@
-import smtplib
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -10,9 +9,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages
 from user_app.tests.constants import (
-    CHANGE_EMAIL_VIEW_MODULE_PATH,
     FAKE_SECRET,
-    SEND_CHANGE_EMAIL_CODE_BY_EMAIL_FUNCTION_TO_PATCH,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
     User,
@@ -104,33 +101,6 @@ def test_do_not_send_code_if_email_already_exists_in_database(
 
     actual_response = client_auth_header.post(
         url, data={"email": EMAIL_ALREADY_EXISTS}, format="json"
-    )
-
-    assert expected_code == actual_response.data["code"]
-    assert expected_detail_message == actual_response.data["detail"]
-    assert expected_status_code == actual_response.status_code
-
-
-@pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(
-    f"{CHANGE_EMAIL_VIEW_MODULE_PATH}.{SEND_CHANGE_EMAIL_CODE_BY_EMAIL_FUNCTION_TO_PATCH}",
-    side_effect=smtplib.SMTPException(),
-)
-def test_do_not_send_code_if_email_sending_fails(
-    send_email_change_code_by_email_function_mock: MagicMock,
-    client_auth_header: APIClient,
-):
-    """
-    Tests the scenario where sending the confirmation email fails.
-    The system attempts to send the confirmation email, but an SMTP exception occurs.
-    """
-    expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    expected_code = response_codes_and_messages.ERROR_SENDING_EMAIL["code"]
-    expected_detail_message = response_codes_and_messages.ERROR_SENDING_EMAIL["detail"]
-
-    actual_response = client_auth_header.post(
-        url, data={"email": NEW_EMAIL}, format="json"
     )
 
     assert expected_code == actual_response.data["code"]
