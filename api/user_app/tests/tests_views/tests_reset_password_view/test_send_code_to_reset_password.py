@@ -1,4 +1,3 @@
-import smtplib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,7 +8,6 @@ from user_app.constants import response_codes_and_messages
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
     RESET_PASSWORD_VIEW_MODULE_PATH,
-    SEND_RESET_PASSWORD_CODE_BY_EMAIL_FUNCTION_TO_PATCH,
     User,
 )
 
@@ -94,38 +92,6 @@ def test_does_not_send_code_when_deactivate_user(
 
     actual_response = client.post(
         url, data={"email": deactivate_user.email}, format="json"
-    )
-
-    assert expected_status_code == actual_response.status_code
-    assert expected_detail_message == actual_response.data["detail"]
-    assert expected_code == actual_response.data["code"]
-
-
-@pytest.mark.django_db
-@patch(
-    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
-    return_value=True,
-)
-@patch(
-    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{SEND_RESET_PASSWORD_CODE_BY_EMAIL_FUNCTION_TO_PATCH}",
-    side_effect=smtplib.SMTPException(),
-)
-def test_does_not_send_code_when_failed_to_send_email(
-    send_code_function_mock: MagicMock,
-    allow_request_function_mock: MagicMock,
-    client: APIClient,
-    activate_user,
-):
-    """
-    Tests that the system does not send a password reset code when there is an error
-    sending the email (e.g., SMTPException).
-    """
-    expected_detail_message = response_codes_and_messages.ERROR_SENDING_EMAIL["detail"]
-    expected_code = response_codes_and_messages.ERROR_SENDING_EMAIL["code"]
-    expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-
-    actual_response = client.post(
-        url, data={"email": activate_user.email}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code

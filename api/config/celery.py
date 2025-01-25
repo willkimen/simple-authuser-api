@@ -21,6 +21,9 @@ app.conf.task_routes = {
     },
     "user_app.tasks.task_send_activation_code_by_email": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_send_change_email_code_by_email": {"queue": EMAIL_QUEUE_NAME},
+    "user_app.tasks.task_send_reset_password_code_by_email": {
+        "queue": EMAIL_QUEUE_NAME
+    },
 }
 
 app.autodiscover_tasks()
