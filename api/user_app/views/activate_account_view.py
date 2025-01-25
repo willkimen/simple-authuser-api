@@ -1,4 +1,3 @@
-import smtplib
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
@@ -11,16 +10,15 @@ from user_app.constants.response_codes_and_messages import (
     CODE_EXPIRED,
     CODE_NOT_FOUND,
     EMAIL_SEND_TO_USER_SUCCESSFULLY,
-    ERROR_SENDING_EMAIL,
     USER_HAS_ALREADY_ACTIVATED,
     USER_NOT_FOUND,
     VALIDATION_ERRORS,
 )
 from user_app.models import AccountActivationCodeModel
 from user_app.serializers import EmailSerializer
+from user_app.tasks import task_send_activation_code_by_email
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
-from user_app.utils.email_service import send_activation_code_by_email
 
 User = get_user_model()
 
@@ -80,13 +78,7 @@ def send_code_to_activate_account(request):
     if user.is_active == True:
         return Response(USER_HAS_ALREADY_ACTIVATED, status=status.HTTP_400_BAD_REQUEST)
 
-    # Send code to user email
-    try:
-        send_activation_code_by_email(serializer.validated_data["email"])
-    except smtplib.SMTPException as e:
-        return Response(
-            merge_dict(ERROR_SENDING_EMAIL, {"error": str(e)}),
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    # Send the activation email
+    task_send_activation_code_by_email.delay(serializer.validated_data["email"])
 
     return Response(EMAIL_SEND_TO_USER_SUCCESSFULLY, status=status.HTTP_200_OK)

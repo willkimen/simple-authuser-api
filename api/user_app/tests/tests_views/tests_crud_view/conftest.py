@@ -1,14 +1,5 @@
 import pytest
 from django.conf import settings
-from rest_framework.test import APIClient
-
-
-# ================= Fixtures ===============
-@pytest.fixture
-def client() -> APIClient:
-    """Returns an API client to make requests."""
-
-    return APIClient()
 
 
 @pytest.fixture(scope="session", autouse=True)

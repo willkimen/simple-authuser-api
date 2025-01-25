@@ -3,7 +3,6 @@ Test the send_code_to_activate_account() view, which expects a user's email in a
 POST request and sends a confirmation code to the user's email address.
 """
 
-import smtplib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,7 +13,6 @@ from user_app.constants import response_codes_and_messages, validation_error_mes
 from user_app.tests.constants import (
     ACTIVATE_ACCOUNT_VIEW_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
-    SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH,
     User,
 )
 
@@ -270,54 +268,8 @@ def test_does_not_send_email_when_user_has_already_activated(
     f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-@patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH}",
-    side_effect=smtplib.SMTPException(),
-)
-def test_failed_to_send_email(
-    send_email_function_mock: MagicMock,
-    allow_request_function_mock: MagicMock,
-    client: APIClient,
-    deactive_user_email: str,
-):
-    """
-    Test if the email sending request returns 500 when there is
-    an error sending the email.
-
-    Args:
-        send_email_function_mock (MagicMock): Mocked method to simulate an
-                                              SMTP exception.
-        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
-        client (APIClient): The API client used to make requests.
-        deactive_user_email (str): The email address of the user with
-                                   a deactivated account.
-
-    This test checks that the server returns a 500 Internal Server Error status code
-    and an appropriate error message when there is an SMTP exception while sending
-    the activation email.
-    """
-    expected_detail_message = response_codes_and_messages.ERROR_SENDING_EMAIL["detail"]
-    expected_code = response_codes_and_messages.ERROR_SENDING_EMAIL["code"]
-    expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-
-    actual_response = client.post(
-        url, data={"email": deactive_user_email}, format="json"
-    )
-
-    assert expected_status_code == actual_response.status_code
-    assert expected_detail_message == actual_response.data["detail"]
-    assert expected_code == actual_response.data["code"]
-
-
-@pytest.mark.django_db
-@patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
-    return_value=True,
-)
 def test_send_email_successfully(
-    allow_request_function_mock: MagicMock,
-    client: APIClient,
-    deactive_user_email: str,
+    allow_request_function_mock: MagicMock, client: APIClient, deactive_user_email: str
 ):
     """
     Test if the email sending request returns 200 when the email is sent successfully.

@@ -67,14 +67,17 @@ services:
     networks:
       - nginx_network
   # ====================================
-  celery_worker:
-    container_name: celery_worker
+  # Celery Worker for 'removed_expired_code_token_queue'
+  worker_removed_code_token:
+    container_name: worker_removed_code_token
     build:
       context: ./../api/  
-      dockerfile: ./../docker/Dockerfile.prod  
-    command: ["sh", "-c", "celery -A config worker --loglevel=debug"]
+      dockerfile: ./../docker/Dockerfile.dev  
+    command: ["sh", "-c", "celery -A config worker --loglevel=debug -Q remove_expired_code_token_queue"]
+    volumes:
+      - ./../api/:/api
     env_file:
-      - ./../api/environments/.env.production
+      - ./../api/environments/.env.development
     depends_on:
       api:
         condition: service_healthy
@@ -87,16 +90,37 @@ services:
       timeout: 5s
       retries: 2
   # ====================================
+  # Celery Worker for 'email_queue'
+  worker_send_email:
+    container_name: worker_send_email
+    build:
+      context: ./../api/
+      dockerfile: ./../docker/Dockerfile.dev
+    command: ["sh", "-c", "celery -A config worker --loglevel=debug -Q email_queue"]
+    volumes:
+      - ./../api/:/api
+    env_file:
+      - ./../api/environments/.env.development
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - db_api_net
+      - redis_api_net
+  # ====================================
+  # Celery Beat for scheduling tasks
   celery_beat:
     container_name: celery_beat
     build:
       context: ./../api/  
-      dockerfile: ./../docker/Dockerfile.prod 
+      dockerfile: ./../docker/Dockerfile.dev  
     command: ["sh", "-c", "celery -A config beat --scheduler django --loglevel=debug"]
+    volumes:
+      - ./../api/:/api
     env_file:
-      - ./../api/environments/.env.production
+      - ./../api/environments/.env.development
     depends_on:
-      celery_worker:
+      worker_removed_code_token:
         condition: service_healthy
     networks:
       - db_api_net

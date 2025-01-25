@@ -138,7 +138,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
     return sent_count
 
 
-def send_activation_code_by_email(user_email: str) -> None:
+def send_activation_code_by_email(user_email: str) -> int:
     """
     Sends an account activation email to the user with a confirmation code.
 
@@ -202,7 +202,7 @@ def send_activation_code_by_email(user_email: str) -> None:
     return sent_count
 
 
-def send_reset_password_code_by_email(user_email: str) -> None:
+def send_reset_password_code_by_email(user_email: str) -> int:
     """
     Sends a password reset code to the user's email address.
 

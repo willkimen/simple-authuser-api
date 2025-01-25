@@ -3,17 +3,13 @@ This module provides views related to creating, updating, deleting and
 returning data for a given user.
 """
 
-import smtplib
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
-
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants.response_codes_and_messages import (
-    ERROR_SENDING_EMAIL,
     PASSWORD_DO_NOT_MATCH,
     USER_DELETED_SUCCESSFULLY,
     USER_PASSWORD_CHANGED,
@@ -27,8 +23,8 @@ from user_app.serializers import (
     UserResponseSerializer,
     UserUpdateSerializer,
 )
+from user_app.tasks import task_send_activation_code_by_email
 from user_app.utils.data_utils import merge_dict
-from user_app.utils.email_service import send_activation_code_by_email
 from user_app.utils.token_utils import revoke_tokens
 
 User = get_user_model()
@@ -50,13 +46,7 @@ def register(request):
         )
 
     # Send the activation email
-    try:
-        send_activation_code_by_email(request_serializer.validated_data["email"])
-    except smtplib.SMTPException as e:
-        return Response(
-            merge_dict(ERROR_SENDING_EMAIL, {"error": str(e)}),
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    task_send_activation_code_by_email.delay(request_serializer.validated_data["email"])
 
     # Save the user to the database
     user = request_serializer.save()

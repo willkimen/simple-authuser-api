@@ -1,20 +1,8 @@
-"""
-Asynchronous tasks using Celery to execute commands for removing expired data.
-
-Description:
-This module defines tasks that use Celery to execute Django management commands, 
-allowing the removal of expired records asynchronously and on a scheduled basis.
-
-Usage:
-These tasks can be scheduled or called directly through the Celery system 
-to ensure that expired records are automatically removed in the background.
-
-Example configuration for scheduling tasks:
-- Use a scheduler such as `Celery Beat` to execute these tasks at regular intervals.
-"""
+import smtplib
 
 from celery import shared_task
 from django.core.management import call_command
+from user_app.utils.email_service import send_activation_code_by_email
 
 
 @shared_task
@@ -33,3 +21,12 @@ def task_remove_exp_token():
     tokens in the blacklist.
     """
     call_command("remove_exp_token")
+
+
+@shared_task(bind=True, retry_backoff=True, max_retries=5)
+def task_send_activation_code_by_email(self, user_email: str) -> int:
+    try:
+        sent_count = send_activation_code_by_email(user_email)
+        return sent_count
+    except smtplib.SMTPException as e:
+        raise self.retry(exc=e)

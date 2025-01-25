@@ -38,6 +38,10 @@ def set_celery_test_settings():
     Usage:
     - This setup is useful for testing Celery task behavior
        without relying on an active worker or external queues.
+
+    Obs:
+    - If you are running worker containers, this may not be necessary
+        if you want to run tasks asynchronously.
     """
     settings.CELERY_TASK_ALWAYS_EAGER = True
     settings.CELERY_TASK_EAGER_PROPAGATES = True

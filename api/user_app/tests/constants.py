@@ -72,3 +72,6 @@ CHANGE_EMAIL_VIEW_MODULE_PATH = importlib.import_module(
 EMAIL_SERVICE_MODULE_PATH = importlib.import_module(
     "user_app.utils.email_service"
 ).__name__
+
+# Path to the tasks module, containing celery tasks functions.
+TASKS_MODULE_PATH = importlib.import_module("user_app.tasks").__name__

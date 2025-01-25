@@ -1,16 +1,9 @@
-import smtplib
-from unittest.mock import MagicMock, patch
-
 import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages, validation_error_messages
-from user_app.tests.constants import (
-    CRUD_VIEW_MODULE_PATH,
-    SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH,
-    User,
-)
+from user_app.tests.constants import User
 
 # ============== Objects and constants ==============
 url: str = reverse("register")
@@ -37,9 +30,7 @@ def user_data() -> dict[str:str]:
 
 # ================ Tests ==================
 @pytest.mark.django_db
-@patch(f"{CRUD_VIEW_MODULE_PATH}.{SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH}")
 def test_creates_user_with_valid_data(
-    send_activation_code_by_email_function_mock: MagicMock,
     client: APIClient,
     user_data: dict[str:str],
 ):
@@ -47,8 +38,6 @@ def test_creates_user_with_valid_data(
     Tests if a new user is correctly created with valid data.
 
     Args:
-        send_activation_code_by_email_function_mock (Mock): Mock of the activation
-                                                   email sending function.
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
@@ -67,45 +56,6 @@ def test_creates_user_with_valid_data(
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
-
-    # Check if the email sending function was called
-    send_activation_code_by_email_function_mock.assert_called_once()
-
-
-@pytest.mark.django_db
-@patch(
-    f"{CRUD_VIEW_MODULE_PATH}.{SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH}",
-    side_effect=smtplib.SMTPException(),
-)
-def test_does_not_create_user_when_email_sending_fails(
-    send_activation_code_by_email_function_mock: MagicMock,
-    client: APIClient,
-    user_data: dict[str, str],
-):
-    """
-    Tests if user is not created when attempt to send email failed.
-
-    Args:
-        send_activation_code_by_email_function_mock(MagicMock): Mock object to send
-                                                       email function
-        client (APIClient): API client to make requests.
-        user_data (dict): User registration data for the request.
-    """
-
-    expected_detail_message = response_codes_and_messages.ERROR_SENDING_EMAIL["detail"]
-    expected_code = response_codes_and_messages.ERROR_SENDING_EMAIL["code"]
-    expected_status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-
-    actual_response = client.post(url, data=user_data, format="json")
-
-    assert expected_detail_message == actual_response.data["detail"]
-    assert expected_code == actual_response.data["code"]
-    assert expected_status_code == actual_response.status_code
-    # Verify if user was not created
-    assert not User.objects.filter(email=user_data["email"]).exists()
-
-    # Check if the email sending function was called
-    send_activation_code_by_email_function_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -158,9 +108,7 @@ def test_does_not_create_user_with_invalid_email_format(
 
 
 @pytest.mark.django_db
-@patch(f"{CRUD_VIEW_MODULE_PATH}.{SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH}")
 def test_does_not_create_user_with_duplicate_email(
-    send_activation_code_by_email_function_mock: MagicMock,
     client: APIClient,
     user_data: dict[str, str],
 ):
@@ -168,8 +116,6 @@ def test_does_not_create_user_with_duplicate_email(
     Tests if a user is not created when the email is already registered.
 
     Args:
-        send_activation_code_by_email_function_mock (Mock): Mock of the activation email
-                                                   sending function.
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
@@ -254,9 +200,7 @@ def test_does_not_create_user_with_null_email(
 
 
 @pytest.mark.django_db
-@patch(f"{CRUD_VIEW_MODULE_PATH}.{SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH}")
 def test_passwords_not_in_response(
-    send_activation_code_by_email_function_mock: MagicMock,
     client: APIClient,
     user_data: dict[str, str],
 ):
@@ -264,8 +208,6 @@ def test_passwords_not_in_response(
     Tests if the password and confirmation_password fields are not in the response.
 
     Args:
-        send_activation_code_by_email_function_mock (Mock): Mock of the activation
-                                                            email sending function.
         client (APIClient): API client to make requests.
         user_data (dict): User registration data for the request.
     """
