@@ -2,14 +2,8 @@
 This module tests the function for sending an email with an account confirmation code.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 from user_app.models import AccountActivationCodeModel
-from user_app.tests.constants import (
-    EMAIL_MULTI_CLASS_TO_PATCH,
-    EMAIL_SERVICE_MODULE_PATH,
-)
 from user_app.utils.email_service import send_activation_code_by_email
 
 
@@ -19,6 +13,9 @@ def test_success_send_email(deactivated_user):
     """
     The purpose of this test is to ensure that the function is working correctly and
     that it returns the expected number of emails sent.
+
+    **Pre-conditions**:
+    - A user (deactivated_user) must be provided for the test.
 
     **Expected Results**:
     - The test passes if the function returns the correct number of emails sent
@@ -32,10 +29,7 @@ def test_success_send_email(deactivated_user):
 
 
 @pytest.mark.django_db
-@patch(f"{EMAIL_SERVICE_MODULE_PATH}.{EMAIL_MULTI_CLASS_TO_PATCH}")
-def test_success_send_email_create_code_in_database(
-    EmailMultiAlternativesMock: MagicMock, deactivated_user
-):
+def test_success_send_email_create_code_in_database(deactivated_user):
     """
     Tests if the activation code is successfully sent via email
     and if the code is created in the database.
@@ -43,13 +37,7 @@ def test_success_send_email_create_code_in_database(
     Verifies that the email sending function is called and that the
     activation code has been stored in the AccountActivationCodeModel table.
     """
-    # Returns a mocked instance of the MockEmailMultiAlternatives class
-    email_multi_instance_mock = EmailMultiAlternativesMock.return_value
-
     send_activation_code_by_email(deactivated_user.email)
-
-    email_multi_instance_mock.send.assert_called()
-
     assert AccountActivationCodeModel.objects.filter(
         user_id=deactivated_user.email
     ).exists()

@@ -26,6 +26,7 @@ TOKEN_SECRET = os.environ.get(
 # -----------------------------------------------------------------------------
 RESET_LINK = os.environ.get("REDIRECT_TO_ACTIVATE_ACCOUNT_PAGE", "")
 CONFIRMATION_LINK = os.environ.get("REDIRECT_TO_RESET_PASSWORD_PAGE", "")
+LOGIN_LINK = os.environ.get("REDIRECT_TO_LOGIN_PAGE", "")
 
 
 # Database (usando PostgreSQL em produção)

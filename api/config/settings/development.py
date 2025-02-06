@@ -21,6 +21,7 @@ CORS_ALLOWED_ORIGINS: list[str] = []
 # -----------------------------------------------------------------------------
 RESET_LINK = "domain.com/reset/password/"
 CONFIRMATION_LINK = "domain.com/confirmation/email/"
+LOGIN_LINK = "domain.com/login/"
 
 
 # Database (Use if you want postgres with docker container.)
