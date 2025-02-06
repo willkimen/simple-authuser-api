@@ -12,7 +12,7 @@ from user_app.utils.email_service import (
 @shared_task
 def task_remove_exp_code():
     """
-    Executes the `remove_exp_code` command to remove expired account activation codes,
+    Executes the `remove_exp_code` command to remove expired account verification codes,
     email change codes, and password reset codes.
     """
     call_command("remove_exp_code")

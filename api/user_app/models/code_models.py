@@ -7,10 +7,10 @@ from user_app.constants import prefixes
 from user_app.utils.random_code import generate_random_code
 
 
-class ConfirmationCodeManager(models.Manager):
+class VerificationCodeManager(models.Manager):
     def keep_latest_code(self, user_email: str):
         """
-        Removes all confirmation codes for a user, except the most recent one.
+        Removes all verification codes for a user, except the most recent one.
 
         This method retrieves all records associated with the given user's email,
         ordered by the "created_at" field in descending order. It keeps the most
@@ -29,19 +29,19 @@ class ConfirmationCodeManager(models.Manager):
 
     def verify_and_return_new_code(self, prefix: str) -> str:
         """
-        Generates a unique confirmation code with the specified prefix.
+        Generates a unique verification code with the specified prefix.
 
-        This method generates a new confirmation code using a provided prefix and
+        This method generates a new verification code using a provided prefix and
         ensures its uniqueness by verifying that it does not already exist
         in the database.
         If the generated code already exists, the method will generate another one until
         a unique code is found.
 
         Args:
-            prefix (str): The prefix to use for the confirmation code.
+            prefix (str): The prefix to use for the verification code.
 
         Returns:
-            str: A unique confirmation code.
+            str: A unique verification code.
         """
         code: str = generate_random_code(prefix=prefix)
         while self.model.objects.filter(code=code).exists():
@@ -49,17 +49,17 @@ class ConfirmationCodeManager(models.Manager):
         return code
 
 
-class ConfirmationCodeBaseModel(models.Model):
+class VerificationCodeBaseModel(models.Model):
     """
     Abstract model that will serve as a base for others.
 
-    This model is used as a base class for models intended to store confirmation codes
-    for various scenarios such as: account activation, email change, password change,
+    This model is used as a base class for models intended to store verification codes
+    for various scenarios such as: account activation, email change
     and password reset (in case the user has forgotten their password).
 
     Fields:
-    - `code` (CharField): The confirmation code. This field is required, must be unique,
                           and has a maximum length of 16 characters.
+    - `code` (CharField): The verification code. This field is required, must be unique,
 
     - `created_at` (DateTimeField): The timestamp when the code was created.
                                     It is automatically set to the current time if
@@ -78,7 +78,7 @@ class ConfirmationCodeBaseModel(models.Model):
     - The class attribute __prefix is private and should not be set.
     """
 
-    objects = ConfirmationCodeManager()
+    objects = VerificationCodeManager()
     _prefix = ""
     code = models.CharField(max_length=16, unique=True, null=False, blank=False)
     created_at = models.DateTimeField()
@@ -107,12 +107,12 @@ class ConfirmationCodeBaseModel(models.Model):
         abstract = True
 
 
-class AccountActivationCodeModel(ConfirmationCodeBaseModel):
+class AccountActivationCodeModel(VerificationCodeBaseModel):
     """
     Model for storing account activation codes.
 
     This model is used to store activation codes for verifying user accounts.
-    It extends the `ConfirmationCodeBaseModel` and includes additional fields
+    It extends the `verificationCodeBaseModel` and includes additional fields
     specific to account activation.
 
     Fields:
@@ -141,12 +141,12 @@ class AccountActivationCodeModel(ConfirmationCodeBaseModel):
         verbose_name = "account activation code"
 
 
-class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
+class ChangeEmailCodeModel(VerificationCodeBaseModel):
     """
-    Model for storing email change confirmation codes.
+    Model for storing email change verification codes.
 
     This model stores codes used for changing a user's email address.
-    It extends the `ConfirmationCodeBaseModel` and includes additional fields for the
+    It extends the `verificationCodeBaseModel` and includes additional fields for the
     actual and new email addresses.
 
     Fields:
@@ -177,12 +177,12 @@ class ChangeEmailCodeModel(ConfirmationCodeBaseModel):
         verbose_name = "change email code"
 
 
-class ResetPasswordCodeModel(ConfirmationCodeBaseModel):
+class ResetPasswordCodeModel(VerificationCodeBaseModel):
     """
-    Model for storing password reset confirmation codes.
+    Model for storing password reset verification codes.
 
     This model stores codes used for resetting a user's password.
-    It extends the `ConfirmationCodeBaseModel` and is associated with the user
+    It extends the `VerificationCodeBaseModel` and is associated with the user
     via their email address.
 
     Fields:

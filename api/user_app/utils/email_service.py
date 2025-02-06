@@ -19,9 +19,9 @@ from user_app.utils.email_classes import (
 
 def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
     """
-    Sends an email with a confirmation code to change the user's email address.
+    Sends an email with a verification code to change the user's email address.
 
-    This function generates a random confirmation code for changing the user's email,
+    This function generates a random verification code for changing the user's email,
     sends the code to the new email address, and stores the code.
     """
 
@@ -41,7 +41,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
     ChangeEmailCodeModel.objects.create(
         code=email.code, user_id=email.actual_email, new_email=email.new_email
     )
-    # Removes all confirmation codes for a user, except the most recent one.
+    # Removes all verification codes for a user, except the most recent one.
     ChangeEmailCodeModel.objects.keep_latest_code(email.actual_email)
 
     return sent_count
@@ -49,7 +49,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
 
 def send_activation_code_by_email(user_email: str) -> int:
     """
-    Sends an account activation email to the user with a confirmation code.
+    Sends an account activation email to the user with a verification code.
 
     This function generates a random code for account activation, sends it to the
     user's email, and saves the code and email in the database. The activation code is
@@ -70,7 +70,7 @@ def send_activation_code_by_email(user_email: str) -> int:
 
     # Persists code in database.
     AccountActivationCodeModel.objects.create(code=email.code, user_id=email.user_email)
-    # Removes all confirmation codes for a user, except the most recent one.
+    # Removes all verification codes for a user, except the most recent one.
     AccountActivationCodeModel.objects.keep_latest_code(email.user_email)
 
     return sent_count
@@ -100,7 +100,7 @@ def send_reset_password_code_by_email(user_email: str) -> int:
 
     # Persists code in database.
     ResetPasswordCodeModel.objects.create(code=email.code, user_id=email.user_email)
-    # Removes all confirmation codes for a user, except the most recent one.
+    # Removes all verification codes for a user, except the most recent one.
     ResetPasswordCodeModel.objects.keep_latest_code(email.user_email)
 
     return sent_count

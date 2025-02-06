@@ -54,7 +54,7 @@ USER_HAS_ALREADY_ACTIVATED = {
 
 CODE_EXPIRED = {
     "code": "CODE_EXPIRED",
-    "detail": "The code has expired. Please request a new activation code.",
+    "detail": "The code has expired. Please request a new verification code.",
 }
 
 USER_EMAIL_CHANGED = {

@@ -98,7 +98,7 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Confirmation code configuration
+# Verification code configuration
 # -----------------------------------------------------------------------------
 EXPIRATION_CODE_TIME_IN_HOURS = 24
 

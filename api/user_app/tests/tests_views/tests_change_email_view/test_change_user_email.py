@@ -63,7 +63,7 @@ def client(user) -> APIClient:
 @pytest.fixture
 def code(user) -> str:
     """
-    Creates and returns a valid confirmation code
+    Creates and returns a valid verification code
     for changing the user's email.
     """
     return ChangeEmailCodeModel.objects.create(user=user, new_email=NEW_EMAIL).code
@@ -72,7 +72,7 @@ def code(user) -> str:
 @pytest.fixture
 def expired_code(user) -> str:
     """
-    Creates and returns an expired confirmation code for
+    Creates and returns an expired verification code for
     testing expiration scenarios.
     """
     return ChangeEmailCodeModel.objects.create(

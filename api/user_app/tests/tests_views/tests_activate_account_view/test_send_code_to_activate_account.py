@@ -1,6 +1,6 @@
 """
 Test the send_code_to_activate_account() view, which expects a user's email in a 
-POST request and sends a confirmation code to the user's email address.
+POST request and sends a activation code to the user's email address.
 """
 
 from unittest.mock import MagicMock, patch

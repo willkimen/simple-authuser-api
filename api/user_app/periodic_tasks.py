@@ -29,7 +29,7 @@ def create_periodic_task_for_expired_codes_removal(apps, schema_editor):
     Creates a periodic task that removes expired codes from the database.
 
     This function creates a scheduled task that runs daily at 3:00 AM to execute
-    the `task_remove_exp_code` task, which removes expired account activation codes,
+    the `task_remove_exp_code` task, which removes expired account verification codes,
     email change codes, and reset password codes from the database.
 
     It ensures that the task is only created once and prevents duplication of the task

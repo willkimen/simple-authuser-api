@@ -1,5 +1,5 @@
 """
-This module tests the function for sending an email with an account confirmation code.
+This module tests the function for sending an email with an account verification code.
 """
 
 import pytest

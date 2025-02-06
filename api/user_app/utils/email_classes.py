@@ -87,7 +87,7 @@ class ActivationCodeEmail(EmailBase):
         self.subject = "Confirm your email address"
         self.body = dedent(
             f"""
-            Your confirmation code is below:
+            Your verification code is below:
 
             {self.code}
 
@@ -106,7 +106,7 @@ class ActivationCodeEmail(EmailBase):
 
         self.html_body = dedent(
             f"""
-            <p>Your confirmation code is below:</p>
+            <p>Your verification code is below:</p>
             <h2>{self.code}</h2>
             <p>To complete your registration, please visit the following link and submit
             the code:</p>
@@ -166,12 +166,12 @@ class ActivationNotificationEmail(EmailBase):
 
 class ChangeCodeEmail(EmailBase):
     """
-    Sends a confirmation email for changing the user's email address.
+    Sends a verification email for changing the user's email address.
 
-    This class sends an email to the user containing a confirmation code
+    This class sends an email to the user containing a verification code
     for changing their email address. The email informs the user about
     the request to change the email from the current address to the new one,
-    and provides the confirmation code that the user needs to use to confirm
+    and provides the verification code that the user needs to use to verification
     the change.
     """
 
@@ -184,7 +184,7 @@ class ChangeCodeEmail(EmailBase):
             f"""
         You requested to change your email from {self.actual_email} to {self.new_email}.
 
-        To confirm this change, please use the confirmation code below:
+        To confirm this change, please use the verification code below:
 
         {self.code}
 
@@ -198,7 +198,7 @@ class ChangeCodeEmail(EmailBase):
             f"""
             <p>You requested to change your email from <strong>{self.actual_email}</strong> to 
             <strong>{self.new_email}</strong>.</p>
-            <p>To confirm this change, please use the confirmation code below:</p>
+            <p>To confirm this change, please use the verification code below:</p>
             <h2>{self.code}</h2>
             <p>{EXPIRED_MESSAGE}</p>
             <p>{SAFELY_IGNORE_MESSAGE}</p>
