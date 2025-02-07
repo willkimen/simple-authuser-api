@@ -6,7 +6,6 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
-
 from user_app.authentication_classes import JWTAuthentication
 from user_app.constants.response_codes_and_messages import (
     IS_NOT_ACCESS_OR_REFRESH_TOKEN,
@@ -30,8 +29,17 @@ User = get_user_model()
 @api_view(["POST"])
 def obtain_token_pair(request):
     """
-    This view expects to receive the user's email and password and
-    returns a pair of tokens (access and refresh) if authentication is successful.
+    Authenticates a user and returns a pair of tokens.
+
+    This view receives the user's email and password, verifies if the credentials
+    are correct and if the account is active. If authentication is successful,
+    it returns a pair of tokens (access and refresh) for the user.
+
+    Request Body:
+        {
+            "email": "user@example.com",
+            "password": "user_password"
+        }
     """
 
     email = request.data.get("email", None)
@@ -56,7 +64,16 @@ def obtain_token_pair(request):
 @api_view(["POST"])
 def refresh_token_access(request):
     """
-    This view expects a refresh token and returns a new access token.
+    Generates a new access token using a valid refresh token.
+
+    This view receives a refresh token, validates it, and returns a new access token.
+    It ensures that the token is of type 'refresh' and belongs to an existing,
+    active user.
+
+    Request Body:
+        {
+            "refresh": "refresh_token"
+        }
     """
     refresh = request.data.get("refresh", None)
 
@@ -92,7 +109,16 @@ def refresh_token_access(request):
 @authentication_classes([JWTAuthentication])
 def blacklist_token(request):
     """
-    Inserts the token into the blacklist, preventing future use.
+    Adds a token to the blacklist, preventing its future use.
+
+    This view receives an access or refresh token, validates it, and adds it to
+    the blacklist to ensure it can no longer be used. It also verifies that the
+    authenticated user matches the token's owner.
+
+    Request Body:
+        {
+            "token": "access_or_refresh_token"
+        }
     """
 
     token = request.data.get("token", None)
@@ -128,6 +154,18 @@ def blacklist_token(request):
 
 @api_view(["POST"])
 def verify_token(request):
+    """
+    Validates a given token and checks if it is still usable.
+
+    This view receives an access or refresh token, verifies its validity,
+    and ensures that it is not blacklisted. If the token is valid,
+    a confirmation response is returned.
+
+    Request Body:
+        {
+            "token": "access_or_refresh_token"
+        }
+    """
     token = request.data.get("token", None)
 
     # Verify if the token is valid, it returns its payload.

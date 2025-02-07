@@ -33,8 +33,20 @@ User = get_user_model()
 @api_view(["POST"])
 def register(request):
     """
-    Registers a new user in the system and sends a code to the
-    user's email address to activate the account.
+    Registers a new user and sends an activation code via email.
+
+    This view receives user registration data, validates it, and saves the user
+    to the database. After successful registration, an activation code is sent
+    to the user's email for account verification.
+
+    Request Body:
+        {
+            "first_name": "User's first name",
+            "last_name": "User's last name",
+            "email": "user@example.com",
+            "password": "secure_password",
+            "confirmation_password": "secure_password"
+        }
     """
     request_serializer = UserRequestSerializer(data=request.data)
 
@@ -64,7 +76,23 @@ def register(request):
 @authentication_classes([JWTAuthentication])
 def update(request):
     """
-    Partially updates user data in the database. This user must be authenticated.
+    Partially updates the authenticated user's data.
+
+    This view allows an authenticated user to update specific fields in their profile,
+    such as first name, last name, and account status (is_active). Since this is a
+    partial update, it is not necessary to provide all fields.
+
+    Authentication:
+        - The user must be authenticated using JWT tokens.
+        - The authentication is handled by the JWTAuthentication class,
+          which retrieves the user instance from the request (request.user).
+
+    Request Body (example):
+        {
+            "first_name": "New first name",
+            "last_name": "New last name",
+            "is_active": true
+        }
     """
 
     # Initialize the serializer with the current user instance and the provided data.
@@ -99,7 +127,16 @@ def update(request):
 @authentication_classes([JWTAuthentication])
 def user_detail(request):
     """
-    Returns authenticated user data.
+    Returns the data of the authenticated user.
+
+    This view retrieves the data of the currently authenticated user,
+    which is returned in the response. Sensitive information such as the password
+    is not included in the response.
+
+    Authentication:
+        - The user must be authenticated using JWT tokens.
+        - The authentication is handled by the JWTAuthentication class,
+          which retrieves the user instance from the request (request.user).
     """
     response_serializer = UserResponseSerializer(request.user)
     return Response({"user": response_serializer.data}, status=status.HTTP_200_OK)
@@ -109,7 +146,16 @@ def user_detail(request):
 @authentication_classes([JWTAuthentication])
 def delete(request):
     """
-    Deletes the authenticated user.
+    Deletes the authenticated user from the system.
+
+    This view permanently deletes the currently authenticated user's account and all
+    associated data from the application. The user instance is retrieved via JWT
+    authentication (request.user).
+
+    Authentication:
+        - The user must be authenticated using JWT tokens.
+        - The authentication is handled by the JWTAuthentication class,
+          which retrieves the user instance from the request (request.user).
     """
     request.user.delete()
     return Response(USER_DELETED_SUCCESSFULLY, status=status.HTTP_200_OK)
@@ -119,16 +165,32 @@ def delete(request):
 @authentication_classes([JWTAuthentication])
 def change_password(request):
     """
-    Allows a user to change their password.
+    Allows an authenticated user to change their password.
 
-    This endpoint requires the user to be authenticated with a JWT token. It accepts
-    PATCH requests containing the current password and the new password. If the
-    provided current password does not match the stored password, an error is returned.
+    This endpoint enables a user to update their password by providing the
+    current password (`actual_password`) and a new password (`new_password`).
+    If the current password does not match the stored password, an error is returned.
+
+    Authentication:
+        - The user must be authenticated using a JWT token.
+        - The authentication is handled by the JWTAuthentication class,
+          which retrieves the user instance from the request (request.user).
 
     Request Body:
-    - actual_password: The user's current password.
-    - new_password: The new password the user wants to set.
+    {
+        "actual_password": "oldpassword123",
+        "new_password": "newpassword456"
+    }
+
+    Behavior:
+        - Validates the provided data.
+        - Checks if `actual_password` matches the user's current password.
+        - Updates the user's password if validation succeeds.
+        - Revokes all existing tokens associated with the user.
+        - Returns a new pair of tokens (access and refresh).
+
     """
+
     serializer = UserChangePasswordSerializer(data=request.data)
 
     if not serializer.is_valid():

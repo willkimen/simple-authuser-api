@@ -33,7 +33,20 @@ User = get_user_model()
 @authentication_classes([JWTAuthentication])
 def send_code_to_email_change(request):
     """
-    Sends a code to change the email address to the authenticated user.
+    Sends a verification code to the new email address provided by the
+    authenticated user.
+
+    The user must be logged in to request a code to change their email address.
+    The request should include the new email address they want to switch to in
+    JSON format:
+
+    Example request body:
+    {
+        "email": "newemail@example.com"
+    }
+
+    If the email is valid and not already in use, a verification code will be sent
+    to the new email address.
     """
 
     # Get email from body request.
@@ -68,7 +81,22 @@ def send_code_to_email_change(request):
 @authentication_classes([JWTAuthentication])
 def change_user_email(request):
     """
-    This view waits to receive the code and exchanges the user's email.
+    Confirms the email change by validating the verification code.
+
+    The user must be logged in and provide the verification code sent
+    to their new email address.
+    The request should include the verification code in JSON format:
+
+    Example request body:
+    {
+        "code": "chg-code"
+    }
+
+    If the code is valid and not expired, the user's current email will
+    be replaced with the new one.
+
+    After the change, all existing authentication tokens (access and refresh)
+    will be blacklisted, requiring the user to log in again using the new email.
     """
     code = request.data.get("code", None)
 

@@ -29,6 +29,16 @@ def activate_account(request):
     """
     Activates a user account based on the provided activation code and applies
     throttle class to limit the rate of activation requests.
+
+    This endpoint allows a user to activate their account by submitting the activation
+    code they received via email. The activation code must be valid and not expired.
+    Once activated, the user account is marked as active in the database. The activation
+    code is deleted after successful activation, and the user is notified via email.
+
+    Example request body:
+    {
+      "code": "act-code"
+    }
     """
     code = request.data.get("code", None)
 
@@ -56,8 +66,18 @@ def activate_account(request):
 @throttle_classes([FivePerMinuteRateLimit])
 def send_code_to_activate_account(request):
     """
-    Sends an activation email to the user if their account is not already activated and
-    throttle class to limit the rate of email requests.
+    Sends an activation code to a registered user who has not yet activated
+    their account.
+
+    This view expects a JSON payload containing the user's email.
+    If the email belongs to an existing but inactive user, an activation
+    code will be sent to their email address.
+    A rate limit is applied to prevent excessive requests.
+
+    Example request body:
+        {
+            "email": "user@example.com"
+        }
     """
     serializer = EmailSerializer(data=request.data)
 

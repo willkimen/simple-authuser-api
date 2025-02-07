@@ -28,9 +28,17 @@ User = get_user_model()
 @throttle_classes([FivePerMinuteRateLimit])
 def send_code_to_reset_password(request):
     """
-    This view handles the request to send a password reset code to the
-    user's email address.
+    Sends a password reset code to the user's registered email address.
 
+    This view expects a JSON payload containing the user's email.
+    If the email belongs to an active user, a password reset code will be sent to
+    their email. The user can later use this code to reset their forgotten password.
+    A rate limit is applied to prevent excessive requests.
+
+    Request Body:
+        {
+            "email": "user@example.com"
+        }
     """
     email_serializer = EmailSerializer(data=request.data)
 
@@ -57,15 +65,19 @@ def send_code_to_reset_password(request):
 @throttle_classes([FivePerMinuteRateLimit])
 def reset_password(request):
     """
-    View for resetting a user's password.
+    Resets a user's password using a verification code.
 
-    This view receives a reset code and a new password, validates if the code exists,
-    if it's still valid (not expired), and on success, resets the user's password.
+    This view receives a password reset code, a new password, and its confirmation.
+    It validates if the code exists and is still valid (not expired). If everything
+    is correct, the user's password is updated, and the reset code is deleted.
+    The user's authentication tokens are also revoked, and a new token pair is returned.
 
-    Parameters:
-    - code (str): Password reset code sent via email.
-    - new_password (str): The new password desired by the user.
-    - confirmation_new_password (str): The password for confirmation.
+    Request Body:
+        {
+            "code": "reset_code",
+            "new_password": "new_user_password",
+            "confirmation_new_password": "new_user_password"
+        }
     """
     reset_serializer = UserResetPasswordSerializer(data=request.data)
 
