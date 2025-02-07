@@ -1,3 +1,16 @@
+"""
+This Django management command runs Docker Compose commands to set up 
+a production environment.
+The command allows options to build or recreate containers when starting 
+the environment.
+
+To execute this command, you need to be in the same directory as the manage.py file.
+
+Options:
+    --build: Rebuild the Docker containers before starting.
+    --recreate: Force the recreation of containers before starting.
+"""
+
 import subprocess
 from pathlib import Path
 

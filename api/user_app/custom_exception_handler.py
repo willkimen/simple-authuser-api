@@ -3,7 +3,8 @@ from rest_framework.views import exception_handler
 
 def custom_exception_handler(exc, context):
     """
-    Custom exception handler to add error codes and modify error messages in API responses.
+    Custom exception handler to add error codes and modify error messages
+    in API responses.
 
     Args:
         exc (Exception): The exception that was raised.

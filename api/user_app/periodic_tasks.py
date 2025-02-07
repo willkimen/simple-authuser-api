@@ -1,5 +1,5 @@
 """
-Module for creating periodic tasks in Django using Celery and django-celery-beat.
+Module for creating periodic tasks in Django using django-celery-beat.
 
 Description:
 This module contains functions to create scheduled periodic tasks that 
@@ -26,7 +26,7 @@ from user_app.constants.celery_constants import (
 
 def create_periodic_task_for_expired_codes_removal(apps, schema_editor):
     """
-    Creates a periodic task that removes expired codes from the database.
+    Creates a periodic task that removes expired verification codes from the database.
 
     This function creates a scheduled task that runs daily at 3:00 AM to execute
     the `task_remove_exp_code` task, which removes expired account verification codes,

@@ -1,3 +1,23 @@
+"""
+Celery configuration module for Django.
+
+This module configures and initializes an instance of Celery for the Django project.
+It sets up distinct queues for specific tasks and enables task auto-discovery 
+across Django apps. The settings are loaded from Django's configuration.
+
+Functionality:
+- Initializes the Celery instance with the Django project.
+- Loads Celery settings from Django's settings.py.
+- Defines task-specific queues for better task management.
+- Enables automatic task discovery in Django apps.
+
+Queues:
+- EMAIL_QUEUE_NAME: Queue for email-related tasks 
+                    (activation, email change, password reset).
+- REMOVE_EXPIRED_CODE_TOKEN_QUEUE_NAME: Queue for tasks that remove expired 
+                                        codes and tokens.
+"""
+
 import os
 
 from celery import Celery

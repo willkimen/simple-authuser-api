@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
-
 from user_app.constants import (
     authentication_error_messages,
     response_codes_and_messages,
@@ -15,11 +14,17 @@ User = get_user_model()
 
 class JWTAuthentication(BaseAuthentication):
     """
-    Custom JWT authentication class.
+    Custom JWT authentication class for Django Rest Framework.
 
-    This class provides a custom implementation of JWT authentication,
-    verifying tokens in the Authorization header of requests.
-    It handles token validation and user authentication.
+    This class extends BaseAuthentication to authenticate users using
+    JSON Web Tokens (JWT).
+    It extracts the token from the Authorization header of the request and
+    performs multiple checks to validate its authenticity.
+    If the token is valid, it returns a tuple containing the authenticated
+    user instance and the token payload.
+
+    To access the authenticated user instance in a view, use `request.user`.
+    To access the token payload, use `request.auth`.
     """
 
     www_authenticate_realm = "api"

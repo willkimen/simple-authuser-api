@@ -29,6 +29,13 @@ def task_remove_exp_token():
 
 @shared_task(bind=True, retry_backoff=True, max_retries=5)
 def task_send_activation_code_by_email(self, user_email: str) -> int:
+    """
+    Celery task to send an activation code via email.
+
+    This task attempts to send a verification code to the user's email address.
+    If an SMTP exception occurs, the task will automatically retry up to five times
+    with exponential backoff.
+    """
     try:
         sent_count = send_activation_code_by_email(user_email)
         return sent_count
@@ -40,6 +47,13 @@ def task_send_activation_code_by_email(self, user_email: str) -> int:
 def task_send_change_email_code_by_email(
     self, actual_email: str, new_email: str
 ) -> int:
+    """
+    Celery task to send a verification code for changing the user's email.
+
+    This task attempts to send a verification code tothe new email (`new_email`).
+    If an SMTP exception occurs, the task will automatically retry up to five times
+    with exponential backoff.
+    """
     try:
         sent_count = send_change_email_code_by_email(actual_email, new_email)
         return sent_count
@@ -49,6 +63,13 @@ def task_send_change_email_code_by_email(
 
 @shared_task(bind=True, retry_backoff=True, max_retries=5)
 def task_send_reset_password_code_by_email(self, user_email: str) -> int:
+    """
+    Celery task to send a password reset verification code via email.
+
+    This task attempts to send a verification code to the user's email address
+    to allow password reset. If an SMTP exception occurs, the task will automatically
+    retry up to five times with exponential backoff.
+    """
     try:
         sent_count = send_reset_password_code_by_email(user_email)
         return sent_count

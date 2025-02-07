@@ -1,5 +1,23 @@
 #!/bin/sh
 
+# -----------------------------------------------------------------------------
+# Django Container Startup Script
+#
+# This script ensures that the PostgreSQL database is ready before applying
+# migrations and starting the Django application.
+#
+# Functionality:
+# 1. Waits for PostgreSQL to be available before proceeding.
+# 2. Applies Django database migrations.
+# 3. Creates a flag file to indicate that migrations have been executed.
+# 4. Starts Django in production mode using Gunicorn or in development mode
+#    using the built-in Django server, based on the API_ENV environment variable.
+#
+# Environment Variables:
+# - POSTGRES_HOST: Hostname of the PostgreSQL database.
+# - POSTGRES_PORT: Port of the PostgreSQL database.
+# - API_ENV: Determines whether to run the app in "production" or "development".
+# -----------------------------------------------------------------------------
 set -e
 
 while ! nc -z $POSTGRES_HOST $POSTGRES_PORT; do
