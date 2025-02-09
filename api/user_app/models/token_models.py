@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 
 
-class TokenModel(models.Model):
+class TokenBaseModel(models.Model):
     """
     Abstract base model representing a JWT token.
 
@@ -52,7 +52,7 @@ class TokenModel(models.Model):
         abstract = True
 
 
-class BlacklistTokenModel(TokenModel):
+class BlacklistTokenModel(TokenBaseModel):
     """
     Represents a model for storing blacklisted JWTs (JSON Web Tokens).
     This is used to keep track of tokens
@@ -77,7 +77,7 @@ class BlacklistTokenModel(TokenModel):
         verbose_name = "blacklist token"
 
 
-class ValidTokenModel(TokenModel):
+class ValidTokenModel(TokenBaseModel):
     """
     Represents a model for storing valid tokens.
 

@@ -16,7 +16,7 @@ from user_app.constants.response_codes_and_messages import (
 )
 from user_app.models import ResetPasswordCodeModel
 from user_app.serializers import EmailSerializer, UserResetPasswordSerializer
-from user_app.tasks import task_send_reset_password_code_by_email
+from user_app.tasks import task_send_reset_password_code
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.token_utils import revoke_tokens
@@ -26,7 +26,7 @@ User = get_user_model()
 
 @api_view(["POST"])
 @throttle_classes([FivePerMinuteRateLimit])
-def send_code_to_reset_password(request):
+def request_reset_password_code(request):
     """
     Sends a password reset code to the user's registered email address.
 
@@ -56,7 +56,7 @@ def send_code_to_reset_password(request):
     if user.is_active == False:
         return Response(USER_ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
 
-    task_send_reset_password_code_by_email.delay(email_serializer.data["email"])
+    task_send_reset_password_code.delay(email_serializer.data["email"])
 
     return Response(EMAIL_SEND_TO_USER_SUCCESSFULLY, status=status.HTTP_200_OK)
 

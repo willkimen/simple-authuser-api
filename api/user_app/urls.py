@@ -4,17 +4,17 @@ from .views import (
     activate_account,
     blacklist_token,
     change_password,
-    change_user_email,
+    change_email,
     delete,
     obtain_token_pair,
     refresh_token_access,
     register,
     reset_password,
-    send_code_to_activate_account,
-    send_code_to_email_change,
-    send_code_to_reset_password,
+    request_account_activation_code,
+    request_email_change_code,
+    request_reset_password_code,
     update,
-    user_detail,
+    detail,
     verify_token,
 )
 
@@ -22,7 +22,7 @@ urlpatterns = [
     # ============= User Endpoints ====================
     path("user/register/", register, name="register"),
     path("user/update/", update, name="update"),
-    path("user/detail/", user_detail, name="detail"),
+    path("user/detail/", detail, name="detail"),
     path("user/delete/", delete, name="delete"),
     # Change user password
     path("user/change_passoword/", change_password, name="change_password"),
@@ -30,21 +30,21 @@ urlpatterns = [
     path("user/activate/", activate_account, name="activate_account"),
     path(
         "user/email/send_code/activate_account/",
-        send_code_to_activate_account,
-        name="send_code_to_activate_account",
+        request_account_activation_code,
+        name="request_account_activation_code",
     ),
     # Change user email
     path(
         "user/email/send_code/change_email/",
-        send_code_to_email_change,
-        name="send_code_to_email_change",
+        request_email_change_code,
+        name="request_email_change_code",
     ),
-    path("user/change_email/", change_user_email, name="change_user_email"),
+    path("user/change_email/", change_email, name="change_email"),
     # Reset user password
     path(
         "user/send_code/reset_password/",
-        send_code_to_reset_password,
-        name="send_code_to_reset_password",
+        request_reset_password_code,
+        name="request_reset_password_code",
     ),
     path("user/reset_password/", reset_password, name="reset_password"),
     # =============== JWT Endpoints =================

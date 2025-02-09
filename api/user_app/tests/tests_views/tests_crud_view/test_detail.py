@@ -1,7 +1,7 @@
 """
-Test Module: user_detail() View
+Test Module: detail() View
 
-This module contains the tests for the `user_detail` API view, 
+This module contains the tests for the `detail` API view, 
 which retrieves the details of an authenticated user. 
 The tests ensure that the authenticated user receives their 
 correct data in the response.
@@ -69,7 +69,7 @@ def test_logged_user_returns_their_data_successfully(
 ):
     """
     This test verifies that an authenticated user can successfully retrieve their own
-    details via the `user_detail` API view.
+    details via the `detail` API view.
     """
     expected_status_code = status.HTTP_200_OK
 

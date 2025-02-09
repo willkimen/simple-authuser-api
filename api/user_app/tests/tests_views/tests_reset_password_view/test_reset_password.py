@@ -12,7 +12,7 @@ from user_app.models import ResetPasswordCodeModel
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
     FAKE_SECRET,
-    RESET_PASSWORD_VIEW_MODULE_PATH,
+    RESET_PASSWORD_VIEWS_MODULE_PATH,
     REVOKE_TOKENS_FUNCTION_TO_PATCH,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
@@ -79,7 +79,7 @@ def test_does_not_send_code_when_request_limit_is_reached(client: APIClient):
 
 @pytest.mark.django_db
 @patch(
-    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_reset_when_non_existent_code(
@@ -110,7 +110,7 @@ def test_does_not_reset_when_non_existent_code(
 
 @pytest.mark.django_db
 @patch(
-    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_reset_when_expired_code(
@@ -141,7 +141,7 @@ def test_does_not_reset_when_expired_code(
 
 @pytest.mark.django_db
 @patch(
-    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_expired_code_is_deleted(
@@ -167,10 +167,10 @@ def test_expired_code_is_deleted(
 
 @pytest.mark.django_db
 @patch(
-    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-@patch(f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
+@patch(f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
 def test_after_reset_password_the_code_is_deleted(
     revoke_tokens_function_mock: MagicMock,
     allow_request_function_mock: MagicMock,
@@ -200,7 +200,7 @@ def test_after_reset_password_the_code_is_deleted(
 
 @pytest.mark.django_db
 @patch(
-    f"{RESET_PASSWORD_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)

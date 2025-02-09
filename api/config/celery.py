@@ -39,11 +39,9 @@ app.conf.task_routes = {
     "user_app.tasks.task_remove_exp_token": {
         "queue": REMOVE_EXPIRED_CODE_TOKEN_QUEUE_NAME
     },
-    "user_app.tasks.task_send_activation_code_by_email": {"queue": EMAIL_QUEUE_NAME},
-    "user_app.tasks.task_send_change_email_code_by_email": {"queue": EMAIL_QUEUE_NAME},
-    "user_app.tasks.task_send_reset_password_code_by_email": {
-        "queue": EMAIL_QUEUE_NAME
-    },
+    "user_app.tasks.task_send_account_activation_code": {"queue": EMAIL_QUEUE_NAME},
+    "user_app.tasks.task_send_email_change_code": {"queue": EMAIL_QUEUE_NAME},
+    "user_app.tasks.task_send_reset_password_code": {"queue": EMAIL_QUEUE_NAME},
 }
 
 app.autodiscover_tasks()

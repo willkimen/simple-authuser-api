@@ -1,5 +1,5 @@
 """
-Test the send_code_to_activate_account() view, which expects a user's email in a 
+Test the request_account_activation_code() view, which expects a user's email in a 
 POST request and sends a activation code to the user's email address.
 """
 
@@ -11,13 +11,13 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages, validation_error_messages
 from user_app.tests.constants import (
-    ACTIVATE_ACCOUNT_VIEW_MODULE_PATH,
+    ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
     User,
 )
 
 # ========== Objects and constants ============
-url: str = reverse("send_code_to_activate_account")
+url: str = reverse("request_account_activation_code")
 FAKE_USER_DATA = {
     "first_name": "fake_first_name",
     "last_name": "fake_last_name",
@@ -86,7 +86,7 @@ def test_does_not_send_email_when_request_limit_is_reached(client: APIClient):
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_send_email_when_email_field_is_empty(
@@ -118,7 +118,7 @@ def test_does_not_send_email_when_email_field_is_empty(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_send_email_when_email_field_is_null(
@@ -166,7 +166,7 @@ def test_does_not_send_email_when_email_field_is_null(
 )
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_send_email_with_invalid_email_format(
@@ -200,7 +200,7 @@ def test_does_not_send_email_with_invalid_email_format(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_send_email_when_user_does_not_exists(
@@ -230,7 +230,7 @@ def test_does_not_send_email_when_user_does_not_exists(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_send_email_when_user_has_already_activated(
@@ -265,7 +265,7 @@ def test_does_not_send_email_when_user_has_already_activated(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_send_email_successfully(

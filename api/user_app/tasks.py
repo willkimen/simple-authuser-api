@@ -3,9 +3,9 @@ import smtplib
 from celery import shared_task
 from django.core.management import call_command
 from user_app.utils.email_service import (
-    send_activation_code_by_email,
-    send_change_email_code_by_email,
-    send_reset_password_code_by_email,
+    send_account_activation_code,
+    send_email_change_code,
+    send_reset_password_code,
 )
 
 
@@ -28,7 +28,7 @@ def task_remove_exp_token():
 
 
 @shared_task(bind=True, retry_backoff=True, max_retries=5)
-def task_send_activation_code_by_email(self, user_email: str) -> int:
+def task_send_account_activation_code(self, user_email: str) -> int:
     """
     Celery task to send an activation code via email.
 
@@ -37,16 +37,14 @@ def task_send_activation_code_by_email(self, user_email: str) -> int:
     with exponential backoff.
     """
     try:
-        sent_count = send_activation_code_by_email(user_email)
+        sent_count = send_account_activation_code(user_email)
         return sent_count
     except smtplib.SMTPException as e:
         raise self.retry(exc=e)
 
 
 @shared_task(bind=True, retry_backoff=True, max_retries=5)
-def task_send_change_email_code_by_email(
-    self, actual_email: str, new_email: str
-) -> int:
+def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
     """
     Celery task to send a verification code for changing the user's email.
 
@@ -55,14 +53,14 @@ def task_send_change_email_code_by_email(
     with exponential backoff.
     """
     try:
-        sent_count = send_change_email_code_by_email(actual_email, new_email)
+        sent_count = send_email_change_code(actual_email, new_email)
         return sent_count
     except smtplib.SMTPException as e:
         raise self.retry(exc=e)
 
 
 @shared_task(bind=True, retry_backoff=True, max_retries=5)
-def task_send_reset_password_code_by_email(self, user_email: str) -> int:
+def task_send_reset_password_code(self, user_email: str) -> int:
     """
     Celery task to send a password reset verification code via email.
 
@@ -71,7 +69,7 @@ def task_send_reset_password_code_by_email(self, user_email: str) -> int:
     retry up to five times with exponential backoff.
     """
     try:
-        sent_count = send_reset_password_code_by_email(user_email)
+        sent_count = send_reset_password_code(user_email)
         return sent_count
     except smtplib.SMTPException as e:
         raise self.retry(exc=e)

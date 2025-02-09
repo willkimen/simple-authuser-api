@@ -23,7 +23,7 @@ from user_app.serializers import (
     UserResponseSerializer,
     UserUpdateSerializer,
 )
-from user_app.tasks import task_send_activation_code_by_email
+from user_app.tasks import task_send_account_activation_code
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.token_utils import revoke_tokens
 
@@ -58,7 +58,7 @@ def register(request):
         )
 
     # Send the activation email
-    task_send_activation_code_by_email.delay(request_serializer.validated_data["email"])
+    task_send_account_activation_code.delay(request_serializer.validated_data["email"])
 
     # Save the user to the database
     user = request_serializer.save()
@@ -125,7 +125,7 @@ def update(request):
 
 @api_view(["GET"])
 @authentication_classes([JWTAuthentication])
-def user_detail(request):
+def detail(request):
     """
     Returns the data of the authenticated user.
 

@@ -3,13 +3,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from celery.exceptions import Retry
-from user_app.tasks import task_send_change_email_code_by_email
+from user_app.tasks import task_send_email_change_code
 from user_app.tests.constants import (
-    SEND_CHANGE_EMAIL_CODE_BY_EMAIL_FUNCTION_TO_PATCH,
+    SEND_EMAIL_CHANGE_CODE_FUNCTION_TO_PATCH,
     TASKS_MODULE_PATH,
     User,
 )
-from user_app.utils.email_service import send_change_email_code_by_email
+from user_app.utils.email_service import send_email_change_code
 
 NEW_EMAIL = "newemail@email.com"
 ACTUAL_EMAIL = "actualemail@email.com"
@@ -30,37 +30,37 @@ def activated_user():
 
 
 @pytest.mark.django_db
-def test_task_send_change_email_code_by_email_success(activated_user):
+def test_task_send_email_change_code_success(activated_user):
     """
-    Test the successful execution of the task_send_change_email_code_by_email.
+    Test the successful execution of the task_send_email_change_code.
 
     This test verifies that the task successfully sends email and
     returns the correct sent count. The expected value is 1, indicating that
     one email has been sent.
     """
     expected_success_send_email = 1
-    actual_sent_count = send_change_email_code_by_email(activated_user.email, NEW_EMAIL)
+    actual_sent_count = send_email_change_code(activated_user.email, NEW_EMAIL)
     assert expected_success_send_email == actual_sent_count
 
 
 @pytest.mark.django_db
 @patch(
-    f"{TASKS_MODULE_PATH}.{SEND_CHANGE_EMAIL_CODE_BY_EMAIL_FUNCTION_TO_PATCH}",
+    f"{TASKS_MODULE_PATH}.{SEND_EMAIL_CHANGE_CODE_FUNCTION_TO_PATCH}",
     side_effect=SMTPException(),
 )
-@patch.object(task_send_change_email_code_by_email, "retry", side_effect=Retry())
-def test_task_send_change_email_code_by_email_failure(
+@patch.object(task_send_email_change_code, "retry", side_effect=Retry())
+def test_task_send_email_change_code_failure(
     mock_retry: MagicMock, mock_send_change_email_code: MagicMock, activated_user
 ):
     """
-    Test the failure scenario for the task_send_change_email_code_by_email task.
+    Test the failure scenario for the task_send_email_change_code task.
 
     This test simulates an SMTPException being raised when the
-    send_change_email_code_by_email function is called. It then verifies that
+    send_email_change_code function is called. It then verifies that
     the task retries the operation by calling the `retry()` method once.
     Finally, it checks that the retry exception (`Retry`) is raised.
     """
     with pytest.raises(Retry):
-        task_send_change_email_code_by_email(activated_user.email, NEW_EMAIL)
+        task_send_email_change_code(activated_user.email, NEW_EMAIL)
 
     mock_retry.assert_called_once()

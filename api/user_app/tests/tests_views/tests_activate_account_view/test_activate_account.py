@@ -15,7 +15,7 @@ from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages
 from user_app.models import AccountActivationCodeModel
 from user_app.tests.constants import (
-    ACTIVATE_ACCOUNT_VIEW_MODULE_PATH,
+    ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
     User,
 )
@@ -77,7 +77,7 @@ def code_for_deactivated_user(deactivated_user) -> str:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_successful_account_activation(
@@ -117,7 +117,7 @@ def test_successful_account_activation(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_successfully_activated_account_removes_the_code_in_the_database(
@@ -146,7 +146,7 @@ def test_successfully_activated_account_removes_the_code_in_the_database(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_not_activate_account_when_expired_code(
@@ -178,7 +178,7 @@ def test_not_activate_account_when_expired_code(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_expired_code_is_removed_from_the_database(
@@ -205,7 +205,7 @@ def test_expired_code_is_removed_from_the_database(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_not_activate_account_when_code_field_does_not_exists(

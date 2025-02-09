@@ -29,16 +29,16 @@ TOKEN_SECRET_SETTING_TO_PATCH = "settings.TOKEN_SECRET"
 
 # Paths to functions and classes that will be mocked in tests.
 ALLOW_REQUEST_FUNCTION_TO_PATCH = "FivePerMinuteRateLimit.allow_request"
-SEND_CHANGE_EMAIL_CODE_BY_EMAIL_FUNCTION_TO_PATCH = "send_change_email_code_by_email"
-SEND_RESET_PASSWORD_CODE_BY_EMAIL_FUNCTION_TO_PATCH = (
-    "send_reset_password_code_by_email"
+SEND_EMAIL_CHANGE_CODE_FUNCTION_TO_PATCH = "send_email_change_code"
+SEND_RESET_PASSWORD_CODE_FUNCTION_TO_PATCH = (
+    "send_reset_password_code"
 )
 REVOKE_TOKENS_FUNCTION_TO_PATCH = "revoke_tokens"
 GENERATE_RANDOM_CODE_FUNCTION_TO_PATCH = "generate_random_code"
 EMAIL_MULTI_CLASS_TO_PATCH = "EmailMultiAlternatives"
 CREATE_PAYLOAD_FUNCTION_TO_PATCH = "create_payload"
 CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH = "create_pair_token"
-SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH = "send_activation_code_by_email"
+SEND_ACCOUNT_ACTIVATION_CODE_FUNCTION_TO_PATCH = "send_account_activation_code"
 
 # =====================================
 # CONSTANTS FOR PATCHING MODULES
@@ -51,21 +51,21 @@ SEND_ACTIVATION_CODE_BY_EMAIL_FUNCTION_TO_PATCH = "send_activation_code_by_email
 TOKEN_UTILS_MODULE_PATH = importlib.import_module("user_app.utils.token_utils").__name__
 
 # Path to the view responsible for user account activation.
-ACTIVATE_ACCOUNT_VIEW_MODULE_PATH = importlib.import_module(
-    "user_app.views.activate_account_view"
+ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH = importlib.import_module(
+    "user_app.views.activate_account_views"
 ).__name__
 
 # Path to the view responsible for password reset.
-RESET_PASSWORD_VIEW_MODULE_PATH = importlib.import_module(
-    "user_app.views.reset_password_view"
+RESET_PASSWORD_VIEWS_MODULE_PATH = importlib.import_module(
+    "user_app.views.reset_password_views"
 ).__name__
 
 # Path to the CRUD module used in views.
-CRUD_VIEW_MODULE_PATH = importlib.import_module("user_app.views.crud_view").__name__
+CRUD_VIEWS_MODULE_PATH = importlib.import_module("user_app.views.crud_views").__name__
 
 # Path to the view responsible for email change.
-CHANGE_EMAIL_VIEW_MODULE_PATH = importlib.import_module(
-    "user_app.views.change_email_view"
+CHANGE_EMAIL_VIEWS_MODULE_PATH = importlib.import_module(
+    "user_app.views.change_email_views"
 ).__name__
 
 # Path to the email service module, containing email sending functions.

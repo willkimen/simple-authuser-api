@@ -11,7 +11,7 @@ from user_app.constants import response_codes_and_messages
 from user_app.models import ChangeEmailCodeModel
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
-    CHANGE_EMAIL_VIEW_MODULE_PATH,
+    CHANGE_EMAIL_VIEWS_MODULE_PATH,
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
@@ -19,7 +19,7 @@ from user_app.tests.constants import (
 )
 
 # =========== Objects and constants ==============
-url: str = reverse("change_user_email")
+url: str = reverse("change_email")
 NON_EXISTENT_CODE = "non_existent_code"
 OLD_EMAIL = "actual_email@email.com"
 NEW_EMAIL = "new_email@email.com"
@@ -83,7 +83,7 @@ def expired_code(user) -> str:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
@@ -111,7 +111,7 @@ def test_do_not_change_email_if_code_does_not_exist(
 
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
@@ -139,7 +139,7 @@ def test_do_not_change_email_if_code_is_expired(
 
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
@@ -160,7 +160,7 @@ def test_delete_code_if_expired(
 
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
@@ -197,7 +197,7 @@ def test_change_email_successful(
 
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEW_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)

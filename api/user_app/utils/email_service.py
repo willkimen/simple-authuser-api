@@ -17,7 +17,7 @@ from user_app.utils.email_classes import (
 )
 
 
-def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
+def send_email_change_code(actual_email: str, new_email: str) -> int:
     """
     Sends an email with a verification code to change the user's email address.
 
@@ -47,7 +47,7 @@ def send_change_email_code_by_email(actual_email: str, new_email: str) -> int:
     return sent_count
 
 
-def send_activation_code_by_email(user_email: str) -> int:
+def send_account_activation_code(user_email: str) -> int:
     """
     Sends an account activation email to the user with a verification code.
 
@@ -76,7 +76,7 @@ def send_activation_code_by_email(user_email: str) -> int:
     return sent_count
 
 
-def send_reset_password_code_by_email(user_email: str) -> int:
+def send_reset_password_code(user_email: str) -> int:
     """
     Sends a password reset code to the user's email address.
 

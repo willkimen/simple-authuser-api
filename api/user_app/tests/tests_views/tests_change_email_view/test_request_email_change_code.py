@@ -22,7 +22,7 @@ FAKE_USER_DATA = {
     "password": "FAKEpassowrd1234!",
     "is_active": True,
 }
-url: str = reverse("send_code_to_email_change")
+url: str = reverse("request_email_change_code")
 ACTUAL_LOGGED_USER_EMAIL = "loggeduser@email.com"
 EMAIL_ALREADY_EXISTS = "emailalreadyexists@email.com"
 NEW_EMAIL = "newemail@email.com"

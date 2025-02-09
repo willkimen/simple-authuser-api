@@ -21,7 +21,7 @@ from user_app.constants.response_codes_and_messages import (
 )
 from user_app.models import ChangeEmailCodeModel
 from user_app.serializers import EmailSerializer
-from user_app.tasks import task_send_change_email_code_by_email
+from user_app.tasks import task_send_email_change_code
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.token_utils import revoke_tokens
@@ -31,7 +31,7 @@ User = get_user_model()
 
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
-def send_code_to_email_change(request):
+def request_email_change_code(request):
     """
     Sends a verification code to the new email address provided by the
     authenticated user.
@@ -71,7 +71,7 @@ def send_code_to_email_change(request):
         return Response(EMAIL_ALREADY_EXISTS, status=status.HTTP_409_CONFLICT)
 
     # Send code to user email
-    task_send_change_email_code_by_email.delay(request.user.email, new_email)
+    task_send_email_change_code.delay(request.user.email, new_email)
 
     return Response(EMAIL_SEND_TO_USER_SUCCESSFULLY, status=status.HTTP_200_OK)
 
@@ -79,7 +79,7 @@ def send_code_to_email_change(request):
 @api_view(["POST"])
 @throttle_classes([FivePerMinuteRateLimit])
 @authentication_classes([JWTAuthentication])
-def change_user_email(request):
+def change_email(request):
     """
     Confirms the email change by validating the verification code.
 
