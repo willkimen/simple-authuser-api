@@ -8,7 +8,6 @@ from user_app.tests.constants import (
     NOTIFY_CHANGED_EMAIL_FUNCTION_TO_PATCH,
     TASKS_MODULE_PATH,
 )
-from user_app.utils.email_service import notify_changed_email
 
 NEW_EMAIL = "newemail@email.com"
 
@@ -23,7 +22,7 @@ def test_task_notify_changed_email_success():
     one email has been sent.
     """
     expected_success_send_email = 1
-    actual_sent_count = notify_changed_email(NEW_EMAIL)
+    actual_sent_count = task_notify_changed_email(NEW_EMAIL)
     assert expected_success_send_email == actual_sent_count
 
 
