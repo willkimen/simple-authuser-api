@@ -16,7 +16,7 @@ from user_app.constants.response_codes_and_messages import (
 )
 from user_app.models import ResetPasswordCodeModel
 from user_app.serializers import EmailSerializer, UserResetPasswordSerializer
-from user_app.tasks import task_send_reset_password_code
+from user_app.tasks import task_notify_reset_password, task_send_reset_password_code
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.token_utils import revoke_tokens
@@ -111,6 +111,9 @@ def reset_password(request):
 
     # Revoke all user tokens and return new token pair.
     new_token_pair: dict[str, str] = revoke_tokens(user.id)
+
+    # Send email to notify reset password
+    task_notify_reset_password.delay(user.email)
 
     return Response(
         merge_dict(USER_PASSWORD_RESET, new_token_pair), status=status.HTTP_200_OK
