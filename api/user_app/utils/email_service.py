@@ -12,6 +12,7 @@ from user_app.models import (
 )
 from user_app.utils.email_classes import (
     ActivationCodeEmail,
+    ActivationNotificationEmail,
     ChangeCodeEmail,
     ResetPasswordCodeEmail,
 )
@@ -102,5 +103,20 @@ def send_reset_password_code(user_email: str) -> int:
     ResetPasswordCodeModel.objects.create(code=email.code, user_id=email.user_email)
     # Removes all verification codes for a user, except the most recent one.
     ResetPasswordCodeModel.objects.keep_latest_code(email.user_email)
+
+    return sent_count
+
+
+def notify_activated_account(user_email: str) -> int:
+    """
+    Sends a notification email to the user informing them that their account
+    has been activated.
+    """
+    email = ActivationNotificationEmail(user_email=user_email)
+
+    try:
+        sent_count: int = email.send_with_error_handling()
+    except smtplib.SMTPException as e:
+        raise smtplib.SMTPException(str(e))
 
     return sent_count

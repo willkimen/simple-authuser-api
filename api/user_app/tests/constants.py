@@ -30,15 +30,17 @@ TOKEN_SECRET_SETTING_TO_PATCH = "settings.TOKEN_SECRET"
 # Paths to functions and classes that will be mocked in tests.
 ALLOW_REQUEST_FUNCTION_TO_PATCH = "FivePerMinuteRateLimit.allow_request"
 SEND_EMAIL_CHANGE_CODE_FUNCTION_TO_PATCH = "send_email_change_code"
-SEND_RESET_PASSWORD_CODE_FUNCTION_TO_PATCH = (
-    "send_reset_password_code"
-)
+SEND_RESET_PASSWORD_CODE_FUNCTION_TO_PATCH = "send_reset_password_code"
+SEND_ACCOUNT_ACTIVATION_CODE_FUNCTION_TO_PATCH = "send_account_activation_code"
+NOTIFY_ACTIVATED_ACCOUNT_FUNCTION_TO_PATCH = "notify_activated_account"
+NOTIFY_CHANGE_EMAIL_FUNCTION_TO_PATCH = "notify_change_email"
+NOTIFY_RESET_PASSWORD_FUNCTION_TO_PATCH = "notify_reset_password"
 REVOKE_TOKENS_FUNCTION_TO_PATCH = "revoke_tokens"
 GENERATE_RANDOM_CODE_FUNCTION_TO_PATCH = "generate_random_code"
 EMAIL_MULTI_CLASS_TO_PATCH = "EmailMultiAlternatives"
 CREATE_PAYLOAD_FUNCTION_TO_PATCH = "create_payload"
 CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH = "create_pair_token"
-SEND_ACCOUNT_ACTIVATION_CODE_FUNCTION_TO_PATCH = "send_account_activation_code"
+
 
 # =====================================
 # CONSTANTS FOR PATCHING MODULES
