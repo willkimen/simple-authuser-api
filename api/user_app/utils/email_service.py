@@ -14,6 +14,7 @@ from user_app.utils.email_classes import (
     ActivationCodeEmail,
     ActivationNotificationEmail,
     ChangeCodeEmail,
+    ChangeNotificationEmail,
     ResetPasswordCodeEmail,
 )
 
@@ -113,6 +114,21 @@ def notify_activated_account(user_email: str) -> int:
     has been activated.
     """
     email = ActivationNotificationEmail(user_email=user_email)
+
+    try:
+        sent_count: int = email.send_with_error_handling()
+    except smtplib.SMTPException as e:
+        raise smtplib.SMTPException(str(e))
+
+    return sent_count
+
+
+def notify_changed_email(user_email: str) -> int:
+    """
+    Sends a notification email to the user informing them that their email address
+    has been changed.
+    """
+    email = ChangeNotificationEmail(new_email=user_email)
 
     try:
         sent_count: int = email.send_with_error_handling()

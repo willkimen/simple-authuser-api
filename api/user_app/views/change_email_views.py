@@ -21,7 +21,7 @@ from user_app.constants.response_codes_and_messages import (
 )
 from user_app.models import ChangeEmailCodeModel
 from user_app.serializers import EmailSerializer
-from user_app.tasks import task_send_email_change_code
+from user_app.tasks import task_notify_changed_email, task_send_email_change_code
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.token_utils import revoke_tokens
@@ -118,6 +118,9 @@ def change_email(request):
     change_email_code.delete()  # Delete the code as it is no longer useful.
 
     token_pair: dict[str, str] = revoke_tokens(request.user.id)
+
+    # Send email to notify changed email
+    task_notify_changed_email.delay(request.user.email)
 
     return Response(
         merge_dict(USER_EMAIL_CHANGED, token_pair), status=status.HTTP_200_OK
