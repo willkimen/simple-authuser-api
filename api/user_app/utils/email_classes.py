@@ -336,3 +336,36 @@ class PasswordResetNotificationEmail(EmailBase):
         )
 
         self.attach_alternative(self.html_body, "text/html")
+
+
+class DeletedAccountNotificationEmail(EmailBase):
+    """
+    Class that sends a notification email to the user when their account is deleted.
+    """
+
+    def __init__(self, user_email: str, **kwargs):
+        self.user_email = user_email
+        self.subject = "Your Account Has Been Deleted"
+        self.body = dedent(
+            f"""
+            Your account has been successfully deleted.
+
+            {CONTACT_SUPPORT_MESSAGE}
+            """
+        )
+
+        self.html_body = dedent(
+            f"""
+            <p>Your password has been successfully reset.</p>
+            <p>{CONTACT_SUPPORT_MESSAGE}</p>
+            """
+        )
+
+        super().__init__(
+            subject=self.subject,
+            body=self.body,
+            to=[self.user_email],
+            **kwargs,
+        )
+
+        self.attach_alternative(self.html_body, "text/html")

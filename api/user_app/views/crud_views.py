@@ -23,7 +23,10 @@ from user_app.serializers import (
     UserResponseSerializer,
     UserUpdateSerializer,
 )
-from user_app.tasks import task_send_account_activation_code
+from user_app.tasks import (
+    task_notify_deleted_account,
+    task_send_account_activation_code,
+)
 from user_app.utils.data_utils import merge_dict
 from user_app.utils.token_utils import revoke_tokens
 
@@ -157,7 +160,10 @@ def delete(request):
         - The authentication is handled by the JWTAuthentication class,
           which retrieves the user instance from the request (request.user).
     """
+    email = request.user.email
     request.user.delete()
+    task_notify_deleted_account.delay(email)
+
     return Response(USER_DELETED_SUCCESSFULLY, status=status.HTTP_200_OK)
 
 
