@@ -318,7 +318,7 @@ class PasswordResetNotificationEmail(EmailBase):
 
             {LOGIN_MESSAGE}
 
-            {SAFELY_IGNORE_MESSAGE}
+            {CONTACT_SUPPORT_MESSAGE}
             """
         )
 
@@ -327,7 +327,7 @@ class PasswordResetNotificationEmail(EmailBase):
             <p>Your password has been successfully reset.</p>
             <p>You can now <a href="{settings.LOGIN_LINK}">log in</a> using the link below:</p>
             <a href="{settings.LOGIN_LINK}">Login</a>
-            <p>{SAFELY_IGNORE_MESSAGE}</p>
+            <p>{CONTACT_SUPPORT_MESSAGE}</p>
             """
         )
 
