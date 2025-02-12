@@ -19,8 +19,8 @@ CORS_ALLOWED_ORIGINS: list[str] = []
 
 # Redirect links
 # -----------------------------------------------------------------------------
-RESET_LINK = "domain.com/reset/password/"
-CONFIRMATION_LINK = "domain.com/confirmation/email/"
+RESET_PASSWORD_LINK = "domain.com/reset/password/"
+ACTIVATE_ACCOUNT_LINK = "domain.com/confirmation/email/"
 LOGIN_LINK = "domain.com/login/"
 
 

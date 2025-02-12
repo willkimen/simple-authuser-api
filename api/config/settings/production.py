@@ -24,8 +24,8 @@ TOKEN_SECRET = os.environ.get(
 
 # URL configurations
 # -----------------------------------------------------------------------------
-RESET_LINK = os.environ.get("REDIRECT_TO_ACTIVATE_ACCOUNT_PAGE", "")
-CONFIRMATION_LINK = os.environ.get("REDIRECT_TO_RESET_PASSWORD_PAGE", "")
+RESET_PASSWORD_LINK = os.environ.get("REDIRECT_TO_RESET_PASSWORD_PAGE", "")
+ACTIVATE_ACCOUNT_LINK = os.environ.get("REDIRECT_TO_ACTIVATE_ACCOUNT_PAGE", "")
 LOGIN_LINK = os.environ.get("REDIRECT_TO_LOGIN_PAGE", "")
 
 

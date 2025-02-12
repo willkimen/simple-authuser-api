@@ -93,7 +93,7 @@ class ActivationCodeEmail(EmailBase):
 
             To complete your registration, please visit the following link and submit 
             the code:
-            {settings.CONFIRMATION_LINK}
+            {settings.ACTIVATE_ACCOUNT_LINK}
 
             Note: You have 7 days to activate your account. If you do not activate it 
             within this period, your account will be removed.
@@ -110,7 +110,7 @@ class ActivationCodeEmail(EmailBase):
             <h2>{self.code}</h2>
             <p>To complete your registration, please visit the following link and submit
             the code:</p>
-            <a href="{settings.CONFIRMATION_LINK}">Activate Account</a>
+            <a href="{settings.ACTIVATE_ACCOUNT_LINK}">Activate Account</a>
             <p><strong>Note:</strong> You have 7 days to activate your account. If you do
             not activate it within this period, your account will be removed.</p>
             <p>{EXPIRED_MESSAGE}</p>
@@ -270,7 +270,7 @@ class ResetPasswordCodeEmail(EmailBase):
             {self.code}
 
             To reset your password, please visit the following link and submit the code:
-            {settings.RESET_LINK}
+            {settings.RESET_PASSWORD_LINK}
 
             {EXPIRED_MESSAGE}
 
@@ -284,7 +284,7 @@ class ResetPasswordCodeEmail(EmailBase):
             <h2>{self.code}</h2>
             <p>To reset your password, please visit the following link and submit 
             the code:</p>
-            <a href="{settings.RESET_LINK}">Reset Password</a>
+            <a href="{settings.RESET_PASSWORD_LINK}">Reset Password</a>
             <p>{EXPIRED_MESSAGE}</p>
             <p>{SAFELY_IGNORE_MESSAGE}</p>
             """
