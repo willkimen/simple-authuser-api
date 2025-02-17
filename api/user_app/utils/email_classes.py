@@ -356,7 +356,7 @@ class DeletedAccountNotificationEmail(EmailBase):
 
         self.html_body = dedent(
             f"""
-            <p>Your password has been successfully reset.</p>
+            <p>Your account has been successfully deleted.</p>
             <p>{CONTACT_SUPPORT_MESSAGE}</p>
             """
         )
