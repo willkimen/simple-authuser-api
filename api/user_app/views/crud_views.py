@@ -17,6 +17,7 @@ from user_app.constants.response_codes_and_messages import (
     USER_UPDATED_SUCCESSFULLY,
     VALIDATION_ERRORS,
 )
+from user_app.models.user_models import PendingAccounts
 from user_app.serializers import (
     UserChangePasswordSerializer,
     UserRequestSerializer,
@@ -68,6 +69,12 @@ def register(request):
 
     # Serialize the created user data using the response serializer
     response_serializer = UserResponseSerializer(user)
+
+    # Creates a record in the PendingAccounts table for the newly registered user.
+    # This ensures that the system tracks users who haven't activated their accounts
+    # yet, so reminder emails can be sent and the account can be deleted if not
+    # activated in time.
+    PendingAccounts.objects.create(user=user)
 
     return Response(
         merge_dict(USER_REGISTERED_SUCCESSFULLY, {"user": response_serializer.data}),

@@ -22,7 +22,7 @@ CORS_ALLOWED_ORIGINS: list[str] = []
 RESET_PASSWORD_LINK = "domain.com/reset/password/"
 ACTIVATE_ACCOUNT_LINK = "domain.com/confirmation/email/"
 LOGIN_LINK = "domain.com/login/"
-
+REQUEST_NEW_ACTIVATE_ACCOUNT_CODE_LINK = "domain.com/request/new-code-activate-account/"
 
 # Database (Use if you want postgres with docker container.)
 # -----------------------------------------------------------------------------

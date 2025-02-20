@@ -1,0 +1,108 @@
+from datetime import timedelta
+
+import pytest
+import time_machine
+from django.utils import timezone
+from user_app.models import UserProfileModel
+from user_app.models.user_models import PendingAccounts
+from user_app.utils.email_service import notify_second_reminder
+
+# ========== Constants ==================
+USER_DATA = {
+    "first_name": "Fake Name",
+    "last_name": "Fake Last",
+    "email": "fake@email.com",
+    "is_active": False,
+    "password": "FAKEfake123!",
+}
+
+
+# List of email addresses that should receive a reminder today,
+# because their reminder date is today.
+expected_reminder_emails_today = [
+    "fake1@email.com",
+    "fake2@email.com",
+    "fake3@email.com",
+]
+
+
+# ============== Fixtures ==============
+@pytest.fixture
+def create_users_for_reminder():
+    """
+    Fixture that creates multiple users in the database for reminder.
+
+    This fixture:
+        - Creates users who registered **today**, before the cutoff time
+          defined by `DAY_CUTOFF_HOUR`.
+
+    Usage:
+        - This fixture is useful for testing scenarios where users' registration
+          dates affect whether they should receive activation reminders.
+        - Users created before the cutoff hour will have their reminder dates
+          set accordingly.
+
+    Details:
+        - The batch of users (created today before `DAY_CUTOFF_HOUR`) will have
+          their `PendingAccounts` entries created with the corresponding reminder dates.
+
+    Example:
+        - The users registered before `DAY_CUTOFF_HOUR` will be eligible for
+          today's reminders.
+    """
+    before_day_cutoff_hour = timezone.now().replace(
+        hour=(PendingAccounts.DAY_CUTOFF_HOUR - 1), minute=00, second=0, microsecond=0
+    )
+
+    with time_machine.travel(before_day_cutoff_hour):
+        for email in expected_reminder_emails_today:
+            USER_DATA["email"] = email
+            user = UserProfileModel.objects.create_user(**USER_DATA)
+            PendingAccounts.objects.create(user=user)
+
+
+# =============== Tests ================
+@pytest.mark.django_db
+def test_success_send_email(create_users_for_reminder):
+    """
+    Tests the successful sending of the second reminder email to users
+    who have their second reminder scheduled for the test day.
+
+    The test performs the following:
+        1. Creates users whose activation reminders are scheduled
+           for the test day.
+        2. Verifies that the `notify_second_reminder` function is called correctly.
+
+    The `notify_second_reminder` function should return 1 when an email
+    is successfully sent to a user.
+
+    Expected result:
+        - If a user needs to be notified, `expected_send_count` should be 1.
+    """
+
+    second_reminder_day = timezone.now() + timedelta(
+        days=PendingAccounts.SECOND_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR
+    )
+    with time_machine.travel(second_reminder_day):
+        expected_send_count = 1
+        actual_sent_count = notify_second_reminder()
+        assert expected_send_count == actual_sent_count
+
+
+@pytest.mark.django_db
+def test_there_are_not_reminders_to_sent():
+    """
+    Tests the scenario where there are no users to notify, when
+    no reminders are scheduled for the test day.
+
+    This test checks if the `notify_second_reminder` function returns -1
+    when there are no users with reminders scheduled for the current day.
+
+    If no emails are to be sent, the function should return -1.
+
+    Expected result:
+        - If there are no users to notify, `expected_send_count` should be -1.
+    """
+    expected_send_count = -1
+    actual_sent_count = notify_second_reminder()
+    assert expected_send_count == actual_sent_count

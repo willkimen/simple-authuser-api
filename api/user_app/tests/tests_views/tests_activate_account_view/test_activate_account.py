@@ -13,7 +13,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages
-from user_app.models import AccountActivationCodeModel
+from user_app.models import AccountActivationCodeModel, PendingAccounts
 from user_app.tests.constants import (
     ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
@@ -262,3 +262,40 @@ def test_not_activate_account_when_request_limit_is_reached(client: APIClient):
     assert expected_status_code == actual_response.status_code
     assert expected_message in actual_response.data["detail"]
     assert expected_error_code == actual_response.data["code"]
+
+
+@pytest.mark.django_db
+@patch(
+    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    return_value=True,
+)
+def test_successfully_activated_account_removes_pending_account(
+    allow_request_function_mock: MagicMock,
+    client: APIClient,
+    deactivated_user,
+    code_for_deactivated_user: str,
+):
+    """
+    Test if the PendingAccounts instance related to the user is removed
+    after the user successfully activates their account.
+
+    Args:
+        allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
+        deactivated_user (User): An instance of a disabled user.
+        code_for_deactivated_user: Code belonging to a deactivated user.
+        client (APIClient): The API client used to make requests.
+
+    This test ensures that once the user successfully activates their account,
+    their entry in the PendingAccounts table is removed from the database.
+    """
+
+    # Create a pending account entry for the deactivated user
+    PendingAccounts.objects.create(user=deactivated_user)
+
+    # Ensure the PendingAccounts entry exists before activation
+    assert PendingAccounts.objects.filter(user=deactivated_user).exists()
+
+    client.post(url, data={"code": code_for_deactivated_user}, format="json")
+
+    # Verify that the PendingAccounts entry is removed after activation
+    assert not PendingAccounts.objects.filter(user=deactivated_user).exists()

@@ -14,7 +14,7 @@ from user_app.constants.response_codes_and_messages import (
     USER_NOT_FOUND,
     VALIDATION_ERRORS,
 )
-from user_app.models import AccountActivationCodeModel
+from user_app.models import AccountActivationCodeModel, PendingAccounts
 from user_app.serializers import EmailSerializer
 from user_app.tasks import (
     task_notify_activated_account,
@@ -107,5 +107,9 @@ def activate_account(request):
 
     # Send email to notify activated account
     task_notify_activated_account.delay(user.email)
+
+    # Remove the user from the PendingAccounts table after successful activation,
+    # since the account is now active and no longer pending.
+    PendingAccounts.objects.filter(user=user).delete()
 
     return Response(ACTIVATED_USER, status=status.HTTP_200_OK)

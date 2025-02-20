@@ -1,4 +1,5 @@
 import smtplib
+from datetime import datetime
 from textwrap import dedent
 
 from django.conf import settings
@@ -365,6 +366,53 @@ class DeletedAccountNotificationEmail(EmailBase):
             subject=self.subject,
             body=self.body,
             to=[self.user_email],
+            **kwargs,
+        )
+
+        self.attach_alternative(self.html_body, "text/html")
+
+
+class DeactivatedAccountNotificationEmail(EmailBase):
+    """
+    Class that sends a notification email to the user informing them that
+    they have not yet activated their account.
+    """
+
+    def __init__(self, emails: list[str], activation_deadline: datetime, **kwargs):
+        self.emails: list[str] = emails
+        self.activation_deadline = activation_deadline
+        self.subject = "Your Signup Isn’t Complete! Activate Before It’s Too Late"
+        self.body = dedent(
+            f"""
+            Hello,  
+            We noticed that you haven't activated your account yet.  
+            You must activate your account by **{self.activation_deadline.strftime('%Y-%m-%d')}**,  
+            or your account will be permanently deleted.  
+
+            To activate your account, click the link below  
+            and request a new activation code:  
+            {settings.REQUEST_NEW_ACTIVATE_ACCOUNT_CODE_LINK}  
+
+            If you have already activated your account, you can ignore this email.  
+            """
+        )
+        self.html_body = dedent(
+            f"""
+            <p>Hello,</p>
+            <p>We noticed that you haven't activated your account yet.</p>
+            <p>You must activate your account by <strong>{self.activation_deadline.strftime('%Y-%m-%d')}</strong>,  
+            or your account will be permanently deleted.</p>
+            <p>To activate your account, click the link below and request a new code:</p>
+            <p><a href="{settings.REQUEST_NEW_ACTIVATE_ACCOUNT_CODE_LINK}">  
+            Activate Your Account</a></p>
+            <p>If you have already activated your account, you can ignore this email.</p>
+            """
+        )
+
+        super().__init__(
+            subject=self.subject,
+            body=self.body,
+            to=self.emails,
             **kwargs,
         )
 
