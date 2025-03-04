@@ -1,10 +1,17 @@
+import smtplib
 from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 import time_machine
 from django.utils import timezone
 from user_app.models import UserProfileModel
 from user_app.models.user_models import PendingAccounts
+from user_app.tests.constants import (
+    DEACTIVATED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH,
+    EMAIL_SERVICE_MODULE_PATH,
+    SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH,
+)
 from user_app.utils.email_service import notify_first_reminder
 
 # ========== Constants ==================
@@ -106,3 +113,25 @@ def test_there_are_not_reminders_to_sent():
     expected_send_count = -1
     actual_sent_count = notify_first_reminder()
     assert expected_send_count == actual_sent_count
+
+
+@pytest.mark.django_db
+@patch(
+    f"{EMAIL_SERVICE_MODULE_PATH}."
+    f"{DEACTIVATED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH}."
+    f"{SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH}",
+    side_effect=smtplib.SMTPException(),
+)
+def test_failure_send_email(
+    mock_send_with_error_handling: MagicMock, create_users_for_reminder
+):
+    """
+    The purpose of this test is to verify that the function correctly handles email
+    sending failures by raising an appropriate exception.
+    """
+    first_reminder_day = timezone.now() + timedelta(
+        days=PendingAccounts.FIRST_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR
+    )
+    with time_machine.travel(first_reminder_day):
+        with pytest.raises(smtplib.SMTPException):
+            notify_first_reminder()

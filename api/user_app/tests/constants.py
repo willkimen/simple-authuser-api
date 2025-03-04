@@ -26,23 +26,51 @@ TOKEN_SECRET_SETTING_TO_PATCH = "settings.TOKEN_SECRET"
 # =====================================
 # CONSTANTS FOR PATCHING FUNCTIONS AND CLASSES
 # =====================================
-
 # Paths to functions and classes that will be mocked in tests.
+
+# Constant for mocking the method that limits the number of requests
 ALLOW_REQUEST_FUNCTION_TO_PATCH = "FivePerMinuteRateLimit.allow_request"
+
+# Constants for mocking functions that send confirmation codes to users
 SEND_EMAIL_CHANGE_CODE_FUNCTION_TO_PATCH = "send_email_change_code"
 SEND_RESET_PASSWORD_CODE_FUNCTION_TO_PATCH = "send_reset_password_code"
 SEND_ACCOUNT_ACTIVATION_CODE_FUNCTION_TO_PATCH = "send_account_activation_code"
+
+# Constants for mocking functions that notify the user
 NOTIFY_ACTIVATED_ACCOUNT_FUNCTION_TO_PATCH = "notify_activated_account"
 NOTIFY_CHANGED_EMAIL_FUNCTION_TO_PATCH = "notify_changed_email"
 NOTIFY_RESET_PASSWORD_FUNCTION_TO_PATCH = "notify_reset_password"
 NOTIFY_DELETED_ACCOUNT_FUNCTION_TO_PATCH = "notify_deleted_account"
 NOTIFY_FIRST_REMINDER_FUNCTION_TO_PATCH = "notify_first_reminder"
 NOTIFY_SECOND_REMINDER_FUNCTION_TO_PATCH = "notify_second_reminder"
-REVOKE_TOKENS_FUNCTION_TO_PATCH = "revoke_tokens"
+
+# Constant for mocking the utility function that generates a random code
 GENERATE_RANDOM_CODE_FUNCTION_TO_PATCH = "generate_random_code"
+
+# Constant for mocking the class responsible for sending emails
 EMAIL_MULTI_CLASS_TO_PATCH = "EmailMultiAlternatives"
+
+# Constants for mocking functions related to tokens
+REVOKE_TOKENS_FUNCTION_TO_PATCH = "revoke_tokens"
 CREATE_PAYLOAD_FUNCTION_TO_PATCH = "create_payload"
 CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH = "create_pair_token"
+
+# Constants for mocking email notification classes
+ACTIVATION_NOTIFICATION_EMAIL_CLASS_TO_PATCH = "ActivationNotificationEmail"
+CHANGE_NOTIFICATION_EMAIL_CLASS_TO_PATCH = "ChangeNotificationEmail"
+PASSWORD_RESET_NOTIFICATION_EMAIL_CLASS_TO_PATCH = "PasswordResetNotificationEmail"
+DELETED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH = "DeletedAccountNotificationEmail"
+DEACTIVATED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH = (
+    "DeactivatedAccountNotificationEmail"
+)
+
+# Method related to the notification email classes above
+SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH = "send_with_error_handling"
+
+# Constants for mocking classes that manage confirmation codes
+CHANGE_CODE_EMAIL_CLASS_TO_PATCH = "ChangeCodeEmail"
+ACTIVATION_CODE_EMAIL_CLASS_TO_PATCH = "ActivationCodeEmail"
+RESET_PASSWORD_CODE_EMAIL_CLASS_TO_PATCH = "ResetPasswordCodeEmail"
 
 
 # =====================================

@@ -1,5 +1,13 @@
+import smtplib
+from unittest.mock import MagicMock, patch
+
 import pytest
 from user_app.models import ChangeEmailCodeModel
+from user_app.tests.constants import (
+    CHANGE_CODE_EMAIL_CLASS_TO_PATCH,
+    EMAIL_SERVICE_MODULE_PATH,
+    SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH,
+)
 from user_app.utils.email_service import send_email_change_code
 
 # ========== Objects and constants ============
@@ -38,3 +46,19 @@ def test_success_send_email_create_code_in_database(deactivated_user):
     assert (
         ChangeEmailCodeModel.objects.filter(user_id=deactivated_user.email).count() == 1
     )
+
+
+@pytest.mark.django_db
+@patch(
+    f"{EMAIL_SERVICE_MODULE_PATH}."
+    f"{CHANGE_CODE_EMAIL_CLASS_TO_PATCH}."
+    f"{SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH}",
+    side_effect=smtplib.SMTPException(),
+)
+def test_failure_send_email(mock_send_with_error_handling: MagicMock, deactivated_user):
+    """
+    The purpose of this test is to verify that the function correctly handles email
+    sending failures by raising an appropriate exception.
+    """
+    with pytest.raises(smtplib.SMTPException):
+        send_email_change_code(deactivated_user.email, NEW_EMAIL)

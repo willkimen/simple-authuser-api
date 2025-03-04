@@ -1,4 +1,12 @@
+import smtplib
+from unittest.mock import MagicMock, patch
+
 import pytest
+from user_app.tests.constants import (
+    DELETED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH,
+    EMAIL_SERVICE_MODULE_PATH,
+    SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH,
+)
 from user_app.utils.email_service import notify_deleted_account
 
 # ========== Objects and constants ============
@@ -20,3 +28,19 @@ def test_success_send_email():
     expected_send_count = 1
     actual_sent_count = notify_deleted_account(EMAIL)
     assert expected_send_count == actual_sent_count
+
+
+@pytest.mark.django_db
+@patch(
+    f"{EMAIL_SERVICE_MODULE_PATH}."
+    f"{DELETED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH}."
+    f"{SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH}",
+    side_effect=smtplib.SMTPException(),
+)
+def test_failure_send_email(mock_send_with_error_handling: MagicMock):
+    """
+    The purpose of this test is to verify that the function correctly handles email
+    sending failures by raising an appropriate exception.
+    """
+    with pytest.raises(smtplib.SMTPException):
+        notify_deleted_account(EMAIL)
