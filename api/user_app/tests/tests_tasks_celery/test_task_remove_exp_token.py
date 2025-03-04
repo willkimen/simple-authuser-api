@@ -3,22 +3,11 @@ Test file for the asynchronous task `task_remove_exp_token`.
 """
 
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 from django.utils import timezone
 from user_app.models import BlacklistTokenModel, ValidTokenModel
 from user_app.tasks import task_remove_exp_token
-
-
-@pytest.mark.django_db
-@patch("user_app.tasks.call_command")
-def test_task_executes_remove_exp_token_command(mock_call_command):
-    """
-    Ensures the `remove_exp_token` command is called during the task execution.
-    """
-    task_remove_exp_token()
-    mock_call_command.assert_called_once_with("remove_exp_token")
 
 
 @pytest.mark.django_db

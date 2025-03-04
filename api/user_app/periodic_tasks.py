@@ -26,7 +26,7 @@ from user_app.constants.celery_constants import (
 )
 
 
-def create_periodic_task_for_expired_codes_removal(apps, schema_editor):
+def create_periodic_task_for_expired_codes_removal():
     """
     Creates a periodic task that removes expired verification codes from the database.
 
@@ -54,7 +54,7 @@ def create_periodic_task_for_expired_codes_removal(apps, schema_editor):
         )
 
 
-def create_periodic_task_for_expired_tokens_removal(apps, schema_editor):
+def create_periodic_task_for_expired_tokens_removal():
     """
     Creates a periodic task that removes expired tokens from the database.
 
@@ -82,7 +82,7 @@ def create_periodic_task_for_expired_tokens_removal(apps, schema_editor):
         )
 
 
-def create_periodic_task_for_notify_first_reminder(apps, schema_editor):
+def create_periodic_task_for_notify_first_reminder():
     """
     Creates a periodic task to send the first activation reminder.
 
@@ -115,7 +115,7 @@ def create_periodic_task_for_notify_first_reminder(apps, schema_editor):
         )
 
 
-def create_periodic_task_for_notify_second_reminder(apps, schema_editor):
+def create_periodic_task_for_notify_second_reminder():
     """
     Creates a periodic task to send the second activation reminder.
 

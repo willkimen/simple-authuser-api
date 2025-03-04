@@ -10,7 +10,7 @@ from user_app.periodic_tasks import create_periodic_task_for_notify_first_remind
 
 @pytest.mark.django_db
 def test_create_periodic_task_for_notify_first_reminder():
-    create_periodic_task_for_notify_first_reminder(None, None)
+    create_periodic_task_for_notify_first_reminder()
 
     task = PeriodicTask.objects.filter(name=NOTIFY_FIRST_REMINDER_TASK_NAME).first()
     assert task is not None

@@ -10,7 +10,7 @@ from user_app.periodic_tasks import create_periodic_task_for_notify_second_remin
 
 @pytest.mark.django_db
 def test_create_periodic_task_for_notify_second_reminder():
-    create_periodic_task_for_notify_second_reminder(None, None)
+    create_periodic_task_for_notify_second_reminder()
 
     task = PeriodicTask.objects.filter(name=NOTIFY_SECOND_REMINDER_TASK_NAME).first()
     assert task is not None

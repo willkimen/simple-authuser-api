@@ -1,7 +1,14 @@
 import smtplib
 
 from celery import shared_task
-from django.core.management import call_command
+from django.utils import timezone
+from user_app.models import (
+    AccountActivationCodeModel,
+    BlacklistTokenModel,
+    ChangeEmailCodeModel,
+    ResetPasswordCodeModel,
+    ValidTokenModel,
+)
 from user_app.utils.email_service import (
     notify_activated_account,
     notify_changed_email,
@@ -18,19 +25,22 @@ from user_app.utils.email_service import (
 @shared_task
 def task_remove_exp_code():
     """
-    Executes the `remove_exp_code` command to remove expired account verification codes,
-    email change codes, and password reset codes.
+    Remove all codes with an expiration date earlier than the current date.
     """
-    call_command("remove_exp_code")
+    now = timezone.now()
+    AccountActivationCodeModel.objects.filter(expires_at__lt=now).delete()
+    ChangeEmailCodeModel.objects.filter(expires_at__lt=now).delete()
+    ResetPasswordCodeModel.objects.filter(expires_at__lt=now).delete()
 
 
 @shared_task
 def task_remove_exp_token():
     """
-    Executes the `remove_exp_token` command to remove expired validation tokens and
-    tokens in the blacklist.
+    Remove expired validation tokens and expired tokens in the blacklist.
     """
-    call_command("remove_exp_token")
+    now = timezone.now()
+    ValidTokenModel.objects.filter(exp__lt=now).delete()
+    BlacklistTokenModel.objects.filter(exp__lt=now).delete()
 
 
 @shared_task(bind=True, retry_backoff=True, max_retries=5)
