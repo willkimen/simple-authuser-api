@@ -4,8 +4,15 @@ This module tests the creation and persistence in the database of a user profile
 
 import pytest
 from django.db import IntegrityError
-
-from user_app.models import UserProfileModel
+from user_app.models import (
+    AccountActivationCodeModel,
+    BlacklistTokenModel,
+    ChangeEmailCodeModel,
+    PendingAccounts,
+    ResetPasswordCodeModel,
+    UserProfileModel,
+    ValidTokenModel,
+)
 
 # ========== Constants ==================
 EMAIL_UPPERCASE_DOMAIN = "fake_email@DOMAINUPPERCASE.com"
@@ -97,3 +104,36 @@ def test_normalizes_email_domain(user_data):
 
     user_data["email"] = EMAIL_UPPERCASE_DOMAIN
     assert UserProfileModel.objects.create_user(**user_data).email.islower()
+
+
+@pytest.mark.django_db
+def test_user_deletion_cascades_to_related_models(user_data: dict):
+    """
+    Test that deleting a user also deletes all related models through cascading.
+    """
+    user = UserProfileModel.objects.create_user(**user_data)
+
+    ValidTokenModel.objects.create(user=user, jti="fake", exp=1246468468, typ="access")
+    BlacklistTokenModel.objects.create(
+        user=user, jti="fake", exp=1246468468, typ="access"
+    )
+    AccountActivationCodeModel.objects.create(user=user)
+    ChangeEmailCodeModel.objects.create(user=user)
+    ResetPasswordCodeModel.objects.create(user=user)
+    PendingAccounts.objects.create(user=user)
+
+    assert ValidTokenModel.objects.exists()
+    assert BlacklistTokenModel.objects.exists()
+    assert AccountActivationCodeModel.objects.exists()
+    assert ChangeEmailCodeModel.objects.exists()
+    assert ResetPasswordCodeModel.objects.exists()
+    assert PendingAccounts.objects.exists()
+
+    user.delete()
+
+    assert not ValidTokenModel.objects.exists()
+    assert not BlacklistTokenModel.objects.exists()
+    assert not AccountActivationCodeModel.objects.exists()
+    assert not ChangeEmailCodeModel.objects.exists()
+    assert not ResetPasswordCodeModel.objects.exists()
+    assert not PendingAccounts.objects.exists()
