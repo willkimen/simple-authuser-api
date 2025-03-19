@@ -13,7 +13,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages
-from user_app.models import AccountActivationCodeModel, PendingAccounts
+from user_app.models import AccountActivationCodeModel, PendingAccountsModel
 from user_app.tests.constants import (
     ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
@@ -276,7 +276,7 @@ def test_successfully_activated_account_removes_pending_account(
     code_for_deactivated_user: str,
 ):
     """
-    Test if the PendingAccounts instance related to the user is removed
+    Test if the PendingAccountsModel instance related to the user is removed
     after the user successfully activates their account.
 
     Args:
@@ -286,16 +286,16 @@ def test_successfully_activated_account_removes_pending_account(
         client (APIClient): The API client used to make requests.
 
     This test ensures that once the user successfully activates their account,
-    their entry in the PendingAccounts table is removed from the database.
+    their entry in the PendingAccountsModel table is removed from the database.
     """
 
     # Create a pending account entry for the deactivated user
-    PendingAccounts.objects.create(user=deactivated_user)
+    PendingAccountsModel.objects.create(user=deactivated_user)
 
-    # Ensure the PendingAccounts entry exists before activation
-    assert PendingAccounts.objects.filter(user=deactivated_user).exists()
+    # Ensure the PendingAccountsModel entry exists before activation
+    assert PendingAccountsModel.objects.filter(user=deactivated_user).exists()
 
     client.post(url, data={"code": code_for_deactivated_user}, format="json")
 
-    # Verify that the PendingAccounts entry is removed after activation
-    assert not PendingAccounts.objects.filter(user=deactivated_user).exists()
+    # Verify that the PendingAccountsModel entry is removed after activation
+    assert not PendingAccountsModel.objects.filter(user=deactivated_user).exists()

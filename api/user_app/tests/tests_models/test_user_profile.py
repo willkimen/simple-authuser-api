@@ -8,7 +8,7 @@ from user_app.models import (
     AccountActivationCodeModel,
     BlacklistTokenModel,
     ChangeEmailCodeModel,
-    PendingAccounts,
+    PendingAccountsModel,
     ResetPasswordCodeModel,
     UserProfileModel,
     ValidTokenModel,
@@ -120,14 +120,14 @@ def test_user_deletion_cascades_to_related_models(user_data: dict):
     AccountActivationCodeModel.objects.create(user=user)
     ChangeEmailCodeModel.objects.create(user=user)
     ResetPasswordCodeModel.objects.create(user=user)
-    PendingAccounts.objects.create(user=user)
+    PendingAccountsModel.objects.create(user=user)
 
     assert ValidTokenModel.objects.exists()
     assert BlacklistTokenModel.objects.exists()
     assert AccountActivationCodeModel.objects.exists()
     assert ChangeEmailCodeModel.objects.exists()
     assert ResetPasswordCodeModel.objects.exists()
-    assert PendingAccounts.objects.exists()
+    assert PendingAccountsModel.objects.exists()
 
     user.delete()
 
@@ -136,4 +136,4 @@ def test_user_deletion_cascades_to_related_models(user_data: dict):
     assert not AccountActivationCodeModel.objects.exists()
     assert not ChangeEmailCodeModel.objects.exists()
     assert not ResetPasswordCodeModel.objects.exists()
-    assert not PendingAccounts.objects.exists()
+    assert not PendingAccountsModel.objects.exists()

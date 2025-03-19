@@ -1,8 +1,6 @@
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db import models
 from django.utils.timezone import now
 
 
@@ -70,8 +68,9 @@ class UserProfileModel(AbstractUser):
         USERNAME_FIELD (str): Specifies that 'email' should be used as the unique
                               identifier for authentication.
 
-        REQUIRED_FIELDS (list[str]): List of fields that are required when creating a superuser.
-                                     This list is empty as 'email' is used for authentication.
+        REQUIRED_FIELDS (list[str]): List of fields that are required when
+                                     creating a superuser. This list is empty as 'email'
+                                     is used for authentication.
 
         objects (UserProfileManager): Specifies a custom manager for this model to
                                       handle user-related queries.
@@ -177,7 +176,7 @@ class PendingAccountsManager(models.Manager):
         )
 
 
-class PendingAccounts(models.Model):
+class PendingAccountsModel(models.Model):
     """
     Model that stores data about users who have not yet activated their accounts.
 
@@ -190,44 +189,35 @@ class PendingAccounts(models.Model):
     Fields:
         user (ForeignKey): A reference to the user who has not activated
                            their account.
-        first_reminder_at (DateTimeField): The date and time of the first reminder email.
+        first_reminder_at (DateTimeField): The date and time of the first
+                                           reminder email.
         second_reminder_at (DateTimeField): The date and time of the second
                                             reminder email.
         activation_deadline (DateTimeField): The final deadline for account activation.
 
-
     Constants:
-        DAY_CUTOFF_HOUR:
+        CUTOFF_HOUR:
             - Defines the hour that determines how the system calculates the first and
               second reminder dates.
             - When a user registers, their `date_joined` timestamp is recorded.
-            - If the user registers **before** this hour, the current day is considered
+            - If the user registers before this hour, the current day is considered
               as "Day 1" of their pending activation period.
-            - If the user registers **at or after** this hour, "Day 1" starts on the
+            - If the user registers at or after this hour, "Day 1" starts on the
               next day.
 
-        FIRST_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR:
-            - Determines the number of days after registration when the first reminder
-              email is sent.
-            - Applies to users who registered **before** `DAY_CUTOFF_HOUR`.
+        REMINDER_DAYS:
+            - A dictionary that defines how many days after registration the reminders
+              are sent, depending on whether the user registered before or after
+              `CUTOFF_HOUR`.
 
-        SECOND_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR:
-            - Determines the number of days after registration when the second reminder
-              email is sent.
-            - Applies to users who registered **before** `DAY_CUTOFF_HOUR`.
+            - Example:
+                REMINDER_DAYS = {
+                    "before_cutoff":{"first_day": 1,"second_day": 4},
+                    "after_cutoff":{"first_day": 2,"second_day": 5},
+                }
 
-        FIRST_REMINDER_DAYS_AFTER_DAY_CUTOFF_HOUR:
-            - Determines the number of days after registration when the first reminder
-              email is sent.
-            - Applies to users who registered **at or after** `DAY_CUTOFF_HOUR`.
-            - The additional delay occurs because "Day 1" starts on the next day.
-
-        SECOND_REMINDER_DAYS_AFTER_DAY_CUTOFF_HOUR:
-            - Determines the number of days after registration when the second reminder
-              email is sent.
-            - Applies to users who registered **at or after** `DAY_CUTOFF_HOUR`.
-            - The additional delay occurs because "Day 1" starts on the next day.
-
+            - "before_cutoff" applies when registration is before `CUTOFF_HOUR`.
+            - "after_cutoff" applies when registration is at or after `CUTOFF_HOUR`.
 
     Usage:
         - This model is used to keep track of users who haven't activated their
@@ -238,11 +228,11 @@ class PendingAccounts(models.Model):
           their data will be permanently removed.
     """
 
-    DAY_CUTOFF_HOUR = 21
-    FIRST_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR = 1
-    SECOND_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR = 4
-    FIRST_REMINDER_DAYS_AFTER_DAY_CUTOFF_HOUR = 2
-    SECOND_REMINDER_DAYS_AFTER_DAY_CUTOFF_HOUR = 5
+    CUTOFF_HOUR = 18
+    REMINDER_DAYS = {
+        "before_cutoff": {"first_day": 1, "second_day": 4},
+        "after_cutoff": {"first_day": 2, "second_day": 5},
+    }
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -269,57 +259,58 @@ class PendingAccounts(models.Model):
             - The `first_reminder_at` and `second_reminder_at` dates are calculated
               based on when the user registered (`date_joined`).
 
-            - If the user registered **on or after** the time defined in `DAY_CUTOFF_HOUR`:
+            - If the user registered on or after the time defined in `CUTOFF_HOUR`:
 
                 - The first reminder will be scheduled for
-                  `FIRST_REMINDER_DAYS_AFTER_DAY_CUTOFF_HOUR` days after registration.
+                  `REMINDER_DAYS["after_cutoff"]["first_day"]`
+                  days after registration.
 
                 - The second reminder will be scheduled for
-                  `SECOND_REMINDER_DAYS_AFTER_DAY_CUTOFF_HOUR` days after registration.
+                  `REMINDER_DAYS["after_cutoff"]["second_day"]`
+                  days after registration.
 
                 - This happens because, in this case, "Day 1" of the activation period
-                  starts the day **after** registration.
+                  starts the day after registration.
 
-            - If the user registered **before** `DAY_CUTOFF_HOUR`:
+            - If the user registered before `CUTOFF_HOUR`:
 
                 - The first reminder will be scheduled for
-                  `FIRST_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR` days after registration.
+                  `REMINDER_DAYS["before_cutoff"]["first_day"]`
+                  days after registration.
 
                 - The second reminder will be scheduled for
-                  `SECOND_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR` days after registration.
+                  `REMINDER_DAYS["before_cutoff"]["second_day"]`
+                  days after registration.
 
-                - This happens because, in this case, the **registration day itself**
+                - This happens because, in this case, the registration day itself
                   is considered "Day 1" of the activation period.
 
             - The activation deadline (`activation_deadline`) is always set to the end
               of the day (23:59) when the second reminder is sent.
 
         Usage:
-            - When persisting this model, the developer **does not need** to manually
+            - When persisting this model, the developer does not need* to manually
               set the reminder dates or the activation deadline.
-            - Only the user instance needs to be provided:
+            - But only the user instance needs to be provided:
                 ```
-                PendingAccounts.objects.create(user=user_instance)
+                PendingAccountsModel.objects.create(user=user_instance)
                 ```
                 or
                 ```
-                PendingAccounts.objects.create(user_id=user_instance.id)
+                PendingAccountsModel.objects.create(user_id=user_instance.id)
                 ```
         """
 
-        if self.user.date_joined.hour >= self.DAY_CUTOFF_HOUR:
-            first_reminder_days = self.FIRST_REMINDER_DAYS_AFTER_DAY_CUTOFF_HOUR
-            second_reminder_days = self.SECOND_REMINDER_DAYS_AFTER_DAY_CUTOFF_HOUR
+        if self.user.date_joined.hour >= self.CUTOFF_HOUR:
+            first_day = self.REMINDER_DAYS["after_cutoff"]["first_day"]
+            second_day = self.REMINDER_DAYS["after_cutoff"]["second_day"]
         else:
-            first_reminder_days = self.FIRST_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR
-            second_reminder_days = self.SECOND_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR
+            first_day = self.REMINDER_DAYS["before_cutoff"]["first_day"]
+            second_day = self.REMINDER_DAYS["before_cutoff"]["second_day"]
 
-        self.first_reminder_at = self.user.date_joined + timedelta(
-            days=first_reminder_days
-        )
-        self.second_reminder_at = self.user.date_joined + timedelta(
-            days=second_reminder_days
-        )
+        self.first_reminder_at = self.user.date_joined + timedelta(days=first_day)
+        self.second_reminder_at = self.user.date_joined + timedelta(days=second_day)
+
         self.activation_deadline = self.second_reminder_at.replace(
             hour=23, minute=59, second=0, microsecond=0
         )

@@ -9,7 +9,7 @@ from user_app.constants.prefixes import (
 from user_app.models import (
     AccountActivationCodeModel,
     ChangeEmailCodeModel,
-    PendingAccounts,
+    PendingAccountsModel,
     ResetPasswordCodeModel,
 )
 from user_app.utils.email_classes import (
@@ -181,12 +181,12 @@ def notify_first_reminder() -> int:
     If there are no users to notify, returns -1.
     """
     emails_for_reminder_today: list[str] = (
-        PendingAccounts.objects.get_first_reminder_emails_today()
+        PendingAccountsModel.objects.get_first_reminder_emails_today()
     )
 
     if emails_for_reminder_today:
         activation_deadline: datetime = (
-            PendingAccounts.objects.get_first_reminder_deadline_today()
+            PendingAccountsModel.objects.get_first_reminder_deadline_today()
         )
 
         email = DeactivatedAccountNotificationEmail(
@@ -211,12 +211,12 @@ def notify_second_reminder() -> int:
     If there are no users to notify, returns -1.
     """
     emails_for_reminder_today: list[str] = (
-        PendingAccounts.objects.get_second_reminder_emails_today()
+        PendingAccountsModel.objects.get_second_reminder_emails_today()
     )
 
     if emails_for_reminder_today:
         activation_deadline: datetime = (
-            PendingAccounts.objects.get_second_reminder_deadline_today()
+            PendingAccountsModel.objects.get_second_reminder_deadline_today()
         )
 
         email = DeactivatedAccountNotificationEmail(

@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages, validation_error_messages
-from user_app.models import PendingAccounts
+from user_app.models import PendingAccountsModel
 from user_app.tests.constants import User
 
 # ============== Objects and constants ==============
@@ -521,7 +521,7 @@ def test_does_not_create_user_with_too_long_last_name(
 @pytest.mark.django_db
 def test_creates_pending_account_entry(client: APIClient, user_data: dict[str, str]):
     """
-    Tests if a PendingAccounts entry is created after a new user registers.
+    Tests if a PendingAccountsModel entry is created after a new user registers.
 
     Args:
         client (APIClient): API client to make requests.
@@ -534,5 +534,5 @@ def test_creates_pending_account_entry(client: APIClient, user_data: dict[str, s
     # Get the created user from the database
     expected_user = User.objects.get(email=user_data["email"])
 
-    # Verify that a PendingAccounts entry was created for the user
-    assert PendingAccounts.objects.filter(user=expected_user).exists()
+    # Verify that a PendingAccountsModel entry was created for the user
+    assert PendingAccountsModel.objects.filter(user=expected_user).exists()

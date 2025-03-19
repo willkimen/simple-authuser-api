@@ -6,7 +6,7 @@ import pytest
 import time_machine
 from django.utils import timezone
 from user_app.models import UserProfileModel
-from user_app.models.user_models import PendingAccounts
+from user_app.models.user_models import PendingAccountsModel
 from user_app.tests.constants import (
     DEACTIVATED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH,
     EMAIL_SERVICE_MODULE_PATH,
@@ -24,13 +24,21 @@ USER_DATA = {
 }
 
 
-# List of email addresses that should receive a reminder today,
-# because their first reminder date is today.
-expected_reminder_emails_today = [
+EMAILS_INACTIVE_USERS = [
     "fake1@email.com",
     "fake2@email.com",
     "fake3@email.com",
 ]
+
+# Sets today's date and a time before the cutoff hour.
+TODAY_BEFORE_CUTOFF = timezone.now().replace(
+    hour=(PendingAccountsModel.CUTOFF_HOUR - 1), minute=00, second=0, microsecond=0
+)
+
+# Set the date of the first reminder
+FIRST_REMINDER_DAY = timezone.now() + timedelta(
+    days=PendingAccountsModel.REMINDER_DAYS["before_cutoff"]["first_day"]
+)
 
 
 # ============== Fixtures ==============
@@ -41,7 +49,7 @@ def create_users_for_reminder():
 
     This fixture:
         - Creates users who registered **today**, before the cutoff time
-          defined by `DAY_CUTOFF_HOUR`.
+          defined by `CUTOFF_HOUR`.
 
     Usage:
         - This fixture is useful for testing scenarios where users' registration
@@ -50,22 +58,19 @@ def create_users_for_reminder():
           set accordingly.
 
     Details:
-        - The first batch of users (created today before `DAY_CUTOFF_HOUR`) will have
-          their `PendingAccounts` entries created with the corresponding reminder dates.
+        - The first batch of users (created today before `CUTOFF_HOUR`) will have
+          their `PendingAccountsModel` entries created with the corresponding
+          reminder dates.
 
     Example:
-        - The users registered before `DAY_CUTOFF_HOUR` will be eligible for
+        - The users registered before `CUTOFF_HOUR` will be eligible for
           today's reminders.
     """
-    before_day_cutoff_hour = timezone.now().replace(
-        hour=(PendingAccounts.DAY_CUTOFF_HOUR - 1), minute=00, second=0, microsecond=0
-    )
-
-    with time_machine.travel(before_day_cutoff_hour):
-        for email in expected_reminder_emails_today:
+    with time_machine.travel(TODAY_BEFORE_CUTOFF):
+        for email in EMAILS_INACTIVE_USERS:
             USER_DATA["email"] = email
             user = UserProfileModel.objects.create_user(**USER_DATA)
-            PendingAccounts.objects.create(user=user)
+            PendingAccountsModel.objects.create(user=user)
 
 
 # =============== Tests ================
@@ -86,11 +91,7 @@ def test_success_send_email(create_users_for_reminder):
     Expected result:
         - If a user needs to be notified, `expected_send_count` should be 1.
     """
-
-    first_reminder_day = timezone.now() + timedelta(
-        days=PendingAccounts.FIRST_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR
-    )
-    with time_machine.travel(first_reminder_day):
+    with time_machine.travel(FIRST_REMINDER_DAY):
         expected_send_count = 1
         actual_sent_count = notify_first_reminder()
         assert expected_send_count == actual_sent_count
@@ -129,9 +130,6 @@ def test_failure_send_email(
     The purpose of this test is to verify that the function correctly handles email
     sending failures by raising an appropriate exception.
     """
-    first_reminder_day = timezone.now() + timedelta(
-        days=PendingAccounts.FIRST_REMINDER_DAYS_BEFORE_DAY_CUTOFF_HOUR
-    )
-    with time_machine.travel(first_reminder_day):
+    with time_machine.travel(FIRST_REMINDER_DAY):
         with pytest.raises(smtplib.SMTPException):
             notify_first_reminder()
