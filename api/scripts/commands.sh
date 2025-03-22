@@ -10,13 +10,11 @@
 # 1. Waits for PostgreSQL to be available before proceeding.
 # 2. Applies Django database migrations.
 # 3. Creates a flag file to indicate that migrations have been executed.
-# 4. Starts Django in production mode using Gunicorn or in development mode
-#    using the built-in Django server, based on the API_ENV environment variable.
+# 4. Starts Django in using Gunicorn.
 #
 # Environment Variables:
 # - POSTGRES_HOST: Hostname of the PostgreSQL database.
 # - POSTGRES_PORT: Port of the PostgreSQL database.
-# - API_ENV: Determines whether to run the app in "production" or "development".
 # -----------------------------------------------------------------------------
 set -e
 
@@ -40,15 +38,6 @@ touch /home/djuser/my_environment
 echo "MIGRATED=True" >> /home/djuser/my_environment
 echo "MIGRATED environment variable set to True"
 
-if [ "$API_ENV" = "production" ]; then
-    echo "Starting Gunicorn for production..."
-    gunicorn --bind 0.0.0.0:8000 config.wsgi
-elif [ "$API_ENV" = "development" ]; then
-    echo "Starting Django development server..."
-    python manage.py runserver 0.0.0.0:8000
-else
-    echo "Unknown environment: $API_ENV"
-    echo "Please set API_ENV to either 'development' or 'production'."
-    exit 1
-fi
+echo "Starting Gunicorn..."
+gunicorn --bind 0.0.0.0:8000 config.wsgi
 

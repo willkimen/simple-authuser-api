@@ -18,11 +18,11 @@ from django.core.management.base import BaseCommand
 
 DOCKER_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "docker"
 
-up_command = "docker compose -f docker-compose.dev.yml up"
-up_build_command = "docker compose -f docker-compose.dev.yml up --build"
-up_recreate_command = "docker compose -f docker-compose.dev.yml up --force-recreate"
+up_command = "docker compose docker-compose.yml up"
+up_build_command = "docker compose docker-compose.yml up --build"
+up_recreate_command = "docker compose docker-compose.yml up --force-recreate"
 up_build_recreate_command = (
-    "docker compose -f docker-compose.dev.yml up --build --force-recreate"
+    "docker compose docker-compose.yml up --build --force-recreate"
 )
 
 
