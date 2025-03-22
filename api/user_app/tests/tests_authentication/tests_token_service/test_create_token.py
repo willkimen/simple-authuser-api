@@ -10,7 +10,7 @@ from user_app.tests.constants import (
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
 )
-from user_app.utils.token_utils import create_token
+from user_app.authentication.token_service import create_token
 
 
 # ============= Tests ======================

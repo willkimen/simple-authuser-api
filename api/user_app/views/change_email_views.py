@@ -9,7 +9,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, throttle_classes
 from rest_framework.response import Response
-from user_app.authentication_classes import JWTAuthentication
+from user_app.authentication.authentication_classes import JWTAuthentication
 from user_app.constants.response_codes_and_messages import (
     CODE_EXPIRED,
     CODE_NOT_FOUND,
@@ -23,8 +23,8 @@ from user_app.models import ChangeEmailCodeModel
 from user_app.serializers import EmailSerializer
 from user_app.tasks import task_notify_changed_email, task_send_email_change_code
 from user_app.throttlings import FivePerMinuteRateLimit
-from user_app.utils.data_utils import merge_dict
-from user_app.utils.token_utils import revoke_tokens
+from user_app.utils import merge_dict
+from user_app.authentication.token_service import revoke_tokens
 
 User = get_user_model()
 

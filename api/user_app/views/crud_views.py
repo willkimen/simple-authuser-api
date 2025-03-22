@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import check_password
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
-from user_app.authentication_classes import JWTAuthentication
+from user_app.authentication.authentication_classes import JWTAuthentication
 from user_app.constants.response_codes_and_messages import (
     PASSWORD_DO_NOT_MATCH,
     USER_DELETED_SUCCESSFULLY,
@@ -28,8 +28,8 @@ from user_app.tasks import (
     task_notify_deleted_account,
     task_send_account_activation_code,
 )
-from user_app.utils.data_utils import merge_dict
-from user_app.utils.token_utils import revoke_tokens
+from user_app.utils import merge_dict
+from user_app.authentication.token_service import revoke_tokens
 
 User = get_user_model()
 

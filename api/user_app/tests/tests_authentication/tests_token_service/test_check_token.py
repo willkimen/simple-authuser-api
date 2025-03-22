@@ -13,7 +13,7 @@ import jwt
 import pytest
 from django.utils import timezone
 from user_app.constants import token_exception_messages
-from user_app.exceptions import (
+from user_app.authentication.token_exceptions import (
     BlacklistTokenException,
     DecodeException,
     ExpiredSignatureException,
@@ -26,7 +26,7 @@ from user_app.tests.constants import (
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
 )
-from user_app.utils.token_utils import check_token
+from user_app.authentication.token_service import check_token
 
 # ========== Objects and constants ============
 INVALID_SECRET = "invalid_secret"

@@ -81,7 +81,7 @@ RESET_PASSWORD_CODE_EMAIL_CLASS_TO_PATCH = "ResetPasswordCodeEmail"
 # They use `importlib.import_module` to load the module names.
 
 # Path to the token-related utility module.
-TOKEN_UTILS_MODULE_PATH = importlib.import_module("user_app.utils.token_utils").__name__
+TOKEN_UTILS_MODULE_PATH = importlib.import_module("user_app.authentication.token_service").__name__
 
 # Path to the view responsible for user account activation.
 ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH = importlib.import_module(
@@ -103,7 +103,7 @@ CHANGE_EMAIL_VIEWS_MODULE_PATH = importlib.import_module(
 
 # Path to the email service module, containing email sending functions.
 EMAIL_SERVICE_MODULE_PATH = importlib.import_module(
-    "user_app.utils.email_service"
+    "user_app.email.email_service"
 ).__name__
 
 # Path to the tasks module, containing celery tasks functions.

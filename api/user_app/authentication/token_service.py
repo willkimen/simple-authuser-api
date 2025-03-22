@@ -6,8 +6,7 @@ import jwt
 from django.conf import settings
 from django.db.models.query import QuerySet
 from django.utils import timezone
-
-from user_app.exceptions import (
+from user_app.authentication.token_exceptions import (
     BlacklistTokenException,
     DecodeException,
     ExpiredSignatureException,

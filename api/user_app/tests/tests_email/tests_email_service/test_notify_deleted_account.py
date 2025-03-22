@@ -7,7 +7,7 @@ from user_app.tests.constants import (
     EMAIL_SERVICE_MODULE_PATH,
     SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH,
 )
-from user_app.utils.email_service import notify_deleted_account
+from user_app.email.email_service import notify_deleted_account
 
 # ========== Objects and constants ============
 EMAIL = "fakeemail@email.com"

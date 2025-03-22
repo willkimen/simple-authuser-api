@@ -9,7 +9,7 @@ from user_app.tests.constants import (
     TASKS_MODULE_PATH,
     User,
 )
-from user_app.utils.email_service import send_email_change_code
+from user_app.email.email_service import send_email_change_code
 
 NEW_EMAIL = "newemail@email.com"
 ACTUAL_EMAIL = "actualemail@email.com"

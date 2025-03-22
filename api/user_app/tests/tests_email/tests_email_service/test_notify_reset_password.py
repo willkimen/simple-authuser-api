@@ -3,12 +3,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from user_app.tests.constants import (
-    ACTIVATION_NOTIFICATION_EMAIL_CLASS_TO_PATCH,
     EMAIL_SERVICE_MODULE_PATH,
+    PASSWORD_RESET_NOTIFICATION_EMAIL_CLASS_TO_PATCH,
     SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH,
 )
-from user_app.utils.email_service import notify_activated_account
+from user_app.email.email_service import notify_reset_password
 
+# ========== Objects and constants ============
 EMAIL = "fakeemail@email.com"
 
 
@@ -25,14 +26,14 @@ def test_success_send_email():
       there was an issue with sending the email.
     """
     expected_send_count = 1
-    actual_sent_count = notify_activated_account(EMAIL)
+    actual_sent_count = notify_reset_password(EMAIL)
     assert expected_send_count == actual_sent_count
 
 
 @pytest.mark.django_db
 @patch(
     f"{EMAIL_SERVICE_MODULE_PATH}."
-    f"{ACTIVATION_NOTIFICATION_EMAIL_CLASS_TO_PATCH}."
+    f"{PASSWORD_RESET_NOTIFICATION_EMAIL_CLASS_TO_PATCH}."
     f"{SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH}",
     side_effect=smtplib.SMTPException(),
 )
@@ -42,4 +43,4 @@ def test_failure_send_email(mock_send_with_error_handling: MagicMock):
     sending failures by raising an appropriate exception.
     """
     with pytest.raises(smtplib.SMTPException):
-        notify_activated_account(EMAIL)
+        notify_reset_password(EMAIL)

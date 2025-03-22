@@ -6,8 +6,8 @@ from user_app.constants import (
     authentication_error_messages,
     response_codes_and_messages,
 )
-from user_app.exceptions import TokenException
-from user_app.utils.token_utils import check_token
+from user_app.authentication.token_exceptions import TokenException
+from user_app.authentication.token_service import check_token
 
 User = get_user_model()
 

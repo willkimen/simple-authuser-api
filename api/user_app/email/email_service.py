@@ -12,7 +12,7 @@ from user_app.models import (
     PendingAccountsModel,
     ResetPasswordCodeModel,
 )
-from user_app.utils.email_classes import (
+from user_app.email.email_classes import (
     ActivationCodeEmail,
     ActivationNotificationEmail,
     ChangeCodeEmail,

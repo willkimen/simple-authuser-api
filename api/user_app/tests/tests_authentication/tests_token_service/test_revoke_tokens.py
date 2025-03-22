@@ -10,7 +10,7 @@ from user_app.tests.constants import (
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
 )
-from user_app.utils.token_utils import revoke_tokens
+from user_app.authentication.token_service import revoke_tokens
 
 
 # ========== Objects, auxiliary functions and constants ============

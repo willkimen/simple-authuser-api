@@ -21,7 +21,7 @@ from user_app.tasks import (
     task_send_account_activation_code,
 )
 from user_app.throttlings import FivePerMinuteRateLimit
-from user_app.utils.data_utils import merge_dict
+from user_app.utils import merge_dict
 
 User = get_user_model()
 

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from user_app.constants import prefixes
-from user_app.utils.random_code import generate_random_code
+from user_app.utils import generate_random_code
 
 
 class VerificationCodeManager(models.Manager):

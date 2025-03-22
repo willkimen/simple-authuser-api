@@ -2,14 +2,7 @@ import smtplib
 
 from celery import shared_task
 from django.utils import timezone
-from user_app.models import (
-    AccountActivationCodeModel,
-    BlacklistTokenModel,
-    ChangeEmailCodeModel,
-    ResetPasswordCodeModel,
-    ValidTokenModel,
-)
-from user_app.utils.email_service import (
+from user_app.email.email_service import (
     notify_activated_account,
     notify_changed_email,
     notify_deleted_account,
@@ -19,6 +12,13 @@ from user_app.utils.email_service import (
     send_account_activation_code,
     send_email_change_code,
     send_reset_password_code,
+)
+from user_app.models import (
+    AccountActivationCodeModel,
+    BlacklistTokenModel,
+    ChangeEmailCodeModel,
+    ResetPasswordCodeModel,
+    ValidTokenModel,
 )
 
 

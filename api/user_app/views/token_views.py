@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
-from user_app.authentication_classes import JWTAuthentication
+from user_app.authentication.authentication_classes import JWTAuthentication
 from user_app.constants.response_codes_and_messages import (
     IS_NOT_ACCESS_OR_REFRESH_TOKEN,
     IS_NOT_REFRESH_TOKEN,
@@ -18,10 +18,10 @@ from user_app.constants.response_codes_and_messages import (
     USER_NOT_FOUND,
     USER_TOKEN_MISMATCH,
 )
-from user_app.exceptions import BlacklistTokenException, TokenException
+from user_app.authentication.token_exceptions import BlacklistTokenException, TokenException
 from user_app.models import BlacklistTokenModel
-from user_app.utils.data_utils import merge_dict
-from user_app.utils.token_utils import check_token, create_pair_token, create_token
+from user_app.utils import merge_dict
+from user_app.authentication.token_service import check_token, create_pair_token, create_token
 
 User = get_user_model()
 

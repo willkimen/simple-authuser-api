@@ -3,18 +3,18 @@ from django.urls import path
 from .views import (
     activate_account,
     blacklist_token,
-    change_password,
     change_email,
+    change_password,
     delete,
+    detail,
     obtain_token_pair,
     refresh_token_access,
     register,
-    reset_password,
     request_account_activation_code,
     request_email_change_code,
     request_reset_password_code,
+    reset_password,
     update,
-    detail,
     verify_token,
 )
 

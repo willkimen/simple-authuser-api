@@ -24,7 +24,7 @@ from django.test import RequestFactory
 from django.utils import timezone
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
-from user_app.authentication_classes import JWTAuthentication
+from user_app.authentication.authentication_classes import JWTAuthentication
 from user_app.constants import (
     authentication_error_messages,
     response_codes_and_messages,
