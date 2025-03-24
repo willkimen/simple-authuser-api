@@ -21,6 +21,7 @@ from django_celery_beat.models import CrontabSchedule, PeriodicTask
 from user_app.constants.celery_constants import (
     NOTIFY_FIRST_REMINDER_TASK_NAME,
     NOTIFY_SECOND_REMINDER_TASK_NAME,
+    REMOVE_EXPIRED_ACCOUNT_TASK_NAME,
     REMOVE_EXPIRED_CODE_TASK_NAME,
     REMOVE_EXPIRED_TOKENS_TASK_NAME,
 )
@@ -144,5 +145,26 @@ def create_periodic_task_for_notify_second_reminder():
             crontab=schedule,
             name=NOTIFY_SECOND_REMINDER_TASK_NAME,
             task="user_app.tasks.task_notify_second_reminder",
+            args=json.dumps([]),
+        )
+
+
+def create_periodic_task_for_delete_expired_accounts():
+    """
+    Creates a periodic task that deletes expired user accounts daily at 00:00.
+    """
+    schedule, _ = CrontabSchedule.objects.get_or_create(
+        minute="0",
+        hour="0",
+        day_of_week="*",
+        day_of_month="*",
+        month_of_year="*",
+    )
+
+    if not PeriodicTask.objects.filter(name=REMOVE_EXPIRED_ACCOUNT_TASK_NAME).exists():
+        PeriodicTask.objects.create(
+            crontab=schedule,
+            name=REMOVE_EXPIRED_ACCOUNT_TASK_NAME,
+            task="user_app.tasks.task_delete_expired_accounts",
             args=json.dumps([]),
         )

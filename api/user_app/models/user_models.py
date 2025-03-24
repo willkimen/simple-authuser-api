@@ -1,6 +1,8 @@
+from datetime import date, timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db import models, transaction
 from django.utils.timezone import now
 
 
@@ -175,6 +177,38 @@ class PendingAccountsManager(models.Manager):
             .first()
         )
 
+    def delete_expired_accounts(self, target_date: date):
+        """
+        Deletes users whose account activation deadline matches the given date.
+        Saves their emails into the notification table before deletion.
+
+        Args:
+            target_date (date): The target date to be used to search for users
+                                who have expired the time limit to activate their
+                                account.
+        """
+        # Filters PendingAccountsModel with deadline equal to target_date
+        pending_accounts = self.select_related("user").filter(
+            activation_deadline__date=target_date
+        )
+
+        with transaction.atomic():
+            emails_to_persist = []
+            user_ids_to_delete = []
+
+            for pending_account in pending_accounts:
+                user = pending_account.user
+                emails_to_persist.append(
+                    UsersPendingDeletionNotificationModel(email=user.email)
+                )
+                user_ids_to_delete.append(user.id)
+
+            # Save emails
+            UsersPendingDeletionNotificationModel.objects.bulk_create(emails_to_persist)
+
+            # Delete users (automatic cascade in relationships)
+            UserProfileModel.objects.filter(id__in=user_ids_to_delete).delete()
+
 
 class PendingAccountsModel(models.Model):
     """
@@ -316,3 +350,20 @@ class PendingAccountsModel(models.Model):
         )
 
         super().save(*args, **kwargs)
+
+
+class UsersPendingDeletionNotificationModel(models.Model):
+    """
+    Model to store emails of users who will be notified about their
+    permanent account deletion.
+    This model tracks users pending deletion and ensures that they are
+    notified accordingly.
+
+    Fields:
+        email (EmailField): The unique email address of the user to notify.
+    """
+
+    email = models.EmailField(unique=True, null=False, blank=False)
+
+    class Meta:
+        db_table = "users_pending_deletion_notification"

@@ -12,19 +12,14 @@ Functionality:
 - Enables automatic task discovery in Django apps.
 
 Queues:
-- EMAIL_QUEUE_NAME: Queue for email-related tasks 
-                    (activation, email change, password reset).
-- REMOVE_EXPIRED_CODE_TOKEN_QUEUE_NAME: Queue for tasks that remove expired 
-                                        codes and tokens.
+- EMAIL_QUEUE_NAME: Queue for email-related tasks. 
+- REMOVALS_QUEUE_NAME: Queue for removal-related tasks.
 """
 
 import os
 
 from celery import Celery
-from user_app.constants.celery_constants import (
-    EMAIL_QUEUE_NAME,
-    REMOVE_EXPIRED_CODE_TOKEN_QUEUE_NAME,
-)
+from user_app.constants.celery_constants import EMAIL_QUEUE_NAME, REMOVALS_QUEUE_NAME
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
@@ -33,12 +28,8 @@ app = Celery("config")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.conf.task_routes = {
-    "user_app.tasks.task_remove_exp_code": {
-        "queue": REMOVE_EXPIRED_CODE_TOKEN_QUEUE_NAME
-    },
-    "user_app.tasks.task_remove_exp_token": {
-        "queue": REMOVE_EXPIRED_CODE_TOKEN_QUEUE_NAME
-    },
+    "user_app.tasks.task_remove_exp_code": {"queue": REMOVALS_QUEUE_NAME},
+    "user_app.tasks.task_remove_exp_token": {"queue": REMOVALS_QUEUE_NAME},
     "user_app.tasks.task_send_account_activation_code": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_send_email_change_code": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_send_reset_password_code": {"queue": EMAIL_QUEUE_NAME},
@@ -48,6 +39,7 @@ app.conf.task_routes = {
     "user_app.tasks.task_notify_deleted_account": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_notify_first_reminder": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_notify_second_reminder": {"queue": EMAIL_QUEUE_NAME},
+    "user_app.tasks.task_delete_expired_accounts": {"queue": REMOVALS_QUEUE_NAME},
 }
 
 app.autodiscover_tasks()

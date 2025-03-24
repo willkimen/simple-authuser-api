@@ -1,4 +1,5 @@
 import smtplib
+from datetime import date, timedelta
 
 from celery import shared_task
 from django.utils import timezone
@@ -17,6 +18,7 @@ from user_app.models import (
     AccountActivationCodeModel,
     BlacklistTokenModel,
     ChangeEmailCodeModel,
+    PendingAccountsModel,
     ResetPasswordCodeModel,
     ValidTokenModel,
 )
@@ -179,3 +181,17 @@ def task_notify_second_reminder(self) -> int:
         return sent_count
     except smtplib.SMTPException as e:
         raise self.retry(exc=e)
+
+
+@shared_task
+def task_delete_expired_accounts():
+    """
+    Task that deletes users who have not activated their accounts in a timely manner.
+
+    - Note:
+        This task will be scheduled to run every day at 00:00, i.e. one day after
+        activation_deadline, so to delete users on the correct day you will need
+        to enter yesterday's date.
+    """
+    yesterday: date = timezone.now().date() - timedelta(days=1)
+    PendingAccountsModel.objects.delete_expired_accounts(yesterday)
