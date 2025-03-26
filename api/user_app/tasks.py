@@ -7,6 +7,7 @@ from user_app.email.email_service import (
     notify_activated_account,
     notify_changed_email,
     notify_deleted_account,
+    notify_expired_account_deletion,
     notify_first_reminder,
     notify_reset_password,
     notify_second_reminder,
@@ -195,3 +196,20 @@ def task_delete_expired_accounts():
     """
     yesterday: date = timezone.now().date() - timedelta(days=1)
     PendingAccountsModel.objects.delete_expired_accounts(yesterday)
+
+
+@shared_task(bind=True, retry_backoff=True, max_retries=5)
+def task_notify_expired_account_deletion(self) -> int:
+    """
+    Celery task to send the notification email to users informing about the removal
+    of their accounts from the system, for not activating them in a timely manner.
+    After successful sending, these emails are removed.
+
+    If an SMTP exception occurs, the task will automatically
+    retry up to five times with exponential backoff.
+    """
+    try:
+        sent_count = notify_expired_account_deletion()
+        return sent_count
+    except smtplib.SMTPException as e:
+        raise self.retry(exc=e)

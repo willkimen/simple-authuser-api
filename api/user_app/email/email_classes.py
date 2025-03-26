@@ -417,3 +417,48 @@ class DeactivatedAccountNotificationEmail(EmailBase):
         )
 
         self.attach_alternative(self.html_body, "text/html")
+
+
+class ExpiredAccountDeletionEmail(EmailBase):
+    """
+    Class that sends a notification email to the user informing them that
+    their account has been deleted due to non-activation within the deadline.
+    """
+
+    def __init__(self, emails: list[str], **kwargs):
+        self.emails: list[str] = emails
+        self.subject = "Your Account Has Been Deleted Due to Inactivity"
+        self.body = dedent(
+            f"""
+            Hello,  
+            We regret to inform you that your account has been permanently deleted  
+            because it was not activated within the required timeframe.  
+
+            If you still wish to use our services, you will need to sign up again.  
+            
+            You can create a new account here:  
+            {settings.REGISTER_LINK}  
+
+            If you believe this was a mistake, please contact our support team.  
+            """
+        )
+        self.html_body = dedent(
+            f"""
+            <p>Hello,</p>
+            <p>We regret to inform you that your account has been permanently deleted  
+            because it was not activated within the required timeframe.</p>
+            <p>If you still wish to use our services, you will need to sign up again.</p>
+            <p>You can create a new account here:</p>
+            <p><a href="{settings.REGISTER_LINK}">Sign Up</a></p>
+            <p>If you believe this was a mistake, please contact our support team.</p>
+            """
+        )
+
+        super().__init__(
+            subject=self.subject,
+            body=self.body,
+            to=self.emails,
+            **kwargs,
+        )
+
+        self.attach_alternative(self.html_body, "text/html")

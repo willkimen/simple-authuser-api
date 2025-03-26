@@ -43,6 +43,7 @@ NOTIFY_RESET_PASSWORD_FUNCTION_TO_PATCH = "notify_reset_password"
 NOTIFY_DELETED_ACCOUNT_FUNCTION_TO_PATCH = "notify_deleted_account"
 NOTIFY_FIRST_REMINDER_FUNCTION_TO_PATCH = "notify_first_reminder"
 NOTIFY_SECOND_REMINDER_FUNCTION_TO_PATCH = "notify_second_reminder"
+NOTIFY_EXPIRED_ACCOUNT_DELETION_FUNCTION_TO_PATCH = "notify_expired_account_deletion"
 
 # Constant for mocking the utility function that generates a random code
 GENERATE_RANDOM_CODE_FUNCTION_TO_PATCH = "generate_random_code"
@@ -63,6 +64,7 @@ DELETED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH = "DeletedAccountNotificationE
 DEACTIVATED_ACCOUNT_NOTIFICATION_EMAIL_CLASS_TO_PATCH = (
     "DeactivatedAccountNotificationEmail"
 )
+EXPIRED_ACCOUNT_DELETION_EMAIL_CLASS_TO_PATCH = "ExpiredAccountDeletionEmail"
 
 # Method related to the notification email classes above
 SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH = "send_with_error_handling"
@@ -81,7 +83,9 @@ RESET_PASSWORD_CODE_EMAIL_CLASS_TO_PATCH = "ResetPasswordCodeEmail"
 # They use `importlib.import_module` to load the module names.
 
 # Path to the token-related utility module.
-TOKEN_UTILS_MODULE_PATH = importlib.import_module("user_app.authentication.token_service").__name__
+TOKEN_UTILS_MODULE_PATH = importlib.import_module(
+    "user_app.authentication.token_service"
+).__name__
 
 # Path to the view responsible for user account activation.
 ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH = importlib.import_module(

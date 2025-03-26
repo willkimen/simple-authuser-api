@@ -6,12 +6,6 @@ from user_app.constants.prefixes import (
     CHANGE_EMAIL_PREFIX,
     RESET_PASSWORD_PREFIX,
 )
-from user_app.models import (
-    AccountActivationCodeModel,
-    ChangeEmailCodeModel,
-    PendingAccountsModel,
-    ResetPasswordCodeModel,
-)
 from user_app.email.email_classes import (
     ActivationCodeEmail,
     ActivationNotificationEmail,
@@ -19,8 +13,16 @@ from user_app.email.email_classes import (
     ChangeNotificationEmail,
     DeactivatedAccountNotificationEmail,
     DeletedAccountNotificationEmail,
+    ExpiredAccountDeletionEmail,
     PasswordResetNotificationEmail,
     ResetPasswordCodeEmail,
+)
+from user_app.models import (
+    AccountActivationCodeModel,
+    ChangeEmailCodeModel,
+    PendingAccountsModel,
+    ResetPasswordCodeModel,
+    UsersPendingDeletionNotificationModel,
 )
 
 
@@ -184,23 +186,23 @@ def notify_first_reminder() -> int:
         PendingAccountsModel.objects.get_first_reminder_emails_today()
     )
 
-    if emails_for_reminder_today:
-        activation_deadline: datetime = (
-            PendingAccountsModel.objects.get_first_reminder_deadline_today()
-        )
+    if not emails_for_reminder_today:
+        return -1
 
-        email = DeactivatedAccountNotificationEmail(
-            emails=emails_for_reminder_today, activation_deadline=activation_deadline
-        )
+    activation_deadline: datetime = (
+        PendingAccountsModel.objects.get_first_reminder_deadline_today()
+    )
 
-        try:
-            sent_count: int = email.send_with_error_handling()
-        except smtplib.SMTPException as e:
-            raise smtplib.SMTPException(str(e))
+    email = DeactivatedAccountNotificationEmail(
+        emails=emails_for_reminder_today, activation_deadline=activation_deadline
+    )
 
-        return sent_count
+    try:
+        sent_count: int = email.send_with_error_handling()
+    except smtplib.SMTPException as e:
+        raise smtplib.SMTPException(str(e))
 
-    return -1
+    return sent_count
 
 
 def notify_second_reminder() -> int:
@@ -214,20 +216,47 @@ def notify_second_reminder() -> int:
         PendingAccountsModel.objects.get_second_reminder_emails_today()
     )
 
-    if emails_for_reminder_today:
-        activation_deadline: datetime = (
-            PendingAccountsModel.objects.get_second_reminder_deadline_today()
-        )
+    if not emails_for_reminder_today:
+        return -1
 
-        email = DeactivatedAccountNotificationEmail(
-            emails=emails_for_reminder_today, activation_deadline=activation_deadline
-        )
+    activation_deadline: datetime = (
+        PendingAccountsModel.objects.get_second_reminder_deadline_today()
+    )
 
-        try:
-            sent_count: int = email.send_with_error_handling()
-        except smtplib.SMTPException as e:
-            raise smtplib.SMTPException(str(e))
+    email = DeactivatedAccountNotificationEmail(
+        emails=emails_for_reminder_today, activation_deadline=activation_deadline
+    )
 
-        return sent_count
+    try:
+        sent_count: int = email.send_with_error_handling()
+    except smtplib.SMTPException as e:
+        raise smtplib.SMTPException(str(e))
 
-    return -1
+    return sent_count
+
+
+def notify_expired_account_deletion() -> int:
+    """
+    Recovers emails from users who will be notified about the removal
+    of their accounts from the system, for not activating them in a timely manner.
+    After successful sending, these emails are removed.
+
+    If there are no users to notify, returns -1.
+    """
+    emails: list[str] = list(
+        UsersPendingDeletionNotificationModel.objects.values_list("email", flat=True)
+    )
+
+    if not emails:
+        return -1
+
+    email = ExpiredAccountDeletionEmail(emails=emails)
+
+    try:
+        sent_count: int = email.send_with_error_handling()
+    except smtplib.SMTPException as e:
+        raise smtplib.SMTPException(str(e))
+
+    UsersPendingDeletionNotificationModel.objects.all().delete()
+
+    return sent_count

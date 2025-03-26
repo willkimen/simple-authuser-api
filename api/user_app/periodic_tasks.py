@@ -1,24 +1,12 @@
 """
 Module for creating periodic tasks in Django using django-celery-beat.
-
-Description:
-This module contains functions to create scheduled periodic tasks that 
-automatically remove expired codes and tokens from the database. 
-The tasks are scheduled to run daily at 3:00 AM.
-
-Usage:
-These functions can be called during database migrations 
-to set up the tasks automatically, ensuring the scheduled removal of expired data.
-
-Dependencies:
-- Celery: For task scheduling and execution.
-- django-celery-beat: For managing periodic tasks and scheduling.
 """
 
 import json
 
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 from user_app.constants.celery_constants import (
+    NOTIFY_EXPIRED_ACCOUNT_DELETION_TASK_NAME,
     NOTIFY_FIRST_REMINDER_TASK_NAME,
     NOTIFY_SECOND_REMINDER_TASK_NAME,
     REMOVE_EXPIRED_ACCOUNT_TASK_NAME,
@@ -166,5 +154,29 @@ def create_periodic_task_for_delete_expired_accounts():
             crontab=schedule,
             name=REMOVE_EXPIRED_ACCOUNT_TASK_NAME,
             task="user_app.tasks.task_delete_expired_accounts",
+            args=json.dumps([]),
+        )
+
+
+def create_periodic_task_for_notify_expired_account_deletion():
+    """
+    Creates a periodic task that notify users about removal their accounts
+    daily at 09:00.
+    """
+    schedule, _ = CrontabSchedule.objects.get_or_create(
+        minute="0",
+        hour="9",
+        day_of_week="*",
+        day_of_month="*",
+        month_of_year="*",
+    )
+
+    if not PeriodicTask.objects.filter(
+        name=NOTIFY_EXPIRED_ACCOUNT_DELETION_TASK_NAME
+    ).exists():
+        PeriodicTask.objects.create(
+            crontab=schedule,
+            name=NOTIFY_EXPIRED_ACCOUNT_DELETION_TASK_NAME,
+            task="user_app.tasks.task_expired_account_deletion",
             args=json.dumps([]),
         )

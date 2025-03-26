@@ -37,6 +37,7 @@ app.conf.task_routes = {
     "user_app.tasks.task_notify_changed_email": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_notify_reset_password": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_notify_deleted_account": {"queue": EMAIL_QUEUE_NAME},
+    "user_app.tasks.task_notify_expired_account_deletion": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_notify_first_reminder": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_notify_second_reminder": {"queue": EMAIL_QUEUE_NAME},
     "user_app.tasks.task_delete_expired_accounts": {"queue": REMOVALS_QUEUE_NAME},
