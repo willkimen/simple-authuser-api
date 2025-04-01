@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, throttle_classes
+from rest_framework.request import Request
 from rest_framework.response import Response
 from user_app.authentication.token_service import revoke_tokens
 from user_app.constants.response_codes_and_messages import (
