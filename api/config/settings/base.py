@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 # Project base directory
@@ -96,6 +97,51 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
+
+
+# Logging
+# -----------------------------------------------------------------------------
+# Set the new level value
+EMAIL_TASK_ERROR = 35
+
+# Add level to logging system
+logging.addLevelName(EMAIL_TASK_ERROR, "EMAIL_TASK_ERROR")
+
+
+# Create a custom method for the logger
+def email_task_error(self, message, *args, **kwargs):
+    if self.isEnabledFor(EMAIL_TASK_ERROR):
+        self._log(EMAIL_TASK_ERROR, message, args, **kwargs)
+
+
+# Add the method to the logger
+logging.Logger.email_task_error = email_task_error
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose_multiline": {
+            "format": "{levelname} {asctime} {module} {funcName}\n{message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "email_task_error_file": {
+            "level": EMAIL_TASK_ERROR,
+            "class": "logging.FileHandler",
+            "filename": "logs/email_task_errors.log",
+            "formatter": "verbose_multiline",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["email_task_error_file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}
 
 # Verification code configuration
 # -----------------------------------------------------------------------------

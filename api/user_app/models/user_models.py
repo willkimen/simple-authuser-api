@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -97,7 +97,7 @@ class UserProfileModel(AbstractUser):
 
 
 class PendingAccountsManager(models.Manager):
-    def get_first_reminder_emails_today(self):
+    def get_first_reminder_emails_today(self) -> list[str]:
         """
         Returns the email addresses of users who should receive their first
         reminder today.
@@ -111,11 +111,13 @@ class PendingAccountsManager(models.Manager):
                       today with the first reminder.
         """
         today = now().date()
-        return self.filter(first_reminder_at__date=today).values_list(
-            "user__email", flat=True
+        return list(
+            self.filter(first_reminder_at__date=today).values_list(
+                "user__email", flat=True
+            )
         )
 
-    def get_second_reminder_emails_today(self):
+    def get_second_reminder_emails_today(self) -> list[str]:
         """
         Returns the email addresses of users who should receive their second
         reminder today.
@@ -129,11 +131,13 @@ class PendingAccountsManager(models.Manager):
                       today with the second reminder.
         """
         today = now().date()
-        return self.filter(second_reminder_at__date=today).values_list(
-            "user__email", flat=True
+        return list(
+            self.filter(second_reminder_at__date=today).values_list(
+                "user__email", flat=True
+            )
         )
 
-    def get_first_reminder_deadline_today(self):
+    def get_first_reminder_deadline_today(self) -> datetime | None:
         """
         Returns the activation deadline (`activation_deadline`) for users who
         should receive their first reminder today.
@@ -155,7 +159,7 @@ class PendingAccountsManager(models.Manager):
             .first()
         )
 
-    def get_second_reminder_deadline_today(self):
+    def get_second_reminder_deadline_today(self) -> datetime | None:
         """
         Returns the activation deadline (`activation_deadline`) for users who
         should receive their second reminder today.
@@ -177,7 +181,7 @@ class PendingAccountsManager(models.Manager):
             .first()
         )
 
-    def delete_expired_accounts(self, target_date: date):
+    def delete_expired_accounts(self, target_date: date) -> None:
         """
         Deletes users whose account activation deadline matches the given date.
         Saves their emails into the notification table before deletion.

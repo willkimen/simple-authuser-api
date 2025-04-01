@@ -1,3 +1,4 @@
+import logging
 import smtplib
 from datetime import date, timedelta
 
@@ -21,8 +22,11 @@ from user_app.models import (
     ChangeEmailCodeModel,
     PendingAccountsModel,
     ResetPasswordCodeModel,
+    UsersPendingDeletionNotificationModel,
     ValidTokenModel,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -59,6 +63,12 @@ def task_send_account_activation_code(self, user_email: str) -> int:
         sent_count = send_account_activation_code(user_email)
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send account activation code.\n"
+                f"User Email: {user_email}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -75,6 +85,13 @@ def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
         sent_count = send_email_change_code(actual_email, new_email)
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send email change code.\n"
+                f"Actual Email: {actual_email}\n"
+                f"New Email: {new_email}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -91,6 +108,12 @@ def task_send_reset_password_code(self, user_email: str) -> int:
         sent_count = send_reset_password_code(user_email)
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send password reset code.\n"
+                f"User Email: {user_email}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -106,6 +129,12 @@ def task_notify_activated_account(self, user_email: str) -> int:
         sent_count = notify_activated_account(user_email)
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send account activation notification.\n"
+                f"User Email: {user_email}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -121,6 +150,12 @@ def task_notify_changed_email(self, user_email: str) -> int:
         sent_count = notify_changed_email(user_email)
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send email change notification.\n"
+                f"User Email: {user_email}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -136,6 +171,12 @@ def task_notify_reset_password(self, user_email: str) -> int:
         sent_count = notify_reset_password(user_email)
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send password reset notification.\n"
+                f"User Email: {user_email}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -151,6 +192,12 @@ def task_notify_deleted_account(self, user_email: str) -> int:
         sent_count = notify_deleted_account(user_email)
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send account deletion notification.\n"
+                f"User Email: {user_email}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -162,10 +209,20 @@ def task_notify_first_reminder(self) -> int:
     If an SMTP exception occurs, the task will automatically
     retry up to five times with exponential backoff.
     """
+    emails_for_reminder_today: list[str] = (
+        PendingAccountsModel.objects.get_first_reminder_emails_today()
+    )
+
     try:
         sent_count = notify_first_reminder()
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send first reminder email.\n"
+                f"Emails: {', '.join(emails_for_reminder_today)}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -177,10 +234,20 @@ def task_notify_second_reminder(self) -> int:
     If an SMTP exception occurs, the task will automatically
     retry up to five times with exponential backoff.
     """
+    emails_for_reminder_today: list[str] = (
+        PendingAccountsModel.objects.get_second_reminder_emails_today()
+    )
+
     try:
         sent_count = notify_second_reminder()
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send second reminder email.\n"
+                f"Emails: {', '.join(emails_for_reminder_today)}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
 
 
@@ -208,8 +275,18 @@ def task_notify_expired_account_deletion(self) -> int:
     If an SMTP exception occurs, the task will automatically
     retry up to five times with exponential backoff.
     """
+    emails: list[str] = list(
+        UsersPendingDeletionNotificationModel.objects.values_list("email", flat=True)
+    )
+
     try:
         sent_count = notify_expired_account_deletion()
         return sent_count
     except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                f"Failed to send expired account deletion notification.\n"
+                f"Emails: {', '.join(emails)}\n"
+                f"Error: {str(e)}"
+            )
         raise self.retry(exc=e)
