@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-
 from user_app.constants import validation_error_messages
 
 # Get the custom user model
@@ -42,7 +41,7 @@ class UserRequestSerializer(serializers.ModelSerializer):
         # Create and return the user with the provided data
         return User.objects.create_user(**validated_data)
 
-    def validate(self, data):
+    def validate(self, data: dict[str, str]) -> dict[str, str]:
         """
         Validates the data provided during registration.
         """
@@ -55,7 +54,7 @@ class UserRequestSerializer(serializers.ModelSerializer):
             )
         return data
 
-    def validate_password(self, password):
+    def validate_password(self, password: str) -> str:
         """
         Validates the password strength using Django's standard validations.
         """
@@ -103,7 +102,7 @@ class UserChangePasswordSerializer(serializers.Serializer):
     actual_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
-    def validate_new_password(self, new_password):
+    def validate_new_password(self, new_password: str) -> str:
         """
         Validates the password strength using Django's standard validations.
         """
@@ -125,7 +124,7 @@ class UserResetPasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True)
     confirmation_new_password = serializers.CharField(required=True)
 
-    def validate(self, data):
+    def validate(self, data: dict[str, str]) -> dict[str, str]:
         """
         Validates the provided data, ensuring the passwords match.
         Raises a validation error if the passwords do not match.
@@ -139,7 +138,7 @@ class UserResetPasswordSerializer(serializers.Serializer):
             )
         return data
 
-    def validate_new_password(self, new_password):
+    def validate_new_password(self, new_password: str) -> str:
         """
         Validates the strength of the new password using Django's standard validations.
         Raises a validation error if the password does not meet security requirements.

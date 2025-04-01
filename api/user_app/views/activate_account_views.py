@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, throttle_classes
+from rest_framework.request import Request
 from rest_framework.response import Response
 from user_app.constants.response_codes_and_messages import (
     ACTIVATED_USER,
@@ -28,7 +29,7 @@ User = get_user_model()
 
 @api_view(["POST"])
 @throttle_classes([FivePerMinuteRateLimit])
-def request_account_activation_code(request):
+def request_account_activation_code(request: Request) -> Response:
     """
     Sends an activation code to a registered user who has not yet activated
     their account.
@@ -70,7 +71,7 @@ def request_account_activation_code(request):
 
 @api_view(["POST"])
 @throttle_classes([FivePerMinuteRateLimit])
-def activate_account(request):
+def activate_account(request: Request) -> Response:
     """
     Activates a user account based on the provided activation code and applies
     throttle class to limit the rate of activation requests.
@@ -85,7 +86,7 @@ def activate_account(request):
       "code": "act-code"
     }
     """
-    code = request.data.get("code", None)
+    code: str | None = request.data.get("code", None)
 
     # Checks if code exists in the data base
     try:

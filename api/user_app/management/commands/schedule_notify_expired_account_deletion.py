@@ -7,5 +7,5 @@ from user_app.periodic_tasks import (
 class Command(BaseCommand):
     help = "Persists the scheduling of the notify users about account deletion task"
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs) -> None:
         create_periodic_task_for_notify_expired_account_deletion()

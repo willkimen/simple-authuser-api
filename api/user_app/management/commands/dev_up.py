@@ -14,7 +14,7 @@ Options:
 import subprocess
 from pathlib import Path
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandParser
 
 DOCKER_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "docker"
 
@@ -29,11 +29,11 @@ up_build_recreate_command = (
 class Command(BaseCommand):
     help = "Run docker compose up for developer"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("--build", action="store_true")
         parser.add_argument("--recreate", action="store_true")
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs) -> None:
         build = kwargs.get("build")
         recreate = kwargs.get("recreate")
 

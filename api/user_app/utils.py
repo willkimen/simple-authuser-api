@@ -16,7 +16,7 @@ def merge_dict(original_dict: dict, update_data: dict) -> dict:
     Returns:
         dict: The updated dictionary with new data.
     """
-    updated_dict = copy.deepcopy(original_dict)
+    updated_dict: dict = copy.deepcopy(original_dict)
     updated_dict.update(update_data)
     return updated_dict
 
@@ -37,6 +37,6 @@ def generate_random_code(length: int = 8, prefix: str = "") -> str:
     Returns:
         str: The generated random alphanumeric code with the optional prefix.
     """
-    characters = string.ascii_letters + string.digits
-    random_code = "".join(random.choice(characters) for _ in range(length))
+    characters: str = string.ascii_letters + string.digits
+    random_code: str = "".join(random.choice(characters) for _ in range(length))
     return f"{prefix}{random_code}"

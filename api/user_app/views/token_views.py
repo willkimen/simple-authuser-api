@@ -5,8 +5,18 @@ This module deals with views related to token manipulation.
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.request import Request
 from rest_framework.response import Response
 from user_app.authentication.authentication_classes import JWTAuthentication
+from user_app.authentication.token_exceptions import (
+    BlacklistTokenException,
+    TokenException,
+)
+from user_app.authentication.token_service import (
+    check_token,
+    create_pair_token,
+    create_token,
+)
 from user_app.constants.response_codes_and_messages import (
     IS_NOT_ACCESS_OR_REFRESH_TOKEN,
     IS_NOT_REFRESH_TOKEN,
@@ -18,16 +28,14 @@ from user_app.constants.response_codes_and_messages import (
     USER_NOT_FOUND,
     USER_TOKEN_MISMATCH,
 )
-from user_app.authentication.token_exceptions import BlacklistTokenException, TokenException
 from user_app.models import BlacklistTokenModel
 from user_app.utils import merge_dict
-from user_app.authentication.token_service import check_token, create_pair_token, create_token
 
 User = get_user_model()
 
 
 @api_view(["POST"])
-def obtain_token_pair(request):
+def obtain_token_pair(request: Request) -> Response:
     """
     Authenticates a user and returns a pair of tokens.
 
@@ -42,8 +50,8 @@ def obtain_token_pair(request):
         }
     """
 
-    email = request.data.get("email", None)
-    password = request.data.get("password", None)
+    email: str | None = request.data.get("email", None)
+    password: str | None = request.data.get("password", None)
 
     # Verify if user exists
     try:
@@ -62,7 +70,7 @@ def obtain_token_pair(request):
 
 
 @api_view(["POST"])
-def refresh_token_access(request):
+def refresh_token_access(request: Request) -> Response:
     """
     Generates a new access token using a valid refresh token.
 
@@ -75,7 +83,7 @@ def refresh_token_access(request):
             "refresh": "refresh_token"
         }
     """
-    refresh = request.data.get("refresh", None)
+    refresh: str | None = request.data.get("refresh", None)
 
     # Verify if the token is valid, it returns its payload.
     try:
@@ -107,7 +115,7 @@ def refresh_token_access(request):
 
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
-def blacklist_token(request):
+def blacklist_token(request: Request) -> Response:
     """
     Adds a token to the blacklist, preventing its future use.
 
@@ -121,7 +129,7 @@ def blacklist_token(request):
         }
     """
 
-    token = request.data.get("token", None)
+    token: str | None = request.data.get("token", None)
 
     # Verify if the token is valid, it returns its payload.
     try:
@@ -153,7 +161,7 @@ def blacklist_token(request):
 
 
 @api_view(["POST"])
-def verify_token(request):
+def verify_token(request: Request) -> Response:
     """
     Validates a given token and checks if it is still usable.
 
@@ -166,7 +174,7 @@ def verify_token(request):
             "token": "access_or_refresh_token"
         }
     """
-    token = request.data.get("token", None)
+    token: str | None = request.data.get("token", None)
 
     # Verify if the token is valid, it returns its payload.
     try:

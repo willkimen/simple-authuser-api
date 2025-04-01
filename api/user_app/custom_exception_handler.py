@@ -1,7 +1,8 @@
+from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
 
-def custom_exception_handler(exc, context):
+def custom_exception_handler(exc: Exception, context: dict) -> Response | None:
     """
     Custom exception handler to add error codes and modify error messages
     in API responses.
@@ -14,7 +15,7 @@ def custom_exception_handler(exc, context):
         Response: The modified response object with added error code.
     """
     # Call the default exception handler to get the standard error response
-    response = exception_handler(exc, context)
+    response: Response | None = exception_handler(exc, context)
 
     # If a response is returned, modify it
     if response is not None:

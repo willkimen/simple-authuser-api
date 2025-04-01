@@ -288,7 +288,7 @@ class PendingAccountsModel(models.Model):
         db_table = "pending_accounts"
         verbose_name = "Pending Accounts"
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """
         Automatically sets notification dates and the activation deadline before
         saving the instance to the database.

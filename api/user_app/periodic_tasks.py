@@ -15,7 +15,7 @@ from user_app.constants.celery_constants import (
 )
 
 
-def create_periodic_task_for_expired_codes_removal():
+def create_periodic_task_for_expired_codes_removal() -> None:
     """
     Creates a periodic task that removes expired verification codes from the database.
 
@@ -43,7 +43,7 @@ def create_periodic_task_for_expired_codes_removal():
         )
 
 
-def create_periodic_task_for_expired_tokens_removal():
+def create_periodic_task_for_expired_tokens_removal() -> None:
     """
     Creates a periodic task that removes expired tokens from the database.
 
@@ -71,7 +71,7 @@ def create_periodic_task_for_expired_tokens_removal():
         )
 
 
-def create_periodic_task_for_notify_first_reminder():
+def create_periodic_task_for_notify_first_reminder() -> None:
     """
     Creates a periodic task to send the first activation reminder.
 
@@ -104,7 +104,7 @@ def create_periodic_task_for_notify_first_reminder():
         )
 
 
-def create_periodic_task_for_notify_second_reminder():
+def create_periodic_task_for_notify_second_reminder() -> None:
     """
     Creates a periodic task to send the second activation reminder.
 
@@ -137,7 +137,7 @@ def create_periodic_task_for_notify_second_reminder():
         )
 
 
-def create_periodic_task_for_delete_expired_accounts():
+def create_periodic_task_for_delete_expired_accounts() -> None:
     """
     Creates a periodic task that deletes expired user accounts daily at 00:00.
     """
@@ -158,7 +158,7 @@ def create_periodic_task_for_delete_expired_accounts():
         )
 
 
-def create_periodic_task_for_notify_expired_account_deletion():
+def create_periodic_task_for_notify_expired_account_deletion() -> None:
     """
     Creates a periodic task that notify users about removal their accounts
     daily at 09:00.

@@ -18,7 +18,7 @@ class TokenException(Exception):
         code (str): The specific error code related to the JWT issue.
     """
 
-    def __init__(self, detail: str = None, code: str = None):
+    def __init__(self, detail: str = None, code: str = None) -> None:
         """
         Initializes the JWTError with an optional detail message and error code.
 
@@ -58,7 +58,7 @@ class ExpiredSignatureException(TokenException):
         code (str): The specific error code related to expired signature.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the ExpiredSignatureError with default message and code.
         """
@@ -79,7 +79,7 @@ class InvalidAlgorithmException(TokenException):
         code (str): The specific error code related to invalid algorithm.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the InvalidAlgorithmError with default message and code.
         """
@@ -100,7 +100,7 @@ class InvalidSignatureException(TokenException):
         code (str): The specific error code related to invalid signature.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the InvalidSignatureError with default message and code.
         """
@@ -121,7 +121,7 @@ class DecodeException(TokenException):
         code (str): The specific error code related to decode error.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the DecodeError with default message and code.
         """
@@ -142,7 +142,7 @@ class InvalidTokenException(TokenException):
         code (str): The specific error code related to invalid tokens.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the InvalidTokenError with default message and code.
         """
@@ -165,7 +165,7 @@ class BlacklistTokenException(TokenException):
         code (str): A specific error code related to the blacklist violation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the BlacklistTokenException with a default message and code.
         """

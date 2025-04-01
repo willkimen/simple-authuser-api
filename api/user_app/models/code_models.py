@@ -8,7 +8,7 @@ from user_app.utils import generate_random_code
 
 
 class VerificationCodeManager(models.Manager):
-    def keep_latest_code(self, user_email: str):
+    def keep_latest_code(self, user_email: str) -> None:
         """
         Removes all verification codes for a user, except the most recent one.
 
@@ -84,7 +84,7 @@ class VerificationCodeBaseModel(models.Model):
     created_at = models.DateTimeField()
     expires_at = models.DateTimeField()
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """
         This method was overridden so that if the user does not directly set fields
         such as created_at, expires_at and code, they are automatically set.

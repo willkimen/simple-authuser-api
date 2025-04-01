@@ -34,7 +34,7 @@ class TokenBaseModel(models.Model):
     exp = models.DateTimeField()
     typ = models.CharField(max_length=10, choices=TYPE_TOKEN_CHOICES)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """
         Override the default save method to handle the expiration field.
 

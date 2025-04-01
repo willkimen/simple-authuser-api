@@ -5,5 +5,5 @@ from user_app.periodic_tasks import create_periodic_task_for_notify_second_remin
 class Command(BaseCommand):
     help = "Creates a periodic task to send the second account activation reminder."
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs) -> None:
         create_periodic_task_for_notify_second_reminder()

@@ -8,8 +8,10 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, throttle_classes
+from rest_framework.request import Request
 from rest_framework.response import Response
 from user_app.authentication.authentication_classes import JWTAuthentication
+from user_app.authentication.token_service import revoke_tokens
 from user_app.constants.response_codes_and_messages import (
     CODE_EXPIRED,
     CODE_NOT_FOUND,
@@ -24,14 +26,13 @@ from user_app.serializers import EmailSerializer
 from user_app.tasks import task_notify_changed_email, task_send_email_change_code
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils import merge_dict
-from user_app.authentication.token_service import revoke_tokens
 
 User = get_user_model()
 
 
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
-def request_email_change_code(request):
+def request_email_change_code(request: Request) -> Response:
     """
     Sends a verification code to the new email address provided by the
     authenticated user.
@@ -59,7 +60,7 @@ def request_email_change_code(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    new_email = email_serializer.data["email"]
+    new_email: str = email_serializer.data["email"]
 
     # Checks whether the email received is the same as the authenticated user's,
     # i.e., it is already the email in use.
@@ -79,7 +80,7 @@ def request_email_change_code(request):
 @api_view(["POST"])
 @throttle_classes([FivePerMinuteRateLimit])
 @authentication_classes([JWTAuthentication])
-def change_email(request):
+def change_email(request: Request) -> Response:
     """
     Confirms the email change by validating the verification code.
 

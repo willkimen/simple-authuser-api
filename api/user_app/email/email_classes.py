@@ -82,7 +82,7 @@ class ActivationCodeEmail(EmailBase):
     to activate a user's account. The email is sent in both plain text and HTML formats.
     """
 
-    def __init__(self, user_email: str, code: str = None, **kwargs):
+    def __init__(self, user_email: str, code: str = None, **kwargs) -> None:
         self.user_email = user_email
         self.code = code
         self.subject = "Confirm your email address"
@@ -105,7 +105,7 @@ class ActivationCodeEmail(EmailBase):
             """
         )
 
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>Your verification code is below:</p>
             <h2>{self.code}</h2>
@@ -136,10 +136,10 @@ class ActivationNotificationEmail(EmailBase):
     information.
     """
 
-    def __init__(self, user_email: str, **kwargs):
+    def __init__(self, user_email: str, **kwargs) -> None:
         self.user_email = user_email
         self.subject = "Your account has been activated"
-        self.body = dedent(
+        self.body: str = dedent(
             f"""
             Your account has been successfully activated.
 
@@ -149,7 +149,7 @@ class ActivationNotificationEmail(EmailBase):
             """
         )
 
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>Your account has been successfully activated.</p>
             <p>You can now <a href="{settings.LOGIN_LINK}">log in</a> using the link below:</p>
@@ -176,12 +176,12 @@ class ChangeCodeEmail(EmailBase):
     the change.
     """
 
-    def __init__(self, actual_email: str, new_email: str, code: str, **kwargs):
+    def __init__(self, actual_email: str, new_email: str, code: str, **kwargs) -> str:
         self.new_email = new_email
         self.actual_email = actual_email
         self.code = code
         self.subject = "Confirm your email address change"
-        self.body = dedent(
+        self.body: str = dedent(
             f"""
         You requested to change your email from {self.actual_email} to {self.new_email}.
 
@@ -195,7 +195,7 @@ class ChangeCodeEmail(EmailBase):
         """
         )
 
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>You requested to change your email from <strong>{self.actual_email}</strong> to 
             <strong>{self.new_email}</strong>.</p>
@@ -222,10 +222,10 @@ class ChangeNotificationEmail(EmailBase):
     access their account with the new email address.
     """
 
-    def __init__(self, new_email: str, **kwargs):
+    def __init__(self, new_email: str, **kwargs) -> str:
         self.new_email = new_email
         self.subject = "Your email address has been changed"
-        self.body = dedent(
+        self.body: str = dedent(
             f"""
             Your old email address has been successfully changed.
 
@@ -235,7 +235,7 @@ class ChangeNotificationEmail(EmailBase):
             """
         )
 
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>Your old email address has been successfully changed.</p>
             <p>You can now <a href="{settings.LOGIN_LINK}">log in</a> using the link below:</p>
@@ -260,11 +260,11 @@ class ResetPasswordCodeEmail(EmailBase):
     provided link and submit the verification code to reset their password.
     """
 
-    def __init__(self, user_email: str, code: str, **kwargs):
+    def __init__(self, user_email: str, code: str, **kwargs) -> str:
         self.user_email = user_email
         self.code = code
         self.subject = "Reset Your Account Password"
-        self.body = dedent(
+        self.body: str = dedent(
             f"""
             Your password reset code is below:
 
@@ -279,7 +279,7 @@ class ResetPasswordCodeEmail(EmailBase):
             """
         )
 
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>Your password reset code is below:</p>
             <h2>{self.code}</h2>
@@ -310,10 +310,10 @@ class PasswordResetNotificationEmail(EmailBase):
     in case the reset was not requested by the user.
     """
 
-    def __init__(self, user_email: str, **kwargs):
+    def __init__(self, user_email: str, **kwargs) -> None:
         self.user_email = user_email
         self.subject = "Your Password Has Been Reset"
-        self.body = dedent(
+        self.body: str = dedent(
             f"""
             Your password has been successfully reset.
 
@@ -323,7 +323,7 @@ class PasswordResetNotificationEmail(EmailBase):
             """
         )
 
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>Your password has been successfully reset.</p>
             <p>You can now <a href="{settings.LOGIN_LINK}">log in</a> using the link below:</p>
@@ -344,10 +344,10 @@ class DeletedAccountNotificationEmail(EmailBase):
     Class that sends a notification email to the user when their account is deleted.
     """
 
-    def __init__(self, user_email: str, **kwargs):
+    def __init__(self, user_email: str, **kwargs) -> None:
         self.user_email = user_email
         self.subject = "Your Account Has Been Deleted"
-        self.body = dedent(
+        self.body: str = dedent(
             f"""
             Your account has been successfully deleted.
 
@@ -355,7 +355,7 @@ class DeletedAccountNotificationEmail(EmailBase):
             """
         )
 
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>Your account has been successfully deleted.</p>
             <p>{CONTACT_SUPPORT_MESSAGE}</p>
@@ -378,11 +378,13 @@ class DeactivatedAccountNotificationEmail(EmailBase):
     they have not yet activated their account.
     """
 
-    def __init__(self, emails: list[str], activation_deadline: datetime, **kwargs):
+    def __init__(
+        self, emails: list[str], activation_deadline: datetime, **kwargs
+    ) -> None:
         self.emails: list[str] = emails
         self.activation_deadline = activation_deadline
         self.subject = "Your Signup Isn’t Complete! Activate Before It’s Too Late"
-        self.body = dedent(
+        self.body: str = dedent(
             f"""
             Hello,  
             We noticed that you haven't activated your account yet.  
@@ -396,7 +398,7 @@ class DeactivatedAccountNotificationEmail(EmailBase):
             If you have already activated your account, you can ignore this email.  
             """
         )
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>Hello,</p>
             <p>We noticed that you haven't activated your account yet.</p>
@@ -425,10 +427,10 @@ class ExpiredAccountDeletionEmail(EmailBase):
     their account has been deleted due to non-activation within the deadline.
     """
 
-    def __init__(self, emails: list[str], **kwargs):
+    def __init__(self, emails: list[str], **kwargs) -> None:
         self.emails: list[str] = emails
         self.subject = "Your Account Has Been Deleted Due to Inactivity"
-        self.body = dedent(
+        self.body: str = dedent(
             f"""
             Hello,  
             We regret to inform you that your account has been permanently deleted  
@@ -442,7 +444,7 @@ class ExpiredAccountDeletionEmail(EmailBase):
             If you believe this was a mistake, please contact our support team.  
             """
         )
-        self.html_body = dedent(
+        self.html_body: str = dedent(
             f"""
             <p>Hello,</p>
             <p>We regret to inform you that your account has been permanently deleted  

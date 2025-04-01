@@ -5,5 +5,5 @@ from user_app.periodic_tasks import create_periodic_task_for_expired_codes_remov
 class Command(BaseCommand):
     help = "Persists the scheduling of the expired codes removal task"
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs) -> None:
         create_periodic_task_for_expired_codes_removal()

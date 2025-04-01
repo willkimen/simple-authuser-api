@@ -5,6 +5,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
+from user_app.authentication.token_service import revoke_tokens
 from user_app.constants.response_codes_and_messages import (
     CODE_EXPIRED,
     CODE_NOT_FOUND,
@@ -19,14 +20,13 @@ from user_app.serializers import EmailSerializer, UserResetPasswordSerializer
 from user_app.tasks import task_notify_reset_password, task_send_reset_password_code
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils import merge_dict
-from user_app.authentication.token_service import revoke_tokens
 
 User = get_user_model()
 
 
 @api_view(["POST"])
 @throttle_classes([FivePerMinuteRateLimit])
-def request_reset_password_code(request):
+def request_reset_password_code(request: Request) -> Response:
     """
     Sends a password reset code to the user's registered email address.
 
@@ -63,7 +63,7 @@ def request_reset_password_code(request):
 
 @api_view(["POST"])
 @throttle_classes([FivePerMinuteRateLimit])
-def reset_password(request):
+def reset_password(request: Request) -> Response:
     """
     Resets a user's password using a verification code.
 

@@ -7,8 +7,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.request import Request
 from rest_framework.response import Response
 from user_app.authentication.authentication_classes import JWTAuthentication
+from user_app.authentication.token_service import revoke_tokens
 from user_app.constants.response_codes_and_messages import (
     PASSWORD_DO_NOT_MATCH,
     USER_DELETED_SUCCESSFULLY,
@@ -29,13 +31,12 @@ from user_app.tasks import (
     task_send_account_activation_code,
 )
 from user_app.utils import merge_dict
-from user_app.authentication.token_service import revoke_tokens
 
 User = get_user_model()
 
 
 @api_view(["POST"])
-def register(request):
+def register(request: Request) -> Response:
     """
     Registers a new user and sends an activation code via email.
 
@@ -84,7 +85,7 @@ def register(request):
 
 @api_view(["PATCH"])
 @authentication_classes([JWTAuthentication])
-def update(request):
+def update(request: Request) -> Response:
     """
     Partially updates the authenticated user's data.
 
@@ -135,7 +136,7 @@ def update(request):
 
 @api_view(["GET"])
 @authentication_classes([JWTAuthentication])
-def detail(request):
+def detail(request: Request) -> Response:
     """
     Returns the data of the authenticated user.
 
@@ -154,7 +155,7 @@ def detail(request):
 
 @api_view(["DELETE"])
 @authentication_classes([JWTAuthentication])
-def delete(request):
+def delete(request: Request) -> Response:
     """
     Deletes the authenticated user from the system.
 
@@ -167,7 +168,7 @@ def delete(request):
         - The authentication is handled by the JWTAuthentication class,
           which retrieves the user instance from the request (request.user).
     """
-    email = request.user.email
+    email: str = request.user.email
     request.user.delete()
     task_notify_deleted_account.delay(email)
 
@@ -176,7 +177,7 @@ def delete(request):
 
 @api_view(["PATCH"])
 @authentication_classes([JWTAuthentication])
-def change_password(request):
+def change_password(request: Request) -> Response:
     """
     Allows an authenticated user to change their password.
 

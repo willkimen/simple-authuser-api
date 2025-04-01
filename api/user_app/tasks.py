@@ -1,6 +1,6 @@
 import logging
 import smtplib
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from celery import shared_task
 from django.utils import timezone
@@ -30,22 +30,22 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
-def task_remove_exp_code():
+def task_remove_exp_code() -> None:
     """
     Remove all codes with an expiration date earlier than the current date.
     """
-    now = timezone.now()
+    now: datetime = timezone.now()
     AccountActivationCodeModel.objects.filter(expires_at__lt=now).delete()
     ChangeEmailCodeModel.objects.filter(expires_at__lt=now).delete()
     ResetPasswordCodeModel.objects.filter(expires_at__lt=now).delete()
 
 
 @shared_task
-def task_remove_exp_token():
+def task_remove_exp_token() -> None:
     """
     Remove expired validation tokens and expired tokens in the blacklist.
     """
-    now = timezone.now()
+    now: datetime = timezone.now()
     ValidTokenModel.objects.filter(exp__lt=now).delete()
     BlacklistTokenModel.objects.filter(exp__lt=now).delete()
 
@@ -60,7 +60,7 @@ def task_send_account_activation_code(self, user_email: str) -> int:
     with exponential backoff.
     """
     try:
-        sent_count = send_account_activation_code(user_email)
+        sent_count: int = send_account_activation_code(user_email)
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -82,7 +82,7 @@ def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
     with exponential backoff.
     """
     try:
-        sent_count = send_email_change_code(actual_email, new_email)
+        sent_count: int = send_email_change_code(actual_email, new_email)
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -105,7 +105,7 @@ def task_send_reset_password_code(self, user_email: str) -> int:
     retry up to five times with exponential backoff.
     """
     try:
-        sent_count = send_reset_password_code(user_email)
+        sent_count: int = send_reset_password_code(user_email)
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -126,7 +126,7 @@ def task_notify_activated_account(self, user_email: str) -> int:
     retry up to five times with exponential backoff.
     """
     try:
-        sent_count = notify_activated_account(user_email)
+        sent_count: int = notify_activated_account(user_email)
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -147,7 +147,7 @@ def task_notify_changed_email(self, user_email: str) -> int:
     retry up to five times with exponential backoff.
     """
     try:
-        sent_count = notify_changed_email(user_email)
+        sent_count: int = notify_changed_email(user_email)
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -168,7 +168,7 @@ def task_notify_reset_password(self, user_email: str) -> int:
     retry up to five times with exponential backoff.
     """
     try:
-        sent_count = notify_reset_password(user_email)
+        sent_count: int = notify_reset_password(user_email)
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -189,7 +189,7 @@ def task_notify_deleted_account(self, user_email: str) -> int:
     retry up to five times with exponential backoff.
     """
     try:
-        sent_count = notify_deleted_account(user_email)
+        sent_count: int = notify_deleted_account(user_email)
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -214,7 +214,7 @@ def task_notify_first_reminder(self) -> int:
     )
 
     try:
-        sent_count = notify_first_reminder()
+        sent_count: int = notify_first_reminder()
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -239,7 +239,7 @@ def task_notify_second_reminder(self) -> int:
     )
 
     try:
-        sent_count = notify_second_reminder()
+        sent_count: int = notify_second_reminder()
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
@@ -280,7 +280,7 @@ def task_notify_expired_account_deletion(self) -> int:
     )
 
     try:
-        sent_count = notify_expired_account_deletion()
+        sent_count: int = notify_expired_account_deletion()
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
