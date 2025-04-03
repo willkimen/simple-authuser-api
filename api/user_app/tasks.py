@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 
 from celery import shared_task
 from django.utils import timezone
+from user_app.constants.logs_constants import EMAIL_TASK_ERROR_LOGGER_NAME
 from user_app.email.email_service import (
     notify_activated_account,
     notify_changed_email,
@@ -26,7 +27,7 @@ from user_app.models import (
     ValidTokenModel,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(EMAIL_TASK_ERROR_LOGGER_NAME)
 
 
 @shared_task

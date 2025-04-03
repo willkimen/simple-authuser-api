@@ -1,6 +1,12 @@
 import logging
 from pathlib import Path
 
+from user_app.constants.logs_constants import (
+    EMAIL_TASK_ERROR_LEVEL,
+    EMAIL_TASK_ERROR_LEVEL_NAME,
+    EMAIL_TASK_ERROR_LOGGER_NAME,
+)
+
 # Project base directory
 # -----------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -101,17 +107,14 @@ USE_TZ = True
 
 # Logging
 # -----------------------------------------------------------------------------
-# Set the new level value
-EMAIL_TASK_ERROR = 35
-
 # Add level to logging system
-logging.addLevelName(EMAIL_TASK_ERROR, "EMAIL_TASK_ERROR")
+logging.addLevelName(EMAIL_TASK_ERROR_LEVEL, EMAIL_TASK_ERROR_LEVEL_NAME)
 
 
 # Create a custom method for the logger
 def email_task_error(self, message, *args, **kwargs):
-    if self.isEnabledFor(EMAIL_TASK_ERROR):
-        self._log(EMAIL_TASK_ERROR, message, args, **kwargs)
+    if self.isEnabledFor(EMAIL_TASK_ERROR_LEVEL):
+        self._log(EMAIL_TASK_ERROR_LEVEL, message, args, **kwargs)
 
 
 # Add the method to the logger
@@ -128,16 +131,16 @@ LOGGING = {
     },
     "handlers": {
         "email_task_error_file": {
-            "level": EMAIL_TASK_ERROR,
+            "level": EMAIL_TASK_ERROR_LEVEL,
             "class": "logging.FileHandler",
             "filename": "logs/email_task_errors.log",
             "formatter": "verbose_multiline",
         },
     },
     "loggers": {
-        "django": {
+        EMAIL_TASK_ERROR_LOGGER_NAME: {
             "handlers": ["email_task_error_file"],
-            "level": "DEBUG",
+            "level": EMAIL_TASK_ERROR_LEVEL,
             "propagate": True,
         },
     },
