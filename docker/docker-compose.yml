@@ -69,13 +69,13 @@ services:
     networks:
       - nginx_network
   # ====================================
-  # Celery Worker for 'removed_expired_code_token_queue'
-  worker_removed_code_token:
-    container_name: worker_removed_code_token
+  # Celery Worker for 'removal_queue'
+  worker_removal:
+    container_name: worker_removal
     build:
       context: ./../api/  
       dockerfile: ./../docker/Dockerfile.dev  
-    command: ["sh", "-c", "celery -A config worker --loglevel=debug -Q remove_expired_code_token_queue"]
+    command: ["sh", "-c", "celery -A config worker --loglevel=debug -Q removal_queue"]
     volumes:
       - ./../api/:/api
     env_file:
@@ -122,7 +122,7 @@ services:
     env_file:
       - ./../api/environments/.env
     depends_on:
-      worker_removed_code_token:
+      worker_removal:
         condition: service_healthy
     networks:
       - db_api_net
