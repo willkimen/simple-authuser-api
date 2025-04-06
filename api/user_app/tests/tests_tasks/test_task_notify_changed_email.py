@@ -2,9 +2,11 @@ from smtplib import SMTPException
 from unittest.mock import MagicMock, patch
 
 import pytest
-from celery.exceptions import Retry
+from celery import states
+from celery.result import EagerResult
 from user_app.tasks import task_notify_changed_email
 from user_app.tests.constants import (
+    LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
     NOTIFY_CHANGED_EMAIL_FUNCTION_TO_PATCH,
     TASKS_MODULE_PATH,
 )
@@ -22,8 +24,12 @@ def test_task_notify_changed_email_success():
     one email has been sent.
     """
     expected_success_send_email = 1
-    actual_sent_count = task_notify_changed_email(NEW_EMAIL)
+
+    result: EagerResult = task_notify_changed_email.apply(args=(NEW_EMAIL,))
+    actual_sent_count: int = result.get()
+
     assert expected_success_send_email == actual_sent_count
+    assert result.status == states.SUCCESS
 
 
 @pytest.mark.django_db
@@ -31,19 +37,18 @@ def test_task_notify_changed_email_success():
     f"{TASKS_MODULE_PATH}.{NOTIFY_CHANGED_EMAIL_FUNCTION_TO_PATCH}",
     side_effect=SMTPException(),
 )
-@patch.object(task_notify_changed_email, "retry", side_effect=Retry())
+@patch(f"{TASKS_MODULE_PATH}.{LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH}")
 def test_task_notify_changed_email_failure(
-    mock_retry: MagicMock, mock_notify_changed_email: MagicMock
+    mock_logger_email_task_error: MagicMock,
+    mock_notify_changed_email: MagicMock,
 ):
     """
     Test the failure scenario for the task_notify_chaged_email task.
-
-    This test simulates an SMTPException being raised when the
-    notify_changed_email function is called. It then verifies that
-    the task retries the operation by calling the `retry()` method once.
-    Finally, it checks that the retry exception (`Retry`) is raised.
     """
-    with pytest.raises(Retry):
-        task_notify_changed_email(NEW_EMAIL)
+    result: EagerResult = task_notify_changed_email.apply(args=(NEW_EMAIL,))
 
-    mock_retry.assert_called_once()
+    with pytest.raises(SMTPException):
+        result.get()
+
+    assert result.state == states.FAILURE
+    mock_logger_email_task_error.assert_called()

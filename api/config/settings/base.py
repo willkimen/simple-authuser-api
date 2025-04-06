@@ -167,5 +167,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # In this case, "redis_broker" refers to the name of the Docker container running Redis.
 # Make sure the container is named "redis_broker" in your Docker Compose.
 CELERY_BROKER_URL = "redis://redis_broker:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis_broker:6379/1"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"

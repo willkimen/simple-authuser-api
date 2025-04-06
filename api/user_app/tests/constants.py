@@ -28,6 +28,10 @@ TOKEN_SECRET_SETTING_TO_PATCH = "settings.TOKEN_SECRET"
 # =====================================
 # Paths to functions and classes that will be mocked in tests.
 
+
+# Constant for mocking message logging
+LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH = "logger.email_task_error"
+
 # Constant for mocking the method that limits the number of requests
 ALLOW_REQUEST_FUNCTION_TO_PATCH = "FivePerMinuteRateLimit.allow_request"
 

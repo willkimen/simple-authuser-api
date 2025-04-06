@@ -2,9 +2,11 @@ from smtplib import SMTPException
 from unittest.mock import MagicMock, patch
 
 import pytest
-from celery.exceptions import Retry
+from celery import states
+from celery.result import EagerResult
 from user_app.tasks import task_notify_reset_password
 from user_app.tests.constants import (
+    LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
     NOTIFY_RESET_PASSWORD_FUNCTION_TO_PATCH,
     TASKS_MODULE_PATH,
 )
@@ -22,8 +24,12 @@ def test_task_notify_reset_password_success():
     one email has been sent.
     """
     expected_success_send_email = 1
-    actual_sent_count = task_notify_reset_password(EMAIL)
+
+    result: EagerResult = task_notify_reset_password.apply(args=(EMAIL,))
+    actual_sent_count: int = result.get()
+
     assert expected_success_send_email == actual_sent_count
+    assert result.status == states.SUCCESS
 
 
 @pytest.mark.django_db
@@ -31,19 +37,19 @@ def test_task_notify_reset_password_success():
     f"{TASKS_MODULE_PATH}.{NOTIFY_RESET_PASSWORD_FUNCTION_TO_PATCH}",
     side_effect=SMTPException(),
 )
-@patch.object(task_notify_reset_password, "retry", side_effect=Retry())
+@patch(f"{TASKS_MODULE_PATH}.{LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH}")
 def test_task_notify_reset_password_failure(
-    mock_retry: MagicMock, mock_notify_reset_password: MagicMock
+    mock_logger_email_task_error: MagicMock,
+    mock_notify_reset_password: MagicMock,
 ):
     """
     Test the failure scenario for the task_notify_reset_password task.
-
-    This test simulates an SMTPException being raised when the
-    notify_reset_password function is called. It then verifies that
-    the task retries the operation by calling the `retry()` method once.
-    Finally, it checks that the retry exception (`Retry`) is raised.
     """
-    with pytest.raises(Retry):
-        task_notify_reset_password(EMAIL)
 
-    mock_retry.assert_called_once()
+    result: EagerResult = task_notify_reset_password.apply(args=(EMAIL,))
+
+    with pytest.raises(SMTPException):
+        result.get()
+
+    assert result.state == states.FAILURE
+    mock_logger_email_task_error.assert_called()

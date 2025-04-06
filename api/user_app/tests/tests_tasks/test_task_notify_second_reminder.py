@@ -4,12 +4,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import time_machine
-from celery.exceptions import Retry
+from celery import states
+from celery.result import EagerResult
 from django.utils import timezone
 from user_app.models import UserProfileModel
 from user_app.models.user_models import PendingAccountsModel
 from user_app.tasks import task_notify_second_reminder
 from user_app.tests.constants import (
+    LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
     NOTIFY_SECOND_REMINDER_FUNCTION_TO_PATCH,
     TASKS_MODULE_PATH,
 )
@@ -57,7 +59,8 @@ def create_users_for_reminder():
 
     Details:
         - The batch of users (created today before `CUTOFF_HOUR`) will have
-          their `PendingAccountsModel` entries created with the corresponding reminder dates.
+          their `PendingAccountsModel` entries created with the corresponding
+          reminder dates.
 
     Example:
         - The users registered before `CUTOFF_HOUR` will be eligible for
@@ -82,8 +85,12 @@ def test_task_notify_second_reminder_success(create_users_for_reminder):
     """
     with time_machine.travel(SECOND_REMINDER_DAY):
         expected_success_send_email = 1
-        actual_sent_count = task_notify_second_reminder()
+
+        result: EagerResult = task_notify_second_reminder.apply()
+        actual_sent_count: int = result.get()
+
         assert expected_success_send_email == actual_sent_count
+        assert result.status == states.SUCCESS
 
 
 @pytest.mark.django_db
@@ -101,8 +108,12 @@ def test_task_notify_second_reminder_not_reminders():
         - If there are no users to notify, `expected_send_count` should be -1.
     """
     expected_send_count = -1
-    actual_sent_count = task_notify_second_reminder()
+
+    result: EagerResult = task_notify_second_reminder.apply()
+    actual_sent_count: int = result.get()
+
     assert expected_send_count == actual_sent_count
+    assert result.status == states.SUCCESS
 
 
 @pytest.mark.django_db
@@ -110,19 +121,18 @@ def test_task_notify_second_reminder_not_reminders():
     f"{TASKS_MODULE_PATH}.{NOTIFY_SECOND_REMINDER_FUNCTION_TO_PATCH}",
     side_effect=SMTPException(),
 )
-@patch.object(task_notify_second_reminder, "retry", side_effect=Retry())
+@patch(f"{TASKS_MODULE_PATH}.{LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH}")
 def test_task_notify_second_reminder_failure(
-    mock_retry: MagicMock, mock_notify_second_reminder: MagicMock
+    mock_logger_email_task_error: MagicMock,
+    mock_notify_second_reminder: MagicMock,
 ):
     """
     Test the failure scenario for the task_notify_second_reminder task.
-
-    This test simulates an SMTPException being raised when the
-    notify_second_reminder function is called. It then verifies that
-    the task retries the operation by calling the `retry()` method once.
-    Finally, it checks that the retry exception (`Retry`) is raised.
     """
-    with pytest.raises(Retry):
-        task_notify_second_reminder()
+    result: EagerResult = task_notify_second_reminder.apply()
 
-    mock_retry.assert_called_once()
+    with pytest.raises(SMTPException):
+        result.get()
+
+    assert result.status == states.FAILURE
+    mock_logger_email_task_error.assert_called()

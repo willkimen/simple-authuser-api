@@ -2,9 +2,11 @@ from smtplib import SMTPException
 from unittest.mock import MagicMock, patch
 
 import pytest
-from celery.exceptions import Retry
+from celery import states
+from celery.result import EagerResult
 from user_app.tasks import task_send_reset_password_code
 from user_app.tests.constants import (
+    LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
     SEND_RESET_PASSWORD_CODE_FUNCTION_TO_PATCH,
     TASKS_MODULE_PATH,
     User,
@@ -35,8 +37,14 @@ def test_task_send_reset_password_code_success(activated_user):
     one email has been sent.
     """
     expected_success_send_email = 1
-    actual_sent_count = task_send_reset_password_code(activated_user.email)
+
+    result: EagerResult = task_send_reset_password_code.apply(
+        args=(activated_user.email,)
+    )
+    actual_sent_count: int = result.get()
+
     assert expected_success_send_email == actual_sent_count
+    assert result.status == states.SUCCESS
 
 
 @pytest.mark.django_db
@@ -44,19 +52,20 @@ def test_task_send_reset_password_code_success(activated_user):
     f"{TASKS_MODULE_PATH}.{SEND_RESET_PASSWORD_CODE_FUNCTION_TO_PATCH}",
     side_effect=SMTPException(),
 )
-@patch.object(task_send_reset_password_code, "retry", side_effect=Retry())
+@patch(f"{TASKS_MODULE_PATH}.{LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH}")
 def test_task_send_reset_password_code_failure(
-    mock_retry: MagicMock, mock_send_reset: MagicMock, activated_user
+    mock_logger_email_task_error: MagicMock,
+    mock_send_reset: MagicMock,
+    activated_user,
 ):
     """
     Test the failure scenario for the task_send_reset_password_code task.
-
-    This test simulates an SMTPException being raised when the
-    send_reset_password_code function is called. It then verifies that
-    the task retries the operation by calling the `retry()` method once.
-    Finally, it checks that the retry exception (`Retry`) is raised.
     """
-    with pytest.raises(Retry):
-        task_send_reset_password_code(activated_user.email)
+    result: EagerResult = task_send_reset_password_code.apply(
+        args=(activated_user.email,)
+    )
+    with pytest.raises(SMTPException):
+        result.get()
 
-    mock_retry.assert_called_once()
+    assert result.state == states.FAILURE
+    mock_logger_email_task_error.assert_called()

@@ -2,6 +2,8 @@ from datetime import timedelta
 
 import pytest
 import time_machine
+from celery import states
+from celery.result import EagerResult
 from django.utils import timezone
 from user_app.models import UserProfileModel
 from user_app.models.user_models import PendingAccountsModel
@@ -81,16 +83,15 @@ def test_deleted_expired_accounts(create_users_for_reminder):
         for user_email in EMAILS_INACTIVE_USERS:
             assert UserProfileModel.objects.filter(email=user_email).exists()
 
-        task_delete_expired_accounts.delay()
+        result: EagerResult = task_delete_expired_accounts.apply()
 
+        assert result.status == states.SUCCESS
         for user_email in EMAILS_INACTIVE_USERS:
             assert not UserProfileModel.objects.filter(email=user_email).exists()
 
 
 @pytest.mark.django_db
-def test_expired_account_not_deleted_before_scheduled_timet_(
-    create_users_for_reminder,
-):
+def test_expired_account_not_deleted_before_scheduled_time(create_users_for_reminder):
     """
     Verifies that inactive user accounts are not deleted before the
     scheduled deletion time.
@@ -99,7 +100,8 @@ def test_expired_account_not_deleted_before_scheduled_timet_(
         for user_email in EMAILS_INACTIVE_USERS:
             assert UserProfileModel.objects.filter(email=user_email).exists()
 
-        task_delete_expired_accounts.delay()
+        result: EagerResult = task_delete_expired_accounts.apply()
 
+        assert result.status == states.SUCCESS
         for user_email in EMAILS_INACTIVE_USERS:
             assert UserProfileModel.objects.filter(email=user_email).exists()

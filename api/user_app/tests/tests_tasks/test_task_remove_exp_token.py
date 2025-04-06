@@ -5,6 +5,8 @@ Test file for the asynchronous task `task_remove_exp_token`.
 from datetime import timedelta
 
 import pytest
+from celery import states
+from celery.result import EagerResult
 from django.utils import timezone
 from user_app.models import BlacklistTokenModel, ValidTokenModel
 from user_app.tasks import task_remove_exp_token
@@ -33,8 +35,9 @@ def test_task_should_remove_exp_token(user):
     assert BlacklistTokenModel.objects.filter(jti=blacklisted_jti).exists()
 
     # Call command to remove expired tokens
-    task_remove_exp_token()
+    result: EagerResult = task_remove_exp_token.apply()
 
+    assert result.status == states.SUCCESS
     # Verify if the tokens have been removed
     assert not ValidTokenModel.objects.filter(jti=valid_jti).exists()
     assert not BlacklistTokenModel.objects.filter(jti=blacklisted_jti).exists()
