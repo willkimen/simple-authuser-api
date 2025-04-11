@@ -23,6 +23,12 @@ TOKEN_SECRET = os.environ.get(
     "TOKEN_SECRET", "secret_token_insecure_jldsfj51dfsd65fsklj564564wg16ae5344*"
 )
 
+CSRF_TRUSTED_ORIGINS: list[str] = [
+    origin.strip() for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # URL configurations
 # -----------------------------------------------------------------------------

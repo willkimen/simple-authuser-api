@@ -105,6 +105,11 @@ USE_I18N = True
 USE_TZ = True
 
 
+# Static files
+# -----------------------------------------------------------------------------
+STATIC_URL = "/static/"
+STATIC_ROOT = "/api/static/"
+
 # Logging
 # -----------------------------------------------------------------------------
 # Add level to logging system

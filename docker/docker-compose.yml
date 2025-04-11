@@ -12,7 +12,7 @@ services:
       - db_api_net
     healthcheck:
       test: ["CMD-SHELL", 'pg_isready -d $POSTGRES_DB -U $POSTGRES_USER']
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 2
   # ====================================
@@ -27,7 +27,7 @@ services:
       - redis_api_net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 2
   # ====================================
@@ -38,6 +38,9 @@ services:
       dockerfile: ./../docker/Dockerfile.dev  
     volumes:
       - ./../api/:/api
+      - static_volume:/api/static/
+    expose:
+      - 80
     env_file:
       - ./../api/environments/.env
     command: ["sh", "-c", "commands.sh"]
@@ -52,7 +55,7 @@ services:
       - nginx_network
     healthcheck:
       test: ["CMD", "sh", "-c", "grep -q 'MIGRATED=True' /home/djuser/my_environment"]
-      interval: 10s
+      interval: 8s
       timeout: 5s
       retries: 2
   # ====================================
@@ -64,6 +67,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - static_volume:/static/:ro
     depends_on:
       - api
     networks:
@@ -88,7 +93,7 @@ services:
       - redis_api_net
     healthcheck:
       test: ["CMD", "celery", "-A", "config", "status"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 2
   # ====================================
@@ -131,6 +136,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  static_volume:
 # ====================================
 networks:
   db_api_net:

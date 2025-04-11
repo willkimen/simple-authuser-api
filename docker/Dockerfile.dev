@@ -20,13 +20,14 @@ WORKDIR /api/
 # Expose port 8000 to allow access to the application via HTTP
 EXPOSE 8000
 
-# Create a virtual environment in the /venv directory, 
+# Create a virtual environment in the /venv directory,
 # upgrade pip, and install the dependencies listed in requirements.txt
 RUN python -m venv /venv && \
     /venv/bin/pip install --upgrade pip && \
     /venv/bin/pip install -r requirements.txt && \
     adduser --disabled-password djuser && \
-    chown -R djuser:djuser /venv
+    chown -R djuser:djuser /venv  && \
+    mkdir -p /api/static && chown -R djuser:djuser /api/static
 
 # Set the PATH to include the application scripts and the virtual environment
 ENV PATH="/api/scripts:/venv/bin:$PATH"
