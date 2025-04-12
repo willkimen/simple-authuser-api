@@ -130,7 +130,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose_multiline": {
-            "format": "{levelname} {asctime} {module} {funcName}\n{message}",
+            "format": "{levelname};{asctime};{module};{funcName};{message}",
             "style": "{",
         },
     },

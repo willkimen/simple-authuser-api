@@ -4,7 +4,20 @@ from datetime import date, datetime, timedelta
 
 from celery import shared_task
 from django.utils import timezone
-from user_app.constants.logs_constants import EMAIL_TASK_ERROR_LOGGER_NAME
+from user_app.constants.logs_constants import (
+    EMAIL_TASK_ERROR_LOGGER_NAME,
+    FAILED_NOTIFY_ACTIVATED_ACCOUNT_TAG,
+    FAILED_NOTIFY_CHANGED_EMAIL_TAG,
+    FAILED_NOTIFY_DELETED_ACCOUNT_TAG,
+    FAILED_NOTIFY_EXPIRED_ACCOUNT_DELETION_TAG,
+    FAILED_NOTIFY_FIRST_REMINDER_TAG,
+    FAILED_NOTIFY_RESET_PASSWORD_TAG,
+    FAILED_NOTIFY_SECOND_REMINDER_TAG,
+    FAILED_SEND_ACCOUNT_ACTIVATION_CODE_TAG,
+    FAILED_SEND_EMAIL_CHANGE_CODE_TAG,
+    FAILED_SEND_RESET_PASSWORD_CODE_TAG,
+    email_task_error_message_format,
+)
 from user_app.email.email_service import (
     notify_activated_account,
     notify_changed_email,
@@ -66,9 +79,11 @@ def task_send_account_activation_code(self, user_email: str) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send account activation code.\n"
-                f"User Email: {user_email}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_SEND_ACCOUNT_ACTIVATION_CODE_TAG,
+                    to=user_email,
+                    error=str(e),
+                )
             )
         raise self.retry(exc=e)
 
@@ -87,11 +102,11 @@ def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
+            to = f"{actual_email},{new_email}"
             logger.email_task_error(
-                f"Failed to send email change code.\n"
-                f"Actual Email: {actual_email}\n"
-                f"New Email: {new_email}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_SEND_EMAIL_CHANGE_CODE_TAG, to=to, error=str(e)
+                )
             )
         raise self.retry(exc=e)
 
@@ -111,9 +126,9 @@ def task_send_reset_password_code(self, user_email: str) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send password reset code.\n"
-                f"User Email: {user_email}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_SEND_RESET_PASSWORD_CODE_TAG, to=user_email, error=str(e)
+                )
             )
         raise self.retry(exc=e)
 
@@ -132,9 +147,9 @@ def task_notify_activated_account(self, user_email: str) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send account activation notification.\n"
-                f"User Email: {user_email}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_NOTIFY_ACTIVATED_ACCOUNT_TAG, to=user_email, error=str(e)
+                )
             )
         raise self.retry(exc=e)
 
@@ -153,9 +168,9 @@ def task_notify_changed_email(self, user_email: str) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send email change notification.\n"
-                f"User Email: {user_email}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_NOTIFY_CHANGED_EMAIL_TAG, to=user_email, error=str(e)
+                )
             )
         raise self.retry(exc=e)
 
@@ -174,9 +189,9 @@ def task_notify_reset_password(self, user_email: str) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send password reset notification.\n"
-                f"User Email: {user_email}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_NOTIFY_RESET_PASSWORD_TAG, to=user_email, error=str(e)
+                )
             )
         raise self.retry(exc=e)
 
@@ -195,9 +210,9 @@ def task_notify_deleted_account(self, user_email: str) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send account deletion notification.\n"
-                f"User Email: {user_email}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_NOTIFY_DELETED_ACCOUNT_TAG, to=user_email, error=str(e)
+                )
             )
         raise self.retry(exc=e)
 
@@ -220,9 +235,11 @@ def task_notify_first_reminder(self) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send first reminder email.\n"
-                f"Emails: {', '.join(emails_for_reminder_today)}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_NOTIFY_FIRST_REMINDER_TAG,
+                    to=",".join(emails_for_reminder_today),
+                    error=str(e),
+                )
             )
         raise self.retry(exc=e)
 
@@ -245,9 +262,11 @@ def task_notify_second_reminder(self) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send second reminder email.\n"
-                f"Emails: {', '.join(emails_for_reminder_today)}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_NOTIFY_SECOND_REMINDER_TAG,
+                    to=",".join(emails_for_reminder_today),
+                    error=str(e),
+                )
             )
         raise self.retry(exc=e)
 
@@ -286,8 +305,10 @@ def task_notify_expired_account_deletion(self) -> int:
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
-                f"Failed to send expired account deletion notification.\n"
-                f"Emails: {', '.join(emails)}\n"
-                f"Error: {str(e)}"
+                email_task_error_message_format.format(
+                    tag=FAILED_NOTIFY_EXPIRED_ACCOUNT_DELETION_TAG,
+                    to=",".join(emails),
+                    error=str(e),
+                )
             )
         raise self.retry(exc=e)
