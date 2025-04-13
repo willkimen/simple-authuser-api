@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 
 from celery import shared_task
 from django.utils import timezone
+from user_app.constants.celery_constants import MAX_RETRIES, RETRY_BACKOFF_MAX
 from user_app.constants.logs_constants import (
     EMAIL_TASK_ERROR_LOGGER_NAME,
     FAILED_NOTIFY_ACTIVATED_ACCOUNT_TAG,
@@ -64,7 +65,12 @@ def task_remove_exp_token() -> None:
     BlacklistTokenModel.objects.filter(exp__lt=now).delete()
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_send_account_activation_code(self, user_email: str) -> int:
     """
     Celery task to send an activation code via email.
@@ -88,7 +94,12 @@ def task_send_account_activation_code(self, user_email: str) -> int:
         raise self.retry(exc=e)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
     """
     Celery task to send a verification code for changing the user's email.
@@ -111,7 +122,12 @@ def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
         raise self.retry(exc=e)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_send_reset_password_code(self, user_email: str) -> int:
     """
     Celery task to send a password reset verification code via email.
@@ -133,7 +149,12 @@ def task_send_reset_password_code(self, user_email: str) -> int:
         raise self.retry(exc=e)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_notify_activated_account(self, user_email: str) -> int:
     """
     Celery task to send a notification email informing the user that their
@@ -154,7 +175,12 @@ def task_notify_activated_account(self, user_email: str) -> int:
         raise self.retry(exc=e)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_notify_changed_email(self, user_email: str) -> int:
     """
     Celery task to send a notification email informing the user that their
@@ -175,7 +201,12 @@ def task_notify_changed_email(self, user_email: str) -> int:
         raise self.retry(exc=e)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_notify_reset_password(self, user_email: str) -> int:
     """
     Celery task to send a notification email informing the user that their
@@ -196,7 +227,12 @@ def task_notify_reset_password(self, user_email: str) -> int:
         raise self.retry(exc=e)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_notify_deleted_account(self, user_email: str) -> int:
     """
     Celery task to send a notification email informing the user that their
@@ -217,7 +253,12 @@ def task_notify_deleted_account(self, user_email: str) -> int:
         raise self.retry(exc=e)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_notify_first_reminder(self) -> int:
     """
     Celery task to send the first reminder notification email to users
@@ -244,7 +285,12 @@ def task_notify_first_reminder(self) -> int:
         raise self.retry(exc=e)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_notify_second_reminder(self) -> int:
     """
     Celery task to send the second reminder notification email to users
@@ -285,7 +331,12 @@ def task_delete_expired_accounts():
     PendingAccountsModel.objects.delete_expired_accounts(yesterday)
 
 
-@shared_task(bind=True, retry_backoff=True, max_retries=5)
+@shared_task(
+    bind=True,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
 def task_notify_expired_account_deletion(self) -> int:
     """
     Celery task to send the notification email to users informing about the removal

@@ -11,3 +11,6 @@ NOTIFY_EXPIRED_ACCOUNT_DELETION_TASK_NAME = "Notify Expired Account Deletion Tas
 REMOVE_EXPIRED_ACCOUNT_TASK_NAME = "Remove Expired Account"
 REMOVALS_QUEUE_NAME = "removal_queue"
 EMAIL_QUEUE_NAME = "email_queue"
+
+RETRY_BACKOFF_MAX = 300
+MAX_RETRIES = 7
