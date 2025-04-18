@@ -1,8 +1,11 @@
-from datetime import date, datetime, timedelta
+from __future__ import annotations
+
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models, transaction
+from django.utils import timezone
 from django.utils.timezone import now
 
 
@@ -97,121 +100,61 @@ class UserProfileModel(AbstractUser):
 
 
 class PendingAccountsManager(models.Manager):
-    def get_first_reminder_emails_today(self) -> list[str]:
+    def get_first_reminder_accounts_today(self) -> list[PendingAccountsModel]:
         """
-        Returns the email addresses of users who should receive their first
-        reminder today.
+        Returns the PendingAccountsModel instances for users who should receive
+        their first reminder today.
 
         How it works:
             - Filters records where `first_reminder_at` matches today's date.
-            - Returns only the corresponding users' email addresses.
-
-        Returns:
-            QuerySet: A list of email addresses of users who should be notified
-                      today with the first reminder.
+            - Returns the full list of matching PendingAccountsModel instances.
         """
         today = now().date()
-        return list(
-            self.filter(first_reminder_at__date=today).values_list(
-                "user__email", flat=True
-            )
-        )
+        return list(self.select_related("user").filter(first_reminder_at__date=today))
 
-    def get_second_reminder_emails_today(self) -> list[str]:
+    def get_second_reminder_accounts_today(self) -> list[PendingAccountsModel]:
         """
-        Returns the email addresses of users who should receive their second
-        reminder today.
+        Returns the PendingAccountsModel instances for users who should receive
+        their second reminder today.
 
         How it works:
             - Filters records where `second_reminder_at` matches today's date.
-            - Returns only the corresponding users' email addresses.
-
-        Returns:
-            QuerySet: A list of email addresses of users who should be notified
-                      today with the second reminder.
+            - Returns the full list of matching PendingAccountsModel instances.
         """
         today = now().date()
-        return list(
-            self.filter(second_reminder_at__date=today).values_list(
-                "user__email", flat=True
-            )
-        )
+        return list(self.select_related("user").filter(second_reminder_at__date=today))
 
-    def get_first_reminder_deadline_today(self) -> datetime | None:
+    def delete_expired_accounts(self) -> None:
         """
-        Returns the activation deadline (`activation_deadline`) for users who
-        should receive their first reminder today.
-
-        How it works:
-            - Filters records where `first_reminder_at` matches today's date.
-            - Returns only the `activation_deadline` field.
-            - Since all matching records share the same activation deadline,
-              only one result is returned.
-
-        Returns:
-            datetime or None: The activation deadline or `None` if there are no
-                              eligible users for the reminder today.
-        """
-        today = now().date()
-        return (
-            self.filter(first_reminder_at__date=today)
-            .values_list("activation_deadline", flat=True)
-            .first()
-        )
-
-    def get_second_reminder_deadline_today(self) -> datetime | None:
-        """
-        Returns the activation deadline (`activation_deadline`) for users who
-        should receive their second reminder today.
-
-        How it works:
-            - Filters records where `second_reminder_at` matches today's date.
-            - Returns only the `activation_deadline` field.
-            - Since all matching records share the same activation deadline,
-              only one result is returned.
-
-        Returns:
-            datetime or None: The activation deadline or `None` if there are no
-                              eligible users for the reminder today.
-        """
-        today = now().date()
-        return (
-            self.filter(second_reminder_at__date=today)
-            .values_list("activation_deadline", flat=True)
-            .first()
-        )
-
-    def delete_expired_accounts(self, target_date: date) -> None:
-        """
-        Deletes users whose account activation deadline matches the given date.
+        Deletes users whose account activation period has expired.
         Saves their emails into the notification table before deletion.
-
-        Args:
-            target_date (date): The target date to be used to search for users
-                                who have expired the time limit to activate their
-                                account.
         """
-        # Filters PendingAccountsModel with deadline equal to target_date
-        pending_accounts = self.select_related("user").filter(
-            activation_deadline__date=target_date
+        # Filters PendingAccountsModel whose account activation period has expired.
+        pending_accounts: list[PendingAccountsModel] = list(
+            self.select_related("user").filter(
+                activation_deadline__date__lt=timezone.now().date()
+            )
         )
 
-        with transaction.atomic():
-            emails_to_persist = []
-            user_ids_to_delete = []
+        if pending_accounts:
+            with transaction.atomic():
+                emails_to_persist = []
+                user_ids_to_delete = []
 
-            for pending_account in pending_accounts:
-                user = pending_account.user
-                emails_to_persist.append(
-                    UsersPendingDeletionNotificationModel(email=user.email)
+                for pending_account in pending_accounts:
+                    user = pending_account.user
+                    emails_to_persist.append(
+                        UsersPendingDeletionNotificationModel(email=user.email)
+                    )
+                    user_ids_to_delete.append(user.id)
+
+                # Save emails from users who will be deleted for later notification.
+                UsersPendingDeletionNotificationModel.objects.bulk_create(
+                    emails_to_persist
                 )
-                user_ids_to_delete.append(user.id)
 
-            # Save emails
-            UsersPendingDeletionNotificationModel.objects.bulk_create(emails_to_persist)
-
-            # Delete users (automatic cascade in relationships)
-            UserProfileModel.objects.filter(id__in=user_ids_to_delete).delete()
+                # Delete users (automatic cascade in relationships)
+                UserProfileModel.objects.filter(id__in=user_ids_to_delete).delete()
 
 
 class PendingAccountsModel(models.Model):
@@ -350,7 +293,7 @@ class PendingAccountsModel(models.Model):
         self.second_reminder_at = self.user.date_joined + timedelta(days=second_day)
 
         self.activation_deadline = self.second_reminder_at.replace(
-            hour=23, minute=59, second=0, microsecond=0
+            hour=23, minute=59, second=59, microsecond=0
         )
 
         super().save(*args, **kwargs)

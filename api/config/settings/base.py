@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 
 from user_app.constants.logs_constants import (
@@ -112,6 +113,8 @@ STATIC_ROOT = "/api/static/"
 
 # Logging
 # -----------------------------------------------------------------------------
+os.makedirs("logs", exist_ok=True)
+
 # Add level to logging system
 logging.addLevelName(EMAIL_TASK_ERROR_LEVEL, EMAIL_TASK_ERROR_LEVEL_NAME)
 

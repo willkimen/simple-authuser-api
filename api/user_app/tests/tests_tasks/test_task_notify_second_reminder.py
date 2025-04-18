@@ -12,7 +12,7 @@ from user_app.models.user_models import PendingAccountsModel
 from user_app.tasks import task_notify_second_reminder
 from user_app.tests.constants import (
     LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
-    NOTIFY_SECOND_REMINDER_FUNCTION_TO_PATCH,
+    NOTIFY_ACTIVATION_ACCOUNT_REMINDER_FUNCTION_TO_PATCH,
     TASKS_MODULE_PATH,
 )
 
@@ -38,6 +38,10 @@ TODAY_BEFORE_CUTOFF = timezone.now().replace(
 
 SECOND_REMINDER_DAY = timezone.now() + timedelta(
     days=PendingAccountsModel.REMINDER_DAYS["before_cutoff"]["second_day"]
+)
+
+ACTIVATION_DEADLINE_DAY = SECOND_REMINDER_DAY.replace(
+    hour=23, minute=59, second=59, microsecond=0
 )
 
 
@@ -86,7 +90,9 @@ def test_task_notify_second_reminder_success(create_users_for_reminder):
     with time_machine.travel(SECOND_REMINDER_DAY):
         expected_success_send_email = 1
 
-        result: EagerResult = task_notify_second_reminder.apply()
+        result: EagerResult = task_notify_second_reminder.apply(
+            args=(EMAILS_INACTIVE_USERS, ACTIVATION_DEADLINE_DAY)
+        )
         actual_sent_count: int = result.get()
 
         assert expected_success_send_email == actual_sent_count
@@ -94,42 +100,20 @@ def test_task_notify_second_reminder_success(create_users_for_reminder):
 
 
 @pytest.mark.django_db
-def test_task_notify_second_reminder_not_reminders():
-    """
-    Tests the scenario where there are no users to notify, when
-    no reminders are scheduled for the test day.
-
-    This test checks if the task_notify_second_reminder function returns -1
-    when there are no users with reminders scheduled for the current day.
-
-    If no emails are to be sent, the function should return -1.
-
-    Expected result:
-        - If there are no users to notify, `expected_send_count` should be -1.
-    """
-    expected_send_count = -1
-
-    result: EagerResult = task_notify_second_reminder.apply()
-    actual_sent_count: int = result.get()
-
-    assert expected_send_count == actual_sent_count
-    assert result.status == states.SUCCESS
-
-
-@pytest.mark.django_db
 @patch(
-    f"{TASKS_MODULE_PATH}.{NOTIFY_SECOND_REMINDER_FUNCTION_TO_PATCH}",
+    f"{TASKS_MODULE_PATH}.{NOTIFY_ACTIVATION_ACCOUNT_REMINDER_FUNCTION_TO_PATCH}",
     side_effect=SMTPException(),
 )
 @patch(f"{TASKS_MODULE_PATH}.{LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH}")
 def test_task_notify_second_reminder_failure(
-    mock_logger_email_task_error: MagicMock,
-    mock_notify_second_reminder: MagicMock,
+    mock_logger_email_task_error: MagicMock, mock_notify_second_reminder: MagicMock
 ):
     """
     Test the failure scenario for the task_notify_second_reminder task.
     """
-    result: EagerResult = task_notify_second_reminder.apply()
+    result: EagerResult = task_notify_second_reminder.apply(
+        args=(EMAILS_INACTIVE_USERS, ACTIVATION_DEADLINE_DAY)
+    )
 
     with pytest.raises(SMTPException):
         result.get()

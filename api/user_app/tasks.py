@@ -1,8 +1,9 @@
 import logging
 import smtplib
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
-from celery import shared_task
+from celery import Task, chain, shared_task
+from dateutil.parser import parse
 from django.utils import timezone
 from user_app.constants.celery_constants import MAX_RETRIES, RETRY_BACKOFF_MAX
 from user_app.constants.logs_constants import (
@@ -21,12 +22,11 @@ from user_app.constants.logs_constants import (
 )
 from user_app.email.email_service import (
     notify_activated_account,
+    notify_activation_account_reminder,
     notify_changed_email,
     notify_deleted_account,
     notify_expired_account_deletion,
-    notify_first_reminder,
     notify_reset_password,
-    notify_second_reminder,
     send_account_activation_code,
     send_email_change_code,
     send_reset_password_code,
@@ -35,13 +35,62 @@ from user_app.models import (
     AccountActivationCodeModel,
     BlacklistTokenModel,
     ChangeEmailCodeModel,
+    FailedTaskModel,
     PendingAccountsModel,
     ResetPasswordCodeModel,
-    UsersPendingDeletionNotificationModel,
     ValidTokenModel,
 )
 
 logger = logging.getLogger(EMAIL_TASK_ERROR_LOGGER_NAME)
+
+
+def get_emails_and_deadline(is_first_reminder: bool) -> tuple[list[str], datetime]:
+    """
+    Fetches the emails of users who need to be notified about their pending account activation.
+    Also returns the activation deadline for the accounts.
+
+    Args:
+        is_first_reminder (bool): Indicates whether this is the first or second reminder.
+
+    Returns:
+        tuple[list[str], datetime]: A tuple containing a list of emails and the account activation deadline.
+    """
+    if is_first_reminder:
+        pending_accounts: list[PendingAccountsModel] = (
+            PendingAccountsModel.objects.get_first_reminder_accounts_today()
+        )
+    else:
+        pending_accounts: list[PendingAccountsModel] = (
+            PendingAccountsModel.objects.get_second_reminder_accounts_today()
+        )
+
+    if not pending_accounts:
+        return ([], None)
+
+    emails = [pa.user.email for pa in pending_accounts]
+    activation_deadline: datetime = pending_accounts[0].activation_deadline
+
+    return (emails, activation_deadline)
+
+
+class TaskFailure(Task):
+    """
+    This class provides a way to log task failure details by creating a database
+    record whenever a task fails.
+    It captures the task name, ID, arguments, exception message, and traceback.
+    """
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        FailedTaskModel.objects.create(
+            task_name=self.name,
+            task_id=task_id,
+            args=args,
+            kwargs=kwargs,
+            exception=str(exc),
+            traceback=str(einfo.traceback),
+        )
+
+        super().on_failure(exc, task_id, args, kwargs, einfo)
 
 
 @shared_task
@@ -67,6 +116,7 @@ def task_remove_exp_token() -> None:
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
@@ -87,6 +137,7 @@ def task_send_account_activation_code(self, user_email: str) -> int:
             logger.email_task_error(
                 email_task_error_message_format.format(
                     tag=FAILED_SEND_ACCOUNT_ACTIVATION_CODE_TAG,
+                    task_id=self.request.id,
                     to=user_email,
                     error=str(e),
                 )
@@ -96,6 +147,7 @@ def task_send_account_activation_code(self, user_email: str) -> int:
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
@@ -116,7 +168,10 @@ def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
             to = f"{actual_email},{new_email}"
             logger.email_task_error(
                 email_task_error_message_format.format(
-                    tag=FAILED_SEND_EMAIL_CHANGE_CODE_TAG, to=to, error=str(e)
+                    tag=FAILED_SEND_EMAIL_CHANGE_CODE_TAG,
+                    task_id=self.request.id,
+                    to=to,
+                    error=str(e),
                 )
             )
         raise self.retry(exc=e)
@@ -124,6 +179,7 @@ def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
@@ -143,7 +199,10 @@ def task_send_reset_password_code(self, user_email: str) -> int:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
                 email_task_error_message_format.format(
-                    tag=FAILED_SEND_RESET_PASSWORD_CODE_TAG, to=user_email, error=str(e)
+                    tag=FAILED_SEND_RESET_PASSWORD_CODE_TAG,
+                    task_id=self.request.id,
+                    to=user_email,
+                    error=str(e),
                 )
             )
         raise self.retry(exc=e)
@@ -151,6 +210,7 @@ def task_send_reset_password_code(self, user_email: str) -> int:
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
@@ -169,7 +229,10 @@ def task_notify_activated_account(self, user_email: str) -> int:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
                 email_task_error_message_format.format(
-                    tag=FAILED_NOTIFY_ACTIVATED_ACCOUNT_TAG, to=user_email, error=str(e)
+                    tag=FAILED_NOTIFY_ACTIVATED_ACCOUNT_TAG,
+                    task_id=self.request.id,
+                    to=user_email,
+                    error=str(e),
                 )
             )
         raise self.retry(exc=e)
@@ -177,6 +240,7 @@ def task_notify_activated_account(self, user_email: str) -> int:
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
@@ -195,7 +259,10 @@ def task_notify_changed_email(self, user_email: str) -> int:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
                 email_task_error_message_format.format(
-                    tag=FAILED_NOTIFY_CHANGED_EMAIL_TAG, to=user_email, error=str(e)
+                    tag=FAILED_NOTIFY_CHANGED_EMAIL_TAG,
+                    task_id=self.request.id,
+                    to=user_email,
+                    error=str(e),
                 )
             )
         raise self.retry(exc=e)
@@ -203,6 +270,7 @@ def task_notify_changed_email(self, user_email: str) -> int:
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
@@ -221,7 +289,10 @@ def task_notify_reset_password(self, user_email: str) -> int:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
                 email_task_error_message_format.format(
-                    tag=FAILED_NOTIFY_RESET_PASSWORD_TAG, to=user_email, error=str(e)
+                    tag=FAILED_NOTIFY_RESET_PASSWORD_TAG,
+                    task_id=self.request.id,
+                    to=user_email,
+                    error=str(e),
                 )
             )
         raise self.retry(exc=e)
@@ -229,6 +300,7 @@ def task_notify_reset_password(self, user_email: str) -> int:
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
@@ -247,38 +319,9 @@ def task_notify_deleted_account(self, user_email: str) -> int:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
                 email_task_error_message_format.format(
-                    tag=FAILED_NOTIFY_DELETED_ACCOUNT_TAG, to=user_email, error=str(e)
-                )
-            )
-        raise self.retry(exc=e)
-
-
-@shared_task(
-    bind=True,
-    retry_backoff=True,
-    retry_backoff_max=RETRY_BACKOFF_MAX,
-    max_retries=MAX_RETRIES,
-)
-def task_notify_first_reminder(self) -> int:
-    """
-    Celery task to send the first reminder notification email to users
-    informing them that they have not activated their accounts.
-    If an SMTP exception occurs, the task will automatically
-    retry up to five times with exponential backoff.
-    """
-    emails_for_reminder_today: list[str] = (
-        PendingAccountsModel.objects.get_first_reminder_emails_today()
-    )
-
-    try:
-        sent_count: int = notify_first_reminder()
-        return sent_count
-    except smtplib.SMTPException as e:
-        if self.request.retries == self.max_retries:
-            logger.email_task_error(
-                email_task_error_message_format.format(
-                    tag=FAILED_NOTIFY_FIRST_REMINDER_TAG,
-                    to=",".join(emails_for_reminder_today),
+                    tag=FAILED_NOTIFY_DELETED_ACCOUNT_TAG,
+                    task_id=self.request.id,
+                    to=user_email,
                     error=str(e),
                 )
             )
@@ -287,30 +330,72 @@ def task_notify_first_reminder(self) -> int:
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
 )
-def task_notify_second_reminder(self) -> int:
+def task_notify_first_reminder(
+    self, emails: list[str], activation_deadline: datetime | str
+) -> int:
+    """
+    Celery task to send the first reminder notification email to users
+    informing them that they have not activated their accounts.
+    If an SMTP exception occurs, the task will automatically
+    retry up to five times with exponential backoff.
+    """
+    if isinstance(activation_deadline, str):
+        activation_deadline = parse(activation_deadline)
+
+    try:
+        sent_count: int = notify_activation_account_reminder(
+            emails, activation_deadline
+        )
+        return sent_count
+    except smtplib.SMTPException as e:
+        if self.request.retries == self.max_retries:
+            logger.email_task_error(
+                email_task_error_message_format.format(
+                    tag=FAILED_NOTIFY_FIRST_REMINDER_TAG,
+                    task_id=self.request.id,
+                    to=",".join(emails),
+                    error=str(e),
+                )
+            )
+        raise self.retry(exc=e)
+
+
+@shared_task(
+    bind=True,
+    base=TaskFailure,
+    retry_backoff=True,
+    retry_backoff_max=RETRY_BACKOFF_MAX,
+    max_retries=MAX_RETRIES,
+)
+def task_notify_second_reminder(
+    self, emails: list[str], activation_deadline: datetime | str
+) -> int:
     """
     Celery task to send the second reminder notification email to users
     informing them that they have not activated their accounts.
     If an SMTP exception occurs, the task will automatically
     retry up to five times with exponential backoff.
     """
-    emails_for_reminder_today: list[str] = (
-        PendingAccountsModel.objects.get_second_reminder_emails_today()
-    )
+    if isinstance(activation_deadline, str):
+        activation_deadline = parse(activation_deadline)
 
     try:
-        sent_count: int = notify_second_reminder()
+        sent_count: int = notify_activation_account_reminder(
+            emails, activation_deadline
+        )
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
                 email_task_error_message_format.format(
                     tag=FAILED_NOTIFY_SECOND_REMINDER_TAG,
-                    to=",".join(emails_for_reminder_today),
+                    task_id=self.request.id,
+                    to=",".join(emails),
                     error=str(e),
                 )
             )
@@ -318,21 +403,42 @@ def task_notify_second_reminder(self) -> int:
 
 
 @shared_task
+def wrapper_task_notify_first_reminder() -> None:
+    """
+    Wrapper task scheduled by Celery Beat to handle the first reminder notification.
+
+    It separates the logic of retrieving user emails and activation deadline
+    from the actual task that sends the reminder notification.
+    """
+    emails, activation_deadline = get_emails_and_deadline(is_first_reminder=True)
+    if emails and activation_deadline:
+        task_notify_first_reminder.delay(emails, activation_deadline)
+
+
+@shared_task
+def wrapper_task_notify_second_reminder() -> None:
+    """
+    Wrapper task scheduled by Celery Beat to handle the second reminder notification.
+
+    It separates the logic of retrieving user emails and activation deadline
+    from the actual task that sends the reminder notification.
+    """
+    emails, activation_deadline = get_emails_and_deadline(is_first_reminder=False)
+    if emails and activation_deadline:
+        task_notify_second_reminder.delay(emails, activation_deadline)
+
+
+@shared_task
 def task_delete_expired_accounts():
     """
     Task that deletes users who have not activated their accounts in a timely manner.
-
-    - Note:
-        This task will be scheduled to run every day at 00:00, i.e. one day after
-        activation_deadline, so to delete users on the correct day you will need
-        to enter yesterday's date.
     """
-    yesterday: date = timezone.now().date() - timedelta(days=1)
-    PendingAccountsModel.objects.delete_expired_accounts(yesterday)
+    PendingAccountsModel.objects.delete_expired_accounts()
 
 
 @shared_task(
     bind=True,
+    base=TaskFailure,
     retry_backoff=True,
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
@@ -345,21 +451,44 @@ def task_notify_expired_account_deletion(self) -> int:
 
     If an SMTP exception occurs, the task will automatically
     retry up to five times with exponential backoff.
-    """
-    emails: list[str] = list(
-        UsersPendingDeletionNotificationModel.objects.values_list("email", flat=True)
-    )
 
+    Note:
+        This task must be scheduled to run **after** `task_delete_expired_accounts`,
+        since it relies on the emails collected during the account deletion process.
+    """
     try:
-        sent_count: int = notify_expired_account_deletion()
+        sent_count, _ = notify_expired_account_deletion()
         return sent_count
     except smtplib.SMTPException as e:
         if self.request.retries == self.max_retries:
             logger.email_task_error(
                 email_task_error_message_format.format(
                     tag=FAILED_NOTIFY_EXPIRED_ACCOUNT_DELETION_TAG,
-                    to=",".join(emails),
+                    task_id=self.request.id,
+                    to="",
                     error=str(e),
                 )
             )
         raise self.retry(exc=e)
+
+
+@shared_task
+def task_delete_expired_accounts_and_notify():
+    """
+    Celery task that orchestrates the full cleanup flow of expired user accounts.
+
+    This task performs the following steps:
+        1. Deletes users who failed to activate their accounts within the allowed time,
+           and stores their emails in a notification table.
+        2. After successful deletion, sends an email notification to those users,
+           informing them about the account removal.
+
+    Implementation note:
+        - This task uses a Celery `chain` to ensure that the notification task is only
+          executed if the deletion task completes successfully.
+        - It replaces the need for scheduling the two tasks independently via Celery Beat.
+        - Only this task should be scheduled periodically (e.g., daily at 00:00).
+    """
+    chain(
+        task_delete_expired_accounts.s(), task_notify_expired_account_deletion.s()
+    ).apply_async()

@@ -46,8 +46,10 @@ SECOND_REMINDER_DAY = timezone.now() + timedelta(
 
 # Sets the deadline date for account activation.
 ACTIVATION_DEADLINE_DAY = SECOND_REMINDER_DAY.replace(
-    hour=23, minute=59, second=0, microsecond=0
+    hour=23, minute=59, second=59, microsecond=0
 )
+
+DAY_AFTER_ACTIVATION_DEADLINE = ACTIVATION_DEADLINE_DAY + timedelta(seconds=1)
 
 
 # ============ Fixtures =========================
@@ -142,7 +144,7 @@ def test_reminders_and_deadline_are_set_correctly_when_user_registers_after_cuto
     )
 
     ACTIVATION_DEADLINE_DAY = SECOND_REMINDER_DAY.replace(
-        hour=23, minute=59, second=0, microsecond=0
+        hour=23, minute=59, second=59, microsecond=0
     )
 
     actual_pending = PendingAccountsModel.objects.create(
@@ -159,7 +161,7 @@ def test_first_reminder_emails_are_fetched_correctly_for_today(
     create_users_for_reminder,
 ):
     """
-    Test get_first_reminder_emails_today method correctly returns email addresses
+    Test get_first_reminder_accounts_today method correctly returns email addresses
     for users who should be notified today with the first reminder.
 
     This test:
@@ -169,12 +171,17 @@ def test_first_reminder_emails_are_fetched_correctly_for_today(
     # Travel to the next day to check if the system correctly fetched
     # the email addresses that should be notified today.
     with time_machine.travel(FIRST_REMINDER_DAY):
-        actual_emails_fetched = (
-            PendingAccountsModel.objects.get_first_reminder_emails_today()
+        pending_accounts: list[PendingAccountsModel] = (
+            PendingAccountsModel.objects.get_first_reminder_accounts_today()
         )
+
+        actual_emails = []
+        for pending_account in pending_accounts:
+            actual_emails.append(pending_account.user.email)
+
         # Assert that only the expected emails for today are fetched.
         for expected_email in EMAILS_INACTIVE_USERS:
-            assert expected_email in actual_emails_fetched
+            assert expected_email in actual_emails
 
 
 @pytest.mark.django_db
@@ -182,7 +189,7 @@ def test_second_reminder_emails_are_fetched_correctly_for_today(
     create_users_for_reminder,
 ):
     """
-    Test get_second_reminder_emails_today method correctly returns email addresses
+    Test get_second_reminder_accounts_today method correctly returns email addresses
     for users who should be notified today with the second reminder.
 
     This test:
@@ -190,67 +197,20 @@ def test_second_reminder_emails_are_fetched_correctly_for_today(
           user registration.
         - Fetches the email addresses of users who should receive the second reminder.
     """
+    # Travel to the next day to check if the system correctly fetched
+    # the email addresses that should be notified today.
     with time_machine.travel(SECOND_REMINDER_DAY):
-        actual_emails_fetched = (
-            PendingAccountsModel.objects.get_second_reminder_emails_today()
+        pending_accounts: list[PendingAccountsModel] = (
+            PendingAccountsModel.objects.get_second_reminder_accounts_today()
         )
+
+        actual_emails = []
+        for pending_account in pending_accounts:
+            actual_emails.append(pending_account.user.email)
+
         # Assert that only the expected emails for today are fetched.
         for expected_email in EMAILS_INACTIVE_USERS:
-            assert expected_email in actual_emails_fetched
-
-
-@pytest.mark.django_db
-def test_get_first_reminder_deadline_today(create_users_for_reminder):
-    """
-    Tests whether the get_first_reminder_deadline_today method correctly returns
-    the activation deadline for users who should receive their first reminder today.
-
-    This test:
-    - Simulates today's date as the first reminder day.
-    - Retrieves the expected deadline for users scheduled to receive this reminder.
-    - Verifies that the method returns the correct deadline.
-    """
-    with time_machine.travel(FIRST_REMINDER_DAY):
-        expected_deadline = (
-            PendingAccountsModel.objects.filter(
-                first_reminder_at__date=timezone.now().date()
-            )
-            .values_list("activation_deadline", flat=True)
-            .first()
-        )
-
-        actual_deadline = (
-            PendingAccountsModel.objects.get_first_reminder_deadline_today()
-        )
-
-        assert actual_deadline == expected_deadline
-
-
-@pytest.mark.django_db
-def test_get_second_reminder_deadline_today(create_users_for_reminder):
-    """
-    Tests whether the get_second_reminder_deadline_today method correctly returns
-    the activation deadline for users who should receive their second reminder today.
-
-    This test:
-    - Simulates today's date as the second reminder day.
-    - Retrieves the expected deadline for users scheduled to receive this reminder.
-    - Verifies that the method returns the correct deadline.
-    """
-    with time_machine.travel(SECOND_REMINDER_DAY):
-        expected_deadline = (
-            PendingAccountsModel.objects.filter(
-                second_reminder_at__date=timezone.now().date()
-            )
-            .values_list("activation_deadline", flat=True)
-            .first()
-        )
-
-        actual_deadline = (
-            PendingAccountsModel.objects.get_second_reminder_deadline_today()
-        )
-
-        assert actual_deadline == expected_deadline
+            assert expected_email in actual_emails
 
 
 @pytest.mark.django_db
@@ -260,12 +220,11 @@ def test_accounts_with_expired_deadlines_are_deleted(create_users_for_reminder):
     are actually removed from the system.
     The method that removes these accounts is .delete_expired_accounts().
     """
-    with time_machine.travel(ACTIVATION_DEADLINE_DAY):
+    with time_machine.travel(DAY_AFTER_ACTIVATION_DEADLINE):
         for user_email in EMAILS_INACTIVE_USERS:
             assert UserProfileModel.objects.filter(email=user_email).exists()
 
-        today = timezone.localdate()
-        PendingAccountsModel.objects.delete_expired_accounts(today)
+        PendingAccountsModel.objects.delete_expired_accounts()
 
         for user_email in EMAILS_INACTIVE_USERS:
             assert not UserProfileModel.objects.filter(email=user_email).exists()
@@ -279,10 +238,8 @@ def test_deleted_users_have_their_emails_saved_for_notification(
     Tests whether accounts that have been removed will have their emails
     persisted for later notification.
     """
-    with time_machine.travel(ACTIVATION_DEADLINE_DAY):
-        today = timezone.localdate()
-
-        PendingAccountsModel.objects.delete_expired_accounts(today)
+    with time_machine.travel(DAY_AFTER_ACTIVATION_DEADLINE):
+        PendingAccountsModel.objects.delete_expired_accounts()
 
         for user_email in EMAILS_INACTIVE_USERS:
             assert UsersPendingDeletionNotificationModel.objects.filter(

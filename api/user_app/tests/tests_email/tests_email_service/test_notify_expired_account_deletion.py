@@ -39,7 +39,7 @@ def test_success_send_email(persistent_emails: list[str]):
       there was an issue with sending the email.
     """
     expected_send_count = 1
-    actual_sent_count = notify_expired_account_deletion()
+    actual_sent_count, _ = notify_expired_account_deletion()
     assert expected_send_count == actual_sent_count
 
 
@@ -85,5 +85,5 @@ def test_does_not_send_notification_when_there_are_no_users():
     When there are no users to be notified, returns -1.
     """
     expected_send_count = -1
-    actual_sent_count: int = notify_expired_account_deletion()
+    actual_sent_count, _ = notify_expired_account_deletion()
     assert expected_send_count == actual_sent_count

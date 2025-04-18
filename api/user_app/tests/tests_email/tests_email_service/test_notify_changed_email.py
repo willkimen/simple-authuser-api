@@ -2,12 +2,12 @@ import smtplib
 from unittest.mock import MagicMock, patch
 
 import pytest
+from user_app.email.email_service import notify_changed_email
 from user_app.tests.constants import (
     CHANGE_NOTIFICATION_EMAIL_CLASS_TO_PATCH,
     EMAIL_SERVICE_MODULE_PATH,
     SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH,
 )
-from user_app.email.email_service import notify_changed_email
 
 # ========== Objects and constants ============
 NEW_EMAIL = "fakenewemail@email.com"

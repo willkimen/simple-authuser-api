@@ -33,8 +33,7 @@ python manage.py schedule_expired_codes_removal
 python manage.py schedule_expired_tokens_removal
 python manage.py schedule_notify_first_reminder
 python manage.py schedule_notify_second_reminder
-python manage.py schedule_delete_expired_accounts
-python manage.py schedule_notify_expired_account_deletion
+python manage.py schedule_delete_expired_accounts_and_notify
 
 touch /home/djuser/my_environment
 echo "MIGRATED=True" >> /home/djuser/my_environment

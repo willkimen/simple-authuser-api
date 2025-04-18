@@ -5,10 +5,10 @@ Centralizing these names helps avoid inconsistencies and simplifies code mainten
 
 REMOVE_EXPIRED_TOKENS_TASK_NAME = "Remove Expired Tokens Task"
 REMOVE_EXPIRED_CODE_TASK_NAME = "Remove Expired Codes Task"
-NOTIFY_FIRST_REMINDER_TASK_NAME = "Notify First Reminder Task"
-NOTIFY_SECOND_REMINDER_TASK_NAME = "Notify Second Reminder Task"
-NOTIFY_EXPIRED_ACCOUNT_DELETION_TASK_NAME = "Notify Expired Account Deletion Task"
-REMOVE_EXPIRED_ACCOUNT_TASK_NAME = "Remove Expired Account"
+WRAPPER_NOTIFY_FIRST_REMINDER_TASK_NAME = "Notify First Reminder Task"
+WRAPPER_NOTIFY_SECOND_REMINDER_TASK_NAME = "Notify Second Reminder Task"
+DELETE_EXPIRED_ACCOUNT_AND_NOTIFY_TASK_NAME = "Delete Expired Account and Notify"
+
 REMOVALS_QUEUE_NAME = "removal_queue"
 EMAIL_QUEUE_NAME = "email_queue"
 

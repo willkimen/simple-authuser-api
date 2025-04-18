@@ -36,7 +36,7 @@ SECOND_REMINDER_DAY = timezone.now() + timedelta(
 
 # Sets the deadline date for account activation.
 ACTIVATION_DEADLINE_DAY = SECOND_REMINDER_DAY.replace(
-    hour=23, minute=59, second=0, microsecond=0
+    hour=23, minute=59, second=59, microsecond=0
 )
 
 
@@ -74,12 +74,12 @@ def test_deleted_expired_accounts(create_users_for_reminder):
 
     Considerations:
     - The task runs one day after the activation deadline.
-    - To delete users on the correct day, the task uses yesterday's date.
     - This ensures precise removal of accounts that have not been activated
       within the specified time frame.
     """
-    tomorrow = ACTIVATION_DEADLINE_DAY + timedelta(days=1)
-    with time_machine.travel(tomorrow):
+    day_after_activation_deadline = ACTIVATION_DEADLINE_DAY + timedelta(seconds=1)
+
+    with time_machine.travel(day_after_activation_deadline):
         for user_email in EMAILS_INACTIVE_USERS:
             assert UserProfileModel.objects.filter(email=user_email).exists()
 
@@ -93,8 +93,8 @@ def test_deleted_expired_accounts(create_users_for_reminder):
 @pytest.mark.django_db
 def test_expired_account_not_deleted_before_scheduled_time(create_users_for_reminder):
     """
-    Verifies that inactive user accounts are not deleted before the
-    scheduled deletion time.
+    Verifies that inactive user accounts are not deleted when the deadline
+    has not yet passed.
     """
     with time_machine.travel(ACTIVATION_DEADLINE_DAY):
         for user_email in EMAILS_INACTIVE_USERS:

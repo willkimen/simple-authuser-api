@@ -5,7 +5,7 @@ EMAIL_TASK_ERROR_LEVEL = 35
 EMAIL_TASK_ERROR_LEVEL_NAME = "EMAIL_TASK_ERROR"
 EMAIL_TASK_ERROR_LOGGER_NAME = "email_task_error"
 
-email_task_error_message_format = "tag={tag};to={to};error={error}"
+email_task_error_message_format = "tag={tag};task_id={task_id};to={to};error={error}"
 FAILED_SEND_ACCOUNT_ACTIVATION_CODE_TAG = "send_account_activation_code_failed"
 FAILED_SEND_EMAIL_CHANGE_CODE_TAG = "send_email_change_code_failed"
 FAILED_SEND_RESET_PASSWORD_CODE_TAG = "send_password_reset_code_failed"

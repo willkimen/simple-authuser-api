@@ -45,8 +45,9 @@ NOTIFY_ACTIVATED_ACCOUNT_FUNCTION_TO_PATCH = "notify_activated_account"
 NOTIFY_CHANGED_EMAIL_FUNCTION_TO_PATCH = "notify_changed_email"
 NOTIFY_RESET_PASSWORD_FUNCTION_TO_PATCH = "notify_reset_password"
 NOTIFY_DELETED_ACCOUNT_FUNCTION_TO_PATCH = "notify_deleted_account"
-NOTIFY_FIRST_REMINDER_FUNCTION_TO_PATCH = "notify_first_reminder"
-NOTIFY_SECOND_REMINDER_FUNCTION_TO_PATCH = "notify_second_reminder"
+NOTIFY_ACTIVATION_ACCOUNT_REMINDER_FUNCTION_TO_PATCH = (
+    "notify_activation_account_reminder"
+)
 NOTIFY_EXPIRED_ACCOUNT_DELETION_FUNCTION_TO_PATCH = "notify_expired_account_deletion"
 
 # Constant for mocking the utility function that generates a random code

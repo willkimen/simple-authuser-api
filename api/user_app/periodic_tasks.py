@@ -6,12 +6,11 @@ import json
 
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 from user_app.constants.celery_constants import (
-    NOTIFY_EXPIRED_ACCOUNT_DELETION_TASK_NAME,
-    NOTIFY_FIRST_REMINDER_TASK_NAME,
-    NOTIFY_SECOND_REMINDER_TASK_NAME,
-    REMOVE_EXPIRED_ACCOUNT_TASK_NAME,
+    DELETE_EXPIRED_ACCOUNT_AND_NOTIFY_TASK_NAME,
     REMOVE_EXPIRED_CODE_TASK_NAME,
     REMOVE_EXPIRED_TOKENS_TASK_NAME,
+    WRAPPER_NOTIFY_FIRST_REMINDER_TASK_NAME,
+    WRAPPER_NOTIFY_SECOND_REMINDER_TASK_NAME,
 )
 
 
@@ -76,7 +75,7 @@ def create_periodic_task_for_notify_first_reminder() -> None:
     Creates a periodic task to send the first activation reminder.
 
     This function schedules a task that runs daily at 9:00 AM to execute
-    `task_notify_first_reminder`, sending reminder emails to users who have not
+    `wrapper_task_notify_first_reminder`, sending reminder emails to users who have not
     yet activated their accounts.
 
     Guarantees:
@@ -95,11 +94,13 @@ def create_periodic_task_for_notify_first_reminder() -> None:
         month_of_year="*",
     )
 
-    if not PeriodicTask.objects.filter(name=NOTIFY_FIRST_REMINDER_TASK_NAME).exists():
+    if not PeriodicTask.objects.filter(
+        name=WRAPPER_NOTIFY_FIRST_REMINDER_TASK_NAME
+    ).exists():
         PeriodicTask.objects.create(
             crontab=schedule,
-            name=NOTIFY_FIRST_REMINDER_TASK_NAME,
-            task="user_app.tasks.task_notify_first_reminder",
+            name=WRAPPER_NOTIFY_FIRST_REMINDER_TASK_NAME,
+            task="user_app.tasks.wrapper_task_notify_first_reminder",
             args=json.dumps([]),
         )
 
@@ -109,7 +110,7 @@ def create_periodic_task_for_notify_second_reminder() -> None:
     Creates a periodic task to send the second activation reminder.
 
     This function schedules a task that runs daily at 9:00 AM to execute
-    `task_notify_second_reminder`, sending a final reminder email to users who have
+    `wrapper_task_notify_second_reminder`, sending a final reminder email to users who have
     not yet activated their accounts.
 
     Guarantees:
@@ -128,18 +129,21 @@ def create_periodic_task_for_notify_second_reminder() -> None:
         month_of_year="*",
     )
 
-    if not PeriodicTask.objects.filter(name=NOTIFY_SECOND_REMINDER_TASK_NAME).exists():
+    if not PeriodicTask.objects.filter(
+        name=WRAPPER_NOTIFY_SECOND_REMINDER_TASK_NAME
+    ).exists():
         PeriodicTask.objects.create(
             crontab=schedule,
-            name=NOTIFY_SECOND_REMINDER_TASK_NAME,
-            task="user_app.tasks.task_notify_second_reminder",
+            name=WRAPPER_NOTIFY_SECOND_REMINDER_TASK_NAME,
+            task="user_app.tasks.wrapper_task_notify_second_reminder",
             args=json.dumps([]),
         )
 
 
-def create_periodic_task_for_delete_expired_accounts() -> None:
+def create_periodic_task_for_delete_and_notify() -> None:
     """
-    Creates a periodic task that deletes expired user accounts daily at 00:00.
+    Creates a periodic task that deletes expired accounts and notifies users,
+    daily at 00:00.
     """
     schedule, _ = CrontabSchedule.objects.get_or_create(
         minute="0",
@@ -149,34 +153,12 @@ def create_periodic_task_for_delete_expired_accounts() -> None:
         month_of_year="*",
     )
 
-    if not PeriodicTask.objects.filter(name=REMOVE_EXPIRED_ACCOUNT_TASK_NAME).exists():
-        PeriodicTask.objects.create(
-            crontab=schedule,
-            name=REMOVE_EXPIRED_ACCOUNT_TASK_NAME,
-            task="user_app.tasks.task_delete_expired_accounts",
-            args=json.dumps([]),
-        )
-
-
-def create_periodic_task_for_notify_expired_account_deletion() -> None:
-    """
-    Creates a periodic task that notify users about removal their accounts
-    daily at 09:00.
-    """
-    schedule, _ = CrontabSchedule.objects.get_or_create(
-        minute="0",
-        hour="9",
-        day_of_week="*",
-        day_of_month="*",
-        month_of_year="*",
-    )
-
     if not PeriodicTask.objects.filter(
-        name=NOTIFY_EXPIRED_ACCOUNT_DELETION_TASK_NAME
+        name=DELETE_EXPIRED_ACCOUNT_AND_NOTIFY_TASK_NAME
     ).exists():
         PeriodicTask.objects.create(
             crontab=schedule,
-            name=NOTIFY_EXPIRED_ACCOUNT_DELETION_TASK_NAME,
-            task="user_app.tasks.task_expired_account_deletion",
+            name=DELETE_EXPIRED_ACCOUNT_AND_NOTIFY_TASK_NAME,
+            task="user_app.tasks.task_delete_expired_accounts_and_notify",
             args=json.dumps([]),
         )
