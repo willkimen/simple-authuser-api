@@ -29,7 +29,7 @@ from user_app.constants.response_codes_and_messages import (
     USER_TOKEN_MISMATCH,
 )
 from user_app.models import BlacklistTokenModel
-from user_app.utils import merge_dict
+from user_app.utils import deep_merge_dict
 
 User = get_user_model()
 
@@ -64,7 +64,7 @@ def obtain_token_pair(request: Request) -> Response:
         return Response(USER_ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
 
     return Response(
-        merge_dict(LOGIN_SUCCESSFUL, create_pair_token(user.id)),
+        deep_merge_dict(LOGIN_SUCCESSFUL, create_pair_token(user.id)),
         status=status.HTTP_200_OK,
     )
 
@@ -108,7 +108,7 @@ def refresh_token_access(request: Request) -> Response:
         return Response(USER_ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
 
     return Response(
-        merge_dict(TOKEN_ACCESS_CREATED, {"access": create_token(payload["uid"])}),
+        deep_merge_dict(TOKEN_ACCESS_CREATED, {"access": create_token(payload["uid"])}),
         status=status.HTTP_201_CREATED,
     )
 

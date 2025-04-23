@@ -25,7 +25,7 @@ from user_app.models import ChangeEmailCodeModel
 from user_app.serializers import EmailSerializer
 from user_app.tasks import task_notify_changed_email, task_send_email_change_code
 from user_app.throttlings import FivePerMinuteRateLimit
-from user_app.utils import merge_dict
+from user_app.utils import deep_merge_dict
 
 User = get_user_model()
 
@@ -56,7 +56,9 @@ def request_email_change_code(request: Request) -> Response:
     # Check if the email is normalized.
     if not email_serializer.is_valid():
         return Response(
-            merge_dict(VALIDATION_ERRORS, {"field_errors": email_serializer.errors}),
+            deep_merge_dict(
+                VALIDATION_ERRORS, {"field_errors": email_serializer.errors}
+            ),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -124,5 +126,5 @@ def change_email(request: Request) -> Response:
     task_notify_changed_email.delay(request.user.email)
 
     return Response(
-        merge_dict(USER_EMAIL_CHANGED, token_pair), status=status.HTTP_200_OK
+        deep_merge_dict(USER_EMAIL_CHANGED, token_pair), status=status.HTTP_200_OK
     )

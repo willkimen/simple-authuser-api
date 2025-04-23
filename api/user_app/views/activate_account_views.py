@@ -22,7 +22,7 @@ from user_app.tasks import (
     task_send_account_activation_code,
 )
 from user_app.throttlings import FivePerMinuteRateLimit
-from user_app.utils import merge_dict
+from user_app.utils import deep_merge_dict
 
 User = get_user_model()
 
@@ -49,7 +49,7 @@ def request_account_activation_code(request: Request) -> Response:
     # Check if the provided data is valid
     if not serializer.is_valid():
         return Response(
-            merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
+            deep_merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
             status=status.HTTP_400_BAD_REQUEST,
         )
 

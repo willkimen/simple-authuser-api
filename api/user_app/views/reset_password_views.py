@@ -20,7 +20,7 @@ from user_app.models import ResetPasswordCodeModel
 from user_app.serializers import EmailSerializer, UserResetPasswordSerializer
 from user_app.tasks import task_notify_reset_password, task_send_reset_password_code
 from user_app.throttlings import FivePerMinuteRateLimit
-from user_app.utils import merge_dict
+from user_app.utils import deep_merge_dict
 
 User = get_user_model()
 
@@ -45,7 +45,9 @@ def request_reset_password_code(request: Request) -> Response:
 
     if not email_serializer.is_valid():
         return Response(
-            merge_dict(VALIDATION_ERRORS, {"field_errors": email_serializer.errors}),
+            deep_merge_dict(
+                VALIDATION_ERRORS, {"field_errors": email_serializer.errors}
+            ),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -84,7 +86,9 @@ def reset_password(request: Request) -> Response:
 
     if not reset_serializer.is_valid():
         return Response(
-            merge_dict(VALIDATION_ERRORS, {"field_errors": reset_serializer.errors}),
+            deep_merge_dict(
+                VALIDATION_ERRORS, {"field_errors": reset_serializer.errors}
+            ),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -117,5 +121,5 @@ def reset_password(request: Request) -> Response:
     task_notify_reset_password.delay(user.email)
 
     return Response(
-        merge_dict(USER_PASSWORD_RESET, new_token_pair), status=status.HTTP_200_OK
+        deep_merge_dict(USER_PASSWORD_RESET, new_token_pair), status=status.HTTP_200_OK
     )

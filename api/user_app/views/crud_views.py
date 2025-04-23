@@ -30,7 +30,7 @@ from user_app.tasks import (
     task_notify_deleted_account,
     task_send_account_activation_code,
 )
-from user_app.utils import merge_dict
+from user_app.utils import deep_merge_dict
 
 User = get_user_model()
 
@@ -58,7 +58,9 @@ def register(request: Request) -> Response:
     # Check if the provided data is valid
     if not request_serializer.is_valid():
         return Response(
-            merge_dict(VALIDATION_ERRORS, {"field_errors": request_serializer.errors}),
+            deep_merge_dict(
+                VALIDATION_ERRORS, {"field_errors": request_serializer.errors}
+            ),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -78,7 +80,9 @@ def register(request: Request) -> Response:
     PendingAccountsModel.objects.create(user=user)
 
     return Response(
-        merge_dict(USER_REGISTERED_SUCCESSFULLY, {"user": response_serializer.data}),
+        deep_merge_dict(
+            USER_REGISTERED_SUCCESSFULLY, {"user": response_serializer.data}
+        ),
         status=status.HTTP_201_CREATED,
     )
 
@@ -117,7 +121,9 @@ def update(request: Request) -> Response:
     if not update_serializer.is_valid():
         # If data is invalid, return a response with validation errors.
         return Response(
-            merge_dict(VALIDATION_ERRORS, {"field_errors": update_serializer.errors}),
+            deep_merge_dict(
+                VALIDATION_ERRORS, {"field_errors": update_serializer.errors}
+            ),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -129,7 +135,7 @@ def update(request: Request) -> Response:
 
     # Return a success response with the updated user data.
     return Response(
-        merge_dict(USER_UPDATED_SUCCESSFULLY, {"user": response_serializer.data}),
+        deep_merge_dict(USER_UPDATED_SUCCESSFULLY, {"user": response_serializer.data}),
         status=status.HTTP_200_OK,
     )
 
@@ -209,7 +215,7 @@ def change_password(request: Request) -> Response:
 
     if not serializer.is_valid():
         return Response(
-            merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
+            deep_merge_dict(VALIDATION_ERRORS, {"field_errors": serializer.errors}),
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -226,5 +232,5 @@ def change_password(request: Request) -> Response:
     token_pair: dict[str, str] = revoke_tokens(request.user.id)
 
     return Response(
-        merge_dict(USER_PASSWORD_CHANGED, token_pair), status=status.HTTP_200_OK
+        deep_merge_dict(USER_PASSWORD_CHANGED, token_pair), status=status.HTTP_200_OK
     )

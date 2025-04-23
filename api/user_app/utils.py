@@ -3,7 +3,7 @@ import random
 import string
 
 
-def merge_dict(original_dict: dict, update_data: dict) -> dict:
+def deep_merge_dict(original_dict: dict, update_data: dict) -> dict:
     """
     Creates a deep copy of the original dictionary, updates it with new data,
     and returns the updated dictionary.
