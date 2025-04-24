@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "user_app",
     "django_celery_beat",
+    "drf_spectacular",
 ]
 
 
@@ -72,8 +73,18 @@ WSGI_APPLICATION = "config.wsgi.application"
 # -----------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "user_app.custom_exception_handler.custom_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+# Drf-spectacular
+# -----------------------------------------------------------------------------
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Simple Authuser API",
+    "DESCRIPTION": "API Documentation",
+    "VERSION": "1.0.0",
+    "CONTACT": {"email": "willkimen.dev@proton.me"},
+    "LICENSE": {"name": "MIT"},
+}
 
 # Password validation
 # -----------------------------------------------------------------------------

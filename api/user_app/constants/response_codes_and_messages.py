@@ -72,8 +72,8 @@ USER_PASSWORD_RESET = {
     "detail": "Password reset successfully. Please log in again using your new password.",
 }
 
-PASSWORD_DO_NOT_MATCH = {
-    "code": "PASSWORD_DO_NOT_MATCH",
+PASSWORD_INCORRECT = {
+    "code": "PASSWORD_INCORRECT",
     "detail": "The current password is incorrect. Please try again.",
 }
 

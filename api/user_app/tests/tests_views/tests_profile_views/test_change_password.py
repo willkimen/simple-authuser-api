@@ -10,8 +10,8 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import response_codes_and_messages
 from user_app.tests.constants import (
-    CRUD_VIEWS_MODULE_PATH,
     FAKE_SECRET,
+    PROFILE_VIEWS_MODULE_PATH,
     REVOKE_TOKENS_FUNCTION_TO_PATCH,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
@@ -65,17 +65,15 @@ def client(user) -> APIClient:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(f"{CRUD_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
+@patch(f"{PROFILE_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
 def test_password_not_changed_when_actual_password_does_not_match(
     revoke_tokens_function_mock: MagicMock, client: APIClient
 ):
     """
     Test that the password is not changed when the current password does not match.
     """
-    expected_detail_message = response_codes_and_messages.PASSWORD_DO_NOT_MATCH[
-        "detail"
-    ]
-    expected_code = response_codes_and_messages.PASSWORD_DO_NOT_MATCH["code"]
+    expected_detail_message = response_codes_and_messages.PASSWORD_INCORRECT["detail"]
+    expected_code = response_codes_and_messages.PASSWORD_INCORRECT["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.patch(
@@ -94,7 +92,7 @@ def test_password_not_changed_when_actual_password_does_not_match(
 
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(f"{CRUD_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
+@patch(f"{PROFILE_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
 def test_change_password_successfully(
     revoke_tokens_function_mock: MagicMock, client: APIClient
 ):

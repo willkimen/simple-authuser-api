@@ -20,33 +20,32 @@ from .views import (
 
 urlpatterns = [
     # ============= User Endpoints ====================
-    path("user/register/", register, name="register"),
-    path("user/update/", update, name="update"),
-    path("user/detail/", detail, name="detail"),
-    path("user/delete/", delete, name="delete"),
-    # Change user password
-    path("user/change_passoword/", change_password, name="change_password"),
+    path("user/profile/register/", register, name="register"),
+    path("user/profile/update/", update, name="update"),
+    path("user/profile/detail/", detail, name="detail"),
+    path("user/profile/delete/", delete, name="delete"),
+    path("user/profile/change_password/", change_password, name="change_password"),
     # Activate user account
-    path("user/activate/", activate_account, name="activate_account"),
     path(
         "user/email/send_code/activate_account/",
         request_account_activation_code,
         name="request_account_activation_code",
     ),
+    path("user/code/activate/", activate_account, name="activate_account"),
     # Change user email
     path(
         "user/email/send_code/change_email/",
         request_email_change_code,
         name="request_email_change_code",
     ),
-    path("user/change_email/", change_email, name="change_email"),
+    path("user/code/change_email/", change_email, name="change_email"),
     # Reset user password
     path(
-        "user/send_code/reset_password/",
+        "user/email/send_code/reset_password/",
         request_reset_password_code,
         name="request_reset_password_code",
     ),
-    path("user/reset_password/", reset_password, name="reset_password"),
+    path("user/code/reset_password/", reset_password, name="reset_password"),
     # =============== JWT Endpoints =================
     # Endpoint to obtain a JWT pair (access and refresh tokens) after successful login.
     path("token/pair/", obtain_token_pair, name="obtain_token_pair"),

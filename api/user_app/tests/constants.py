@@ -102,8 +102,8 @@ RESET_PASSWORD_VIEWS_MODULE_PATH = importlib.import_module(
     "user_app.views.reset_password_views"
 ).__name__
 
-# Path to the CRUD module used in views.
-CRUD_VIEWS_MODULE_PATH = importlib.import_module("user_app.views.crud_views").__name__
+# Path to the profile module used in views.
+PROFILE_VIEWS_MODULE_PATH = importlib.import_module("user_app.views.profile_views").__name__
 
 # Path to the view responsible for email change.
 CHANGE_EMAIL_VIEWS_MODULE_PATH = importlib.import_module(

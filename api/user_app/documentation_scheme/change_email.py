@@ -1,0 +1,79 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse
+from user_app.constants.response_codes_and_messages import (
+    CODE_EXPIRED,
+    CODE_NOT_FOUND,
+    EMAIL_ALREADY_EXISTS,
+    EMAIL_ALREADY_IN_USE,
+    EMAIL_SEND_TO_USER_SUCCESSFULLY,
+    USER_EMAIL_CHANGED,
+    VALIDATION_ERRORS,
+)
+from user_app.constants.validation_error_messages import (
+    BLANK_FIELD,
+    EMAIL_ALREADY_EXISTS,
+    INVALID_FORMAT_EMAIL,
+    NULL_FIELD,
+    REQUIRED_FIELD,
+)
+
+email_already_exists_response = {
+    "type": "object",
+    "example": EMAIL_ALREADY_EXISTS,
+}
+
+email_send_to_user_response = {
+    "type": "object",
+    "example": EMAIL_SEND_TO_USER_SUCCESSFULLY,
+}
+
+email_validation_errors_and_email_already_in_use_response = OpenApiResponse(
+    response=OpenApiTypes.OBJECT,
+    description="Email Validation Errors or Email Already In Use",
+    examples=[
+        OpenApiExample(
+            name="Email Already In Use",
+            value=EMAIL_ALREADY_IN_USE,
+        ),
+        OpenApiExample(
+            name="Email Validation Errors",
+            value={
+                **VALIDATION_ERRORS,
+                "field_errors": {
+                    "email": [
+                        INVALID_FORMAT_EMAIL,
+                        REQUIRED_FIELD,
+                        NULL_FIELD,
+                        BLANK_FIELD,
+                    ],
+                },
+            },
+        ),
+    ],
+)
+
+change_email_request = {
+    "application/json": {
+        "type": "object",
+        "example": {"code": "string code"},
+    }
+}
+
+user_email_changed_response = {
+    "type": "object",
+    "example": {
+        **USER_EMAIL_CHANGED,
+        "access": "string jwt",
+        "refresh": "string jwt",
+    },
+}
+
+code_not_found_response = {
+    "type": "object",
+    "example": CODE_NOT_FOUND,
+}
+
+code_expired_response = {
+    "type": "object",
+    "example": CODE_EXPIRED,
+}

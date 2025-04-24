@@ -1,0 +1,74 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse
+from user_app.constants.response_codes_and_messages import (
+    ACTIVATED_USER,
+    CODE_EXPIRED,
+    CODE_NOT_FOUND,
+    EMAIL_SEND_TO_USER_SUCCESSFULLY,
+    USER_HAS_ALREADY_ACTIVATED,
+    USER_NOT_FOUND,
+    VALIDATION_ERRORS,
+)
+from user_app.constants.validation_error_messages import (
+    BLANK_FIELD,
+    INVALID_FORMAT_EMAIL,
+    NULL_FIELD,
+    REQUIRED_FIELD,
+)
+
+activate_account_request = {
+    "application/json": {
+        "type": "object",
+        "example": {"code": "string code"},
+    }
+}
+
+email_validation_errors_and_user_already_activated_response = OpenApiResponse(
+    response=OpenApiTypes.OBJECT,
+    description="Email Validation Errors or User Already Activated",
+    examples=[
+        OpenApiExample(
+            name="Email Validation Errors",
+            value={
+                **VALIDATION_ERRORS,
+                "field_errors": {
+                    "email": [
+                        INVALID_FORMAT_EMAIL,
+                        REQUIRED_FIELD,
+                        NULL_FIELD,
+                        BLANK_FIELD,
+                    ],
+                },
+            },
+        ),
+        OpenApiExample(
+            name="User Has Already Activated",
+            value=USER_HAS_ALREADY_ACTIVATED,
+        ),
+    ],
+)
+
+email_send_user_response = {
+    "type": "object",
+    "example": EMAIL_SEND_TO_USER_SUCCESSFULLY,
+}
+
+user_not_found_response = {
+    "type": "object",
+    "example": USER_NOT_FOUND,
+}
+
+code_not_found_response = {
+    "type": "object",
+    "example": CODE_NOT_FOUND,
+}
+
+code_expired_response = {
+    "type": "object",
+    "example": CODE_EXPIRED,
+}
+
+activated_user_response = {
+    "type": "object",
+    "example": ACTIVATED_USER,
+}
