@@ -81,7 +81,9 @@ def obtain_token_pair(request: Request) -> Response:
 
     # Verify if user exists.
     try:
-        user = User.objects.get(email=email, password=password)
+        user = User.objects.get(email=email)
+        if not user.check_password(password):
+            return Response(USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
     except User.DoesNotExist:
         return Response(USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
