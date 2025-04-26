@@ -1,6 +1,6 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse
-from user_app.constants.response_codes_and_messages import (
+from user_app.constants.http_response import (
     PASSWORD_INCORRECT,
     USER_DELETED_SUCCESSFULLY,
     USER_PASSWORD_CHANGED,

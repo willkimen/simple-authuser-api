@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages
+from user_app.constants import http_response
 from user_app.models import ChangeEmailCodeModel
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
@@ -98,8 +98,8 @@ def test_do_not_change_email_if_code_does_not_exist(
     - allow_request_function_mock: Mocks the rate limit allowing the request
                                    to proceed.
     """
-    expected_detail_message = response_codes_and_messages.CODE_NOT_FOUND["detail"]
-    expected_code = response_codes_and_messages.CODE_NOT_FOUND["code"]
+    expected_detail_message = http_response.CODE_NOT_FOUND["detail"]
+    expected_code = http_response.CODE_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data={"code": NON_EXISTENT_CODE}, format="json")
@@ -126,8 +126,8 @@ def test_do_not_change_email_if_code_is_expired(
     - allow_request_function_mock: Mocks the rate limit, allowing the request
                                    to proceed.
     """
-    expected_detail_message = response_codes_and_messages.CODE_EXPIRED["detail"]
-    expected_code = response_codes_and_messages.CODE_EXPIRED["code"]
+    expected_detail_message = http_response.CODE_EXPIRED["detail"]
+    expected_code = http_response.CODE_EXPIRED["code"]
     expected_status_code = status.HTTP_410_GONE
 
     actual_response = client.post(url, data={"code": expired_code}, format="json")
@@ -175,8 +175,8 @@ def test_change_email_successful(
     - allow_request_function_mock: Mocks the rate limit, allowing the request
                                    to proceed.
     """
-    expected_detail_message = response_codes_and_messages.USER_EMAIL_CHANGED["detail"]
-    expected_code = response_codes_and_messages.USER_EMAIL_CHANGED["code"]
+    expected_detail_message = http_response.USER_EMAIL_CHANGED["detail"]
+    expected_code = http_response.USER_EMAIL_CHANGED["code"]
     expected_status_code = status.HTTP_200_OK
 
     # Checks if there's user with old email in database, before change.

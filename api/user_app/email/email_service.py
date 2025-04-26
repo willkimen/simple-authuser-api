@@ -1,7 +1,7 @@
 import smtplib
 from datetime import datetime
 
-from user_app.constants.prefixes import (
+from user_app.constants.verification_code import (
     ACTIVATE_ACCOUNT_PREFIX,
     CHANGE_EMAIL_PREFIX,
     RESET_PASSWORD_PREFIX,

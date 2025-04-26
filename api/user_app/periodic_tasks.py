@@ -5,7 +5,7 @@ Module for creating periodic tasks in Django using django-celery-beat.
 import json
 
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
-from user_app.constants.celery_constants import (
+from user_app.constants.celery import (
     DELETE_EXPIRED_ACCOUNT_AND_NOTIFY_TASK_NAME,
     REMOVE_EXPIRED_CODE_TASK_NAME,
     REMOVE_EXPIRED_TOKENS_TASK_NAME,

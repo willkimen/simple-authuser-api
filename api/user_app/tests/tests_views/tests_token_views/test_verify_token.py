@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages, token_exception_messages
+from user_app.constants import http_response, authentication
 from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
@@ -101,8 +101,8 @@ def test_token_already_in_blacklist(client: APIClient, blacklisted_token: str):
     """
     Test that a JWT token already blacklisted returns the appropriate error message.
     """
-    expected_detail_message = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
-    expected_code = token_exception_messages.TOKEN_IN_BLACKLIST["code"]
+    expected_detail_message = authentication.TOKEN_IN_BLACKLIST["detail"]
+    expected_code = authentication.TOKEN_IN_BLACKLIST["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(url, data={"token": blacklisted_token}, format="json")
@@ -122,9 +122,9 @@ def test_token_type_must_be_access_or_refresh(
     returns the appropriate error.
     """
     expected_detail_message = (
-        response_codes_and_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN["detail"]
+        http_response.IS_NOT_ACCESS_OR_REFRESH_TOKEN["detail"]
     )
-    expected_code = response_codes_and_messages.IS_NOT_ACCESS_OR_REFRESH_TOKEN["code"]
+    expected_code = http_response.IS_NOT_ACCESS_OR_REFRESH_TOKEN["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.post(
@@ -145,8 +145,8 @@ def test_valid_token_successfully(client: APIClient, valid_token: str):
     Verifies that the response contains the correct message and code,
     and that the HTTP status is 200.
     """
-    expected_detail_message = response_codes_and_messages.TOKEN_IS_VALID["detail"]
-    expected_code = response_codes_and_messages.TOKEN_IS_VALID["code"]
+    expected_detail_message = http_response.TOKEN_IS_VALID["detail"]
+    expected_code = http_response.TOKEN_IS_VALID["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.post(url, data={"token": valid_token}, format="json")

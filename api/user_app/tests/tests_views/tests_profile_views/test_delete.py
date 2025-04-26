@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages
+from user_app.constants import http_response
 from user_app.models.code_models import (
     AccountActivationCodeModel,
     ChangeEmailCodeModel,
@@ -201,8 +201,8 @@ def test_user_deletion_successful(client_auth_header: APIClient):
         client_auth_header (APIClient): API client with valid JWT authentication.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_codes_and_messages.USER_DELETED_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.USER_DELETED_SUCCESSFULLY[
+    expected_code = http_response.USER_DELETED_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.USER_DELETED_SUCCESSFULLY[
         "detail"
     ]
     expected_user_delete = User.objects.get(id=USER_ID)

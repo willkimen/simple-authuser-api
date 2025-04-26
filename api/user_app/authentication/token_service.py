@@ -14,10 +14,11 @@ from user_app.authentication.token_exceptions import (
     InvalidSignatureException,
     InvalidTokenException,
 )
+from user_app.constants.authentication import (
+    ACCESS_TOKEN_EXPIRATION_MINUTES,
+    REFRESH_TOKEN_EXPIRATION_DAYS,
+)
 from user_app.models import BlacklistTokenModel, ValidTokenModel
-
-EXPIRATION_TIME_FOR_REFRESH = 1
-EXPIRATION_TIME_FOR_ACCESS = 10
 
 
 def create_payload(user_id: int, is_refresh: bool = False) -> dict:
@@ -41,10 +42,10 @@ def create_payload(user_id: int, is_refresh: bool = False) -> dict:
 
     # Create an expiration timestamp for the token.
     exp: float = (
-        (timezone.now() + timedelta(weeks=EXPIRATION_TIME_FOR_REFRESH)).timestamp()
+        (timezone.now() + timedelta(days=REFRESH_TOKEN_EXPIRATION_DAYS)).timestamp()
         if is_refresh
         else (
-            timezone.now() + timedelta(minutes=EXPIRATION_TIME_FOR_ACCESS)
+            timezone.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRATION_MINUTES)
         ).timestamp()
     )
 

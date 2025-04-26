@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from user_app.constants.logs_constants import (
+from user_app.constants.logging import (
     EMAIL_TASK_ERROR_LEVEL,
     EMAIL_TASK_ERROR_LEVEL_NAME,
     EMAIL_TASK_ERROR_LOGGER_NAME,
@@ -164,10 +164,6 @@ LOGGING = {
         },
     },
 }
-
-# Verification code configuration
-# -----------------------------------------------------------------------------
-EXPIRATION_CODE_TIME_IN_HOURS = 24
 
 
 # Static files

@@ -1,11 +1,11 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse
-from user_app.constants.authentication_error_messages import (
+from user_app.constants.authentication import (
     AUTHORIZATION_HEADER_MISSING,
     AUTHORIZATION_HEADER_WITHOUT_BEARER,
     INVALID_AUTHORIZATION_HEADER_FORMAT,
 )
-from user_app.constants.token_exception_messages import (
+from user_app.constants.authentication import (
     DECODE_ERROR,
     EXPIRED_SIGNATURE,
     INVALID_ALGORITHM,

@@ -19,7 +19,7 @@ Queues:
 import os
 
 from celery import Celery
-from user_app.constants.celery_constants import EMAIL_QUEUE_NAME, REMOVALS_QUEUE_NAME
+from user_app.constants.celery import EMAIL_QUEUE_NAME, REMOVALS_QUEUE_NAME
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 

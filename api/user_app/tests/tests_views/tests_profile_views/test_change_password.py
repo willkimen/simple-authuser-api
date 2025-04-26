@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages
+from user_app.constants import http_response
 from user_app.tests.constants import (
     FAKE_SECRET,
     PROFILE_VIEWS_MODULE_PATH,
@@ -72,8 +72,8 @@ def test_password_not_changed_when_actual_password_does_not_match(
     """
     Test that the password is not changed when the current password does not match.
     """
-    expected_detail_message = response_codes_and_messages.PASSWORD_INCORRECT["detail"]
-    expected_code = response_codes_and_messages.PASSWORD_INCORRECT["code"]
+    expected_detail_message = http_response.PASSWORD_INCORRECT["detail"]
+    expected_code = http_response.PASSWORD_INCORRECT["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
     actual_response = client.patch(
@@ -99,10 +99,10 @@ def test_change_password_successfully(
     """
     Test that the password is changed successfully.
     """
-    expected_detail_message = response_codes_and_messages.USER_PASSWORD_CHANGED[
+    expected_detail_message = http_response.USER_PASSWORD_CHANGED[
         "detail"
     ]
-    expected_code = response_codes_and_messages.USER_PASSWORD_CHANGED["code"]
+    expected_code = http_response.USER_PASSWORD_CHANGED["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.patch(

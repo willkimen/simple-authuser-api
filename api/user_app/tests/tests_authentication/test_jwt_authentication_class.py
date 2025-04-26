@@ -26,9 +26,9 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 from user_app.authentication.authentication_classes import JWTAuthentication
 from user_app.constants import (
-    authentication_error_messages,
-    response_codes_and_messages,
-    token_exception_messages,
+    authentication,
+    http_response,
+    authentication,
 )
 from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
@@ -301,7 +301,7 @@ def test_authentication_fails_when_token_type_is_incorrect(
           request_with_incorrect_type_token (Request): The request fixture containing a
                                                      JWT token with an incorrect type.
     """
-    expected_error_message = response_codes_and_messages.IS_NOT_ACCESS_TOKEN["detail"]
+    expected_error_message = http_response.IS_NOT_ACCESS_TOKEN["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(request_with_incorrect_type_token)
 
@@ -318,7 +318,7 @@ def test_authentication_fails_when_empty_auth_header(
         empty_auth_header_request (Request): A request object with an empty
                                              Authorization header.
     """
-    expected_error_message = authentication_error_messages.AUTHORIZATION_HEADER_MISSING
+    expected_error_message = authentication.AUTHORIZATION_HEADER_MISSING
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(empty_auth_header_request)
 
@@ -336,7 +336,7 @@ def test_authentication_fails_when_incorrect_type_auth_header(
                                                  incorrect Authorization header type.
     """
     expected_error_message = (
-        authentication_error_messages.AUTHORIZATION_HEADER_WITHOUT_BEARER
+        authentication.AUTHORIZATION_HEADER_WITHOUT_BEARER
     )
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(incorrect_auth_header_request)
@@ -357,7 +357,7 @@ def test_authentication_fails_when_incorrect_format_auth_header(
                                                               Authorization headers.
     """
     expected_error_message = (
-        authentication_error_messages.INVALID_AUTHORIZATION_HEADER_FORMAT
+        authentication.INVALID_AUTHORIZATION_HEADER_FORMAT
     )
 
     for request in incorrect_format_auth_header_request:
@@ -377,7 +377,7 @@ def test_authentication_fails_when_expired_token(expired_token_request: Request)
         expired_token_request (Request): Request object with an expired
                                          JWT in the Authorization header.
     """
-    expected_error_message = token_exception_messages.EXPIRED_SIGNATURE["detail"]
+    expected_error_message = authentication.EXPIRED_SIGNATURE["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(expired_token_request)
 
@@ -396,7 +396,7 @@ def test_authentication_fails_when_invalid_secret_token(
         token_request_with_invalid_secret (Request): Request object with a JWT
                                                      encoded using an incorrect secret.
     """
-    expected_error_message = token_exception_messages.INVALID_SIGNATURE["detail"]
+    expected_error_message = authentication.INVALID_SIGNATURE["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(token_request_with_invalid_secret)
 
@@ -411,7 +411,7 @@ def test_authentication_fails_when_malformed_token(malformed_token_request: Requ
     Args:
         malformed_token_request (Request): Request object with a malformed JWT.
     """
-    expected_error_message = token_exception_messages.DECODE_ERROR["detail"]
+    expected_error_message = authentication.DECODE_ERROR["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(malformed_token_request)
 
@@ -430,7 +430,7 @@ def test_authentication_fails_when_invalid_algorithm_token(
         token_request_with_invalid_algorithm (Request): Request object containing a
                                                         JWT with an invalid algorithm.
     """
-    expected_error_message = token_exception_messages.INVALID_ALGORITHM["detail"]
+    expected_error_message = authentication.INVALID_ALGORITHM["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(token_request_with_invalid_algorithm)
 
@@ -449,7 +449,7 @@ def test_authentication_fails_when_blacklisted_token(
         request_with_blacklisted_token (Request): Request object with a blacklisted JWT.
     """
 
-    expected_error_message = token_exception_messages.TOKEN_IN_BLACKLIST["detail"]
+    expected_error_message = authentication.TOKEN_IN_BLACKLIST["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(request_with_blacklisted_token)
 
@@ -468,7 +468,7 @@ def test_authentication_fails_when_nonexistent_user(
         token_request_with_nonexistent_user (Request): Request object with a
                                                        JWT for a nonexistent user.
     """
-    expected_error_message = response_codes_and_messages.USER_NOT_FOUND["detail"]
+    expected_error_message = http_response.USER_NOT_FOUND["detail"]
     with pytest.raises(AuthenticationFailed) as e:
         jwt_authentication.authenticate(token_request_with_nonexistent_user)
 
@@ -525,7 +525,7 @@ def test_authentication_fails_when_user_with_account_deactivated(
         The authentication fails with the appropriate error message
         indicating the user's account is not activated.
     """
-    expected_error_message = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED[
+    expected_error_message = http_response.USER_ACCOUNT_NOT_ACTIVATED[
         "detail"
     ]
     with pytest.raises(AuthenticationFailed) as e:

@@ -1,6 +1,6 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse
-from user_app.constants.response_codes_and_messages import (
+from user_app.constants.http_response import (
     ACTIVATED_USER,
     CODE_EXPIRED,
     CODE_NOT_FOUND,

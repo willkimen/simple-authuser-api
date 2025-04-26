@@ -3,7 +3,12 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from user_app.constants import prefixes
+from user_app.constants.verification_code import (
+    ACTIVATE_ACCOUNT_PREFIX,
+    CHANGE_EMAIL_PREFIX,
+    CODE_EXPIRATION_HOURS,
+    RESET_PASSWORD_PREFIX,
+)
 from user_app.utils import generate_random_code
 
 
@@ -95,7 +100,7 @@ class VerificationCodeBaseModel(models.Model):
 
             if self.expires_at is None:
                 self.expires_at: datetime = self.created_at + timedelta(
-                    hours=settings.EXPIRATION_CODE_TIME_IN_HOURS
+                    hours=CODE_EXPIRATION_HOURS
                 )
 
             if not self.code:
@@ -126,7 +131,7 @@ class AccountActivationCodeModel(VerificationCodeBaseModel):
         the user's email to the .user_id=user_instance.email.
     """
 
-    _prefix = prefixes.ACTIVATE_ACCOUNT_PREFIX
+    _prefix = ACTIVATE_ACCOUNT_PREFIX
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -161,7 +166,7 @@ class ChangeEmailCodeModel(VerificationCodeBaseModel):
         the user's email to the .user_id=user_instance.email.
     """
 
-    _prefix = prefixes.CHANGE_EMAIL_PREFIX
+    _prefix = CHANGE_EMAIL_PREFIX
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -195,7 +200,7 @@ class ResetPasswordCodeModel(VerificationCodeBaseModel):
         the user's email to the .user_id=user_instance.email.
     """
 
-    _prefix = prefixes.RESET_PASSWORD_PREFIX
+    _prefix = RESET_PASSWORD_PREFIX
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

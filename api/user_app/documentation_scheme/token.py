@@ -1,6 +1,6 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse
-from user_app.constants.response_codes_and_messages import (
+from user_app.constants.http_response import (
     IS_NOT_ACCESS_OR_REFRESH_TOKEN,
     IS_NOT_REFRESH_TOKEN,
     LOGIN_SUCCESSFUL,
@@ -11,7 +11,7 @@ from user_app.constants.response_codes_and_messages import (
     USER_NOT_FOUND,
     USER_TOKEN_MISMATCH,
 )
-from user_app.constants.token_exception_messages import (
+from user_app.constants.authentication import (
     DECODE_ERROR,
     EXPIRED_SIGNATURE,
     INVALID_ALGORITHM,

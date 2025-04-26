@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages
+from user_app.constants import http_response
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
     RESET_PASSWORD_VIEWS_MODULE_PATH,
@@ -59,8 +59,8 @@ def test_does_not_send_code_when_non_existent_email_in_database(
     Tests that the system does not send a password reset code when the provided email
     is not found in the database.
     """
-    expected_detail_message = response_codes_and_messages.USER_NOT_FOUND["detail"]
-    expected_code = response_codes_and_messages.USER_NOT_FOUND["code"]
+    expected_detail_message = http_response.USER_NOT_FOUND["detail"]
+    expected_code = http_response.USER_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(
@@ -84,10 +84,10 @@ def test_does_not_send_code_when_deactivate_user(
     Tests that the system does not send a password reset code when the user's account is
     deactivated.
     """
-    expected_detail_message = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED[
+    expected_detail_message = http_response.USER_ACCOUNT_NOT_ACTIVATED[
         "detail"
     ]
-    expected_code = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED["code"]
+    expected_code = http_response.USER_ACCOUNT_NOT_ACTIVATED["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
@@ -132,9 +132,9 @@ def test_sends_the_code_to_the_user_email_successfully(
     when the user is found and active.
     """
     expected_detail_message = (
-        response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
+        http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
     )
-    expected_code = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
+    expected_code = http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.post(

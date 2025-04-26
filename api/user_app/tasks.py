@@ -5,8 +5,8 @@ from datetime import datetime
 from celery import Task, chain, shared_task
 from dateutil.parser import parse
 from django.utils import timezone
-from user_app.constants.celery_constants import MAX_RETRIES, RETRY_BACKOFF_MAX
-from user_app.constants.logs_constants import (
+from user_app.constants.celery import MAX_RETRIES, RETRY_BACKOFF_MAX
+from user_app.constants.logging import (
     EMAIL_TASK_ERROR_LOGGER_NAME,
     FAILED_NOTIFY_ACTIVATED_ACCOUNT_TAG,
     FAILED_NOTIFY_CHANGED_EMAIL_TAG,

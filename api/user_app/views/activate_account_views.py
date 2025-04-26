@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, throttle_classes
 from rest_framework.request import Request
 from rest_framework.response import Response
-from user_app.constants.response_codes_and_messages import (
+from user_app.constants.http_response import (
     ACTIVATED_USER,
     CODE_EXPIRED,
     CODE_NOT_FOUND,

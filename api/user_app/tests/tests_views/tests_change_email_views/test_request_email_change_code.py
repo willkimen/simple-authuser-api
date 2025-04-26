@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages
+from user_app.constants import http_response
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
@@ -71,8 +71,8 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
     """
 
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_code = response_codes_and_messages.EMAIL_ALREADY_IN_USE["code"]
-    expected_detail_message = response_codes_and_messages.EMAIL_ALREADY_IN_USE["detail"]
+    expected_code = http_response.EMAIL_ALREADY_IN_USE["code"]
+    expected_detail_message = http_response.EMAIL_ALREADY_IN_USE["detail"]
 
     actual_response = client_auth_header.post(
         url, data={"email": ACTUAL_LOGGED_USER_EMAIL}, format="json"
@@ -96,8 +96,8 @@ def test_do_not_send_code_if_email_already_exists_in_database(
     User.objects.create_user(**FAKE_USER_DATA, email=EMAIL_ALREADY_EXISTS)
 
     expected_status_code = status.HTTP_409_CONFLICT
-    expected_code = response_codes_and_messages.EMAIL_ALREADY_EXISTS["code"]
-    expected_detail_message = response_codes_and_messages.EMAIL_ALREADY_EXISTS["detail"]
+    expected_code = http_response.EMAIL_ALREADY_EXISTS["code"]
+    expected_detail_message = http_response.EMAIL_ALREADY_EXISTS["detail"]
 
     actual_response = client_auth_header.post(
         url, data={"email": EMAIL_ALREADY_EXISTS}, format="json"
@@ -117,9 +117,9 @@ def test_send_code_successfully(client_auth_header: APIClient):
     The user provides a valid new email that is not registered to any other account.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
+    expected_code = http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
     expected_detail_message = (
-        response_codes_and_messages.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
+        http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
     )
 
     actual_response = client_auth_header.post(

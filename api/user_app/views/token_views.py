@@ -18,7 +18,7 @@ from user_app.authentication.token_service import (
     create_pair_token,
     create_token,
 )
-from user_app.constants.response_codes_and_messages import (
+from user_app.constants.http_response import (
     IS_NOT_ACCESS_OR_REFRESH_TOKEN,
     IS_NOT_REFRESH_TOKEN,
     LOGIN_SUCCESSFUL,

@@ -4,9 +4,10 @@ from textwrap import dedent
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from user_app.constants.verification_code import CODE_EXPIRATION_HOURS
 
 EXPIRED_MESSAGE = (
-    f"Please note that this code is valid for {settings.EXPIRATION_CODE_TIME_IN_HOURS} "
+    f"Please note that this code is valid for {CODE_EXPIRATION_HOURS} "
     "hours. After that, it will expire, and you'll need to request a new one."
 )
 

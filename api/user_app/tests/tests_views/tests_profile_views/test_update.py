@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages
+from user_app.constants import http_response
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
@@ -63,8 +63,8 @@ def test_update_first_name_successfully(client_auth_header: APIClient):
     Test that a user can successfully update their first name.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY[
+    expected_code = http_response.USER_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.USER_UPDATED_SUCCESSFULLY[
         "detail"
     ]
     expected_new_first_name = "new_first_name"
@@ -87,8 +87,8 @@ def test_update_last_name_successfully(client_auth_header: APIClient):
     Test that a user can successfully update their last name.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY[
+    expected_code = http_response.USER_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.USER_UPDATED_SUCCESSFULLY[
         "detail"
     ]
     expected_new_last_name = "new_last_name"
@@ -111,8 +111,8 @@ def test_update_first_and_last_name_successfully(client_auth_header: APIClient):
     Test that a user can successfully update both their first and last names.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = response_codes_and_messages.USER_UPDATED_SUCCESSFULLY[
+    expected_code = http_response.USER_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.USER_UPDATED_SUCCESSFULLY[
         "detail"
     ]
     expected_new_first_name = "new_first_name"

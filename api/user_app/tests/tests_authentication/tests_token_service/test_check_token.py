@@ -12,7 +12,7 @@ from unittest.mock import patch
 import jwt
 import pytest
 from django.utils import timezone
-from user_app.constants import token_exception_messages
+from user_app.constants import authentication
 from user_app.authentication.token_exceptions import (
     BlacklistTokenException,
     DecodeException,
@@ -121,7 +121,7 @@ def test_expired_token(token_expired: str):
     Args:
         token_expired (str): The expired JWT.
     """
-    expected_dict_with_code_and_detail = token_exception_messages.EXPIRED_SIGNATURE
+    expected_dict_with_code_and_detail = authentication.EXPIRED_SIGNATURE
     with pytest.raises(ExpiredSignatureException) as e:
         check_token(token_expired)
 
@@ -138,7 +138,7 @@ def test_invalid_signature(token_with_invalid_secret: str):
     Args:
         token_with_invalid_secret (str): The JWT with an incorrect secret.
     """
-    expected_dict_with_code_and_detail = token_exception_messages.INVALID_SIGNATURE
+    expected_dict_with_code_and_detail = authentication.INVALID_SIGNATURE
     with pytest.raises(InvalidSignatureException) as e:
         check_token(token_with_invalid_secret)
 
@@ -154,7 +154,7 @@ def test_decode_error(token_malformed: str):
     Args:
         token_malformed (str): The malformed JWT.
     """
-    expected_dict_with_code_and_detail = token_exception_messages.DECODE_ERROR
+    expected_dict_with_code_and_detail = authentication.DECODE_ERROR
     with pytest.raises(DecodeException) as e:
         check_token(token_malformed)
 
@@ -171,7 +171,7 @@ def test_invalid_algorithm(token_with_invalid_algorithm: str):
     Args:
         token_with_invalid_algorithm (str): The JWT with an invalid algorithm.
     """
-    expected_dict_with_code_and_detail = token_exception_messages.INVALID_ALGORITHM
+    expected_dict_with_code_and_detail = authentication.INVALID_ALGORITHM
     with pytest.raises(InvalidAlgorithmException) as e:
         check_token(token_with_invalid_algorithm)
 
@@ -188,7 +188,7 @@ def test_token_in_black_list(token: str):
     Args:
         token (str): The JWT.
     """
-    expected_dict_with_code_and_detail = token_exception_messages.TOKEN_IN_BLACKLIST
+    expected_dict_with_code_and_detail = authentication.TOKEN_IN_BLACKLIST
     payload: dict = jwt.decode(token, FAKE_SECRET, algorithms="HS256")
 
     BlacklistTokenModel.objects.create(

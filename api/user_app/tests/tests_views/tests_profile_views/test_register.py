@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages, validation_error_messages
+from user_app.constants import http_response, validation_error_messages
 from user_app.models import PendingAccountsModel
 from user_app.tests.constants import User
 
@@ -44,10 +44,10 @@ def test_creates_user_with_valid_data(
     """
 
     expected_status_code = status.HTTP_201_CREATED
-    expected_detail_message = response_codes_and_messages.USER_REGISTERED_SUCCESSFULLY[
+    expected_detail_message = http_response.USER_REGISTERED_SUCCESSFULLY[
         "detail"
     ]
-    expected_code = response_codes_and_messages.USER_REGISTERED_SUCCESSFULLY["code"]
+    expected_code = http_response.USER_REGISTERED_SUCCESSFULLY["code"]
     actual_response = client.post(url, data=user_data, format="json")
 
     # Check if the user was created in the database with the expected data
@@ -90,8 +90,8 @@ def test_does_not_create_user_with_invalid_email_format(
     """
     # Define variables for expected status code, expected field, and expected message
     expected_status_code = status.HTTP_400_BAD_REQUEST
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
     expected_error_message_field = validation_error_messages.INVALID_FORMAT_EMAIL
 
     # Change the email field value to invalid formats
@@ -122,8 +122,8 @@ def test_does_not_create_user_with_duplicate_email(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.EMAIL_ALREADY_EXISTS
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Create a user with the provided email
     client.post(url, data=user_data, format="json")
@@ -153,8 +153,8 @@ def test_does_not_create_user_with_blank_email(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.REQUIRED_FIELD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Remove the email field
     del user_data["email"]
@@ -183,8 +183,8 @@ def test_does_not_create_user_with_null_email(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.NULL_FIELD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Set the email field to None
     user_data["email"] = None
@@ -231,8 +231,8 @@ def test_does_not_create_user_with_different_passwords(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.PASSWORD_DO_NOT_MATCH
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the 'confirmation_password' field to a different password
     user_data["confirmation_password"] = "DifferentPassword123!*"
@@ -262,8 +262,8 @@ def test_does_not_create_user_with_short_password(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.SHORT_PASSWORD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the fields to a password shorter than 8 characters
     user_data["password"] = user_data["confirmation_password"] = "abc!100"
@@ -292,8 +292,8 @@ def test_does_not_create_user_with_numeric_password(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.NUMERIC_PASSWORD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the fields to an entirely numeric password.
     user_data["password"] = user_data["confirmation_password"] = "12345678910"
@@ -322,8 +322,8 @@ def test_does_not_create_user_with_common_password(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.COMMON_PASSWORD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the fields to a common password.
     user_data["password"] = user_data["confirmation_password"] = "password123"
@@ -352,8 +352,8 @@ def test_does_not_create_user_with_blank_first_name(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.BLANK_FIELD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the first_name field to an empty value.
     user_data["first_name"] = ""
@@ -382,8 +382,8 @@ def test_does_not_create_user_with_null_first_name(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.NULL_FIELD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the first_name field to None
     user_data["first_name"] = None
@@ -412,8 +412,8 @@ def test_does_not_create_user_with_too_long_first_name(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.LONG_FIELD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the first_name field to a very long value
     user_data["first_name"] = "my_name" * 15
@@ -442,8 +442,8 @@ def test_does_not_create_user_with_blank_last_name(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.BLANK_FIELD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     user_data["last_name"] = ""
 
@@ -471,8 +471,8 @@ def test_does_not_create_user_with_null_last_name(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.NULL_FIELD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the last_name field to None
     user_data["last_name"] = None
@@ -501,8 +501,8 @@ def test_does_not_create_user_with_too_long_last_name(
     """
     expected_status_code = status.HTTP_400_BAD_REQUEST
     expected_error_message_field = validation_error_messages.LONG_FIELD
-    expected_code = response_codes_and_messages.VALIDATION_ERRORS["code"]
-    expected_detail_message = response_codes_and_messages.VALIDATION_ERRORS["detail"]
+    expected_code = http_response.VALIDATION_ERRORS["code"]
+    expected_detail_message = http_response.VALIDATION_ERRORS["detail"]
 
     # Change the last_name field to a very long value
     user_data["last_name"] = "my_name" * 15

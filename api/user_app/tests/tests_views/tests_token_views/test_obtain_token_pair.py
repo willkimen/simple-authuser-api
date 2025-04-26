@@ -8,7 +8,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import response_codes_and_messages
+from user_app.constants import http_response
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
@@ -64,8 +64,8 @@ def test_nonexistent_user_does_not_return_token_pair(
         client (APIClient): The test client used to make HTTP requests.
         data_user_nonexistent (dict[str, str]): Dictionary containing login data for a user that does not exist.
     """
-    expected_detail_message = response_codes_and_messages.USER_NOT_FOUND["detail"]
-    expected_code = response_codes_and_messages.USER_NOT_FOUND["code"]
+    expected_detail_message = http_response.USER_NOT_FOUND["detail"]
+    expected_code = http_response.USER_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data=data_user_nonexistent, format="json")
@@ -88,10 +88,10 @@ def test_user_with_not_activated_account_does_not_return_token_pair(
                                                 is not activated.
         client (APIClient): The test client used to make HTTP requests.
     """
-    expected_detail_message = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED[
+    expected_detail_message = http_response.USER_ACCOUNT_NOT_ACTIVATED[
         "detail"
     ]
-    expected_code = response_codes_and_messages.USER_ACCOUNT_NOT_ACTIVATED["code"]
+    expected_code = http_response.USER_ACCOUNT_NOT_ACTIVATED["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
@@ -120,8 +120,8 @@ def test_returns_token_pair_successfully(activated_user, client: APIClient):
         client (APIClient): The test client used to make HTTP requests.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_detail_message = response_codes_and_messages.LOGIN_SUCCESSFUL["detail"]
-    expected_code = response_codes_and_messages.LOGIN_SUCCESSFUL["code"]
+    expected_detail_message = http_response.LOGIN_SUCCESSFUL["detail"]
+    expected_code = http_response.LOGIN_SUCCESSFUL["code"]
 
     actual_response = client.post(
         url,
