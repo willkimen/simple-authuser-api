@@ -1,13 +1,14 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import jwt
 import pytest
+import time_machine
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import http_response, authentication
+from user_app.constants import authentication, http_response
 from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
@@ -94,7 +95,84 @@ def valid_token(payload: dict) -> str:
     return jwt.encode(payload, FAKE_SECRET)
 
 
+@pytest.fixture
+def expired_access_token(payload: dict) -> str:
+    """
+    Provides a expired access JWT token.
+    """
+    payload["exp"] = int(
+        (
+            timezone.now()
+            + timedelta(minutes=authentication.ACCESS_TOKEN_EXPIRATION_MINUTES)
+        ).timestamp()
+    )
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def expired_refresh_token(payload: dict) -> str:
+    """
+    Provides a expired access JWT token.
+    """
+    payload["typ"] = "refresh"
+    payload["exp"] = int(
+        (
+            timezone.now()
+            + timedelta(days=authentication.REFRESH_TOKEN_EXPIRATION_DAYS)
+        ).timestamp()
+    )
+    return jwt.encode(payload, FAKE_SECRET)
+
+
 # ========== Tests ================
+@pytest.mark.django_db
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_expired_access_token(client: APIClient, expired_access_token: str):
+    """
+    Test that a expired access token returns the appropriate error.
+    """
+    expected_detail_message = authentication.EXPIRED_SIGNATURE["detail"]
+    expected_code = authentication.EXPIRED_SIGNATURE["code"]
+    expected_status_code = status.HTTP_401_UNAUTHORIZED
+
+    expiration_time: datetime = timezone.now() + timedelta(
+        minutes=authentication.ACCESS_TOKEN_EXPIRATION_MINUTES
+    )
+
+    with time_machine.travel(expiration_time):
+        actual_response = client.post(
+            url, data={"token": expired_access_token}, format="json"
+        )
+
+        assert expected_detail_message == actual_response.data["detail"]
+        assert expected_code == actual_response.data["code"]
+        assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_expired_refresh_token(client: APIClient, expired_refresh_token: str):
+    """
+    Test that a expired refresh token returns the appropriate error.
+    """
+    expected_detail_message = authentication.EXPIRED_SIGNATURE["detail"]
+    expected_code = authentication.EXPIRED_SIGNATURE["code"]
+    expected_status_code = status.HTTP_401_UNAUTHORIZED
+
+    expiration_time: datetime = timezone.now() + timedelta(
+        days=authentication.REFRESH_TOKEN_EXPIRATION_DAYS
+    )
+
+    with time_machine.travel(expiration_time):
+        actual_response = client.post(
+            url, data={"token": expired_refresh_token}, format="json"
+        )
+
+        assert expected_detail_message == actual_response.data["detail"]
+        assert expected_code == actual_response.data["code"]
+        assert expected_status_code == actual_response.status_code
+
+
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_already_in_blacklist(client: APIClient, blacklisted_token: str):
@@ -121,9 +199,7 @@ def test_token_type_must_be_access_or_refresh(
     Test that a JWT token with an incorrect type field ("typ")
     returns the appropriate error.
     """
-    expected_detail_message = (
-        http_response.IS_NOT_ACCESS_OR_REFRESH_TOKEN["detail"]
-    )
+    expected_detail_message = http_response.IS_NOT_ACCESS_OR_REFRESH_TOKEN["detail"]
     expected_code = http_response.IS_NOT_ACCESS_OR_REFRESH_TOKEN["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
