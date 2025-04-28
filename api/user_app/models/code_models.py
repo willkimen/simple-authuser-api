@@ -1,3 +1,17 @@
+"""
+Module responsible for managing verification codes.
+
+This module defines abstract and concrete models to store codes used in
+account verification, password reset, and email change processes.
+It also includes a manager that handles the generation and maintenance of these codes,
+ensuring their uniqueness and validity.
+
+The models are linked to users through their email addresses
+and include fields to track code creation and expiration times.
+
+This module is designed to be reusable across different verification flows in the system.
+"""
+
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -29,7 +43,7 @@ class VerificationCodeManager(models.Manager):
         """
         codes = self.model.objects.filter(user_id=user_email).order_by("-created_at")
         if codes.count() > 1:
-            # Exclude the most recent code and delete the rest
+            # Keep the latest code and delete the rest.
             codes.exclude(pk=codes.first().pk).delete()
 
     def verify_and_return_new_code(self, prefix: str) -> str:
@@ -89,6 +103,9 @@ class VerificationCodeBaseModel(models.Model):
     created_at = models.DateTimeField()
     expires_at = models.DateTimeField()
 
+    class Meta:
+        abstract = True
+
     def save(self, *args, **kwargs) -> None:
         """
         This method was overridden so that if the user does not directly set fields
@@ -107,9 +124,6 @@ class VerificationCodeBaseModel(models.Model):
                 self.code: str = generate_random_code(prefix=self._prefix)
 
         super().save(*args, **kwargs)
-
-    class Meta:
-        abstract = True
 
 
 class AccountActivationCodeModel(VerificationCodeBaseModel):

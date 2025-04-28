@@ -1,3 +1,17 @@
+"""
+This module handles the creation, verification, and revocation of JWT tokens for user 
+authentication. It contains functions for generating access and refresh tokens, 
+verifying the validity of existing tokens, and revoking tokens by adding them to 
+a blacklist. The generated tokens are signed with a secret key and have a 
+configurable expiration time.
+
+Main functions:
+- Creation of JWT tokens (access and refresh).
+- Verification of JWT token validity.
+- Revocation of tokens, including adding non-expired tokens to the blacklist 
+  and generating new tokens.
+"""
+
 import hashlib
 import time
 from datetime import datetime, timedelta

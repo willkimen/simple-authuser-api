@@ -1,3 +1,10 @@
+"""
+This module contains classes responsible for sending emails related to account 
+activation, email change, password recovery, and account status notifications. 
+Each class handles sending a specific type of email, providing both plain text 
+and HTML email bodies.
+"""
+
 import smtplib
 from datetime import datetime
 from textwrap import dedent

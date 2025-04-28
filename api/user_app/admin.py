@@ -86,17 +86,21 @@ class ResetPasswordCodeAdmin(admin.ModelAdmin):
 
 def retry(modeladmin, request, queryset):
     """
-    Retries the selected failed Celery tasks and provides feedback to the admin.
+    Attempts to re-execute selected Celery tasks from the Django Admin.
+
+    For each selected task in the queryset, this method retrieves the original
+    arguments and keyword arguments and tries to re-execute the task asynchronously.
+    After the attempt, it displays success or error messages in the Admin interface.
+
+    This feature makes it easier to manually retry failed tasks directly
+    from the administration panel.
 
     Args:
-        modeladmin: The admin instance handling the request.
-        request: The current HTTP request.
-        queryset: A queryset containing the selected failed tasks to retry.
-
-    This function attempts to requeue each selected failed task using its stored
-    arguments and keyword arguments. After retrying, a success or error message
-    is displayed in the Django Admin interface.
+        modeladmin: The ModelAdmin instance handling the action.
+        request: The current HTTP request object.
+        queryset: A queryset of selected failed tasks to retry.
     """
+
     retried = 0
     failed = 0
 

@@ -1,6 +1,7 @@
-# =====================================
-# Constants related to email_task_error logging
-# =====================================
+"""
+Constants related to email_task_error logging.
+"""
+
 EMAIL_TASK_ERROR_LEVEL = 35
 EMAIL_TASK_ERROR_LEVEL_NAME = "EMAIL_TASK_ERROR"
 EMAIL_TASK_ERROR_LOGGER_NAME = "email_task_error"

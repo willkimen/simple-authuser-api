@@ -1,3 +1,11 @@
+"""
+Module responsible for storing information about Celery tasks.
+
+Currently defines a model for recording tasks that failed during execution,
+including details such as task name, arguments, exception, and traceback.
+It can be expanded in the future to include other types of task-related information.
+"""
+
 from celery import Task
 from config.celery import app
 from django.core.serializers.json import DjangoJSONEncoder
@@ -29,6 +37,18 @@ class FailedTaskModel(models.Model):
         verbose_name_plural = "Failed Tasks"
 
     def retry(self) -> None:
+        """
+        Retrieves the associated Celery task and attempts to re-execute it.
+
+        This method looks up the task by its recorded name, retrieves the original
+        arguments and keyword arguments, and asynchronously re-executes the task
+        using `delay`. After rescheduling the task, the failure record is deleted
+        from the database.
+
+        This method is especially useful in the Django Admin panel, where
+        administrators can manually select and retry failed tasks through a
+        custom action.
+        """
         task: Task | None = app.tasks.get(self.task_name)
         if task is not None:
             task.delay(*tuple(self.args), **self.kwargs)

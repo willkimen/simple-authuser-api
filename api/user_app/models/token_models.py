@@ -1,3 +1,12 @@
+"""
+Models related to JWT token management.
+
+This module defines models for handling valid tokens and blacklisted (invalidated) 
+tokens, allowing storage of information such as the token ID (jti), expiration time, 
+and token type. It also supports automatic processing of the expiration field to 
+ensure it is properly saved as a DateTime.
+"""
+
 from datetime import datetime
 
 from django.conf import settings
@@ -55,8 +64,7 @@ class TokenBaseModel(models.Model):
 class BlacklistTokenModel(TokenBaseModel):
     """
     Represents a model for storing blacklisted JWTs (JSON Web Tokens).
-    This is used to keep track of tokens
-    that should no longer be accepted by the system.
+    This is used to keep track of tokens that should no longer be accepted by the system.
 
     Fields:
         user (ForeignKey): A foreign key relationship to the default user defined in

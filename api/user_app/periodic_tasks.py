@@ -1,5 +1,5 @@
 """
-Module for creating periodic tasks in Django using django-celery-beat.
+Module for creating periodic tasks using django-celery-beat.
 """
 
 import json
@@ -19,11 +19,19 @@ def create_periodic_task_for_expired_codes_removal() -> None:
     Creates a periodic task that removes expired verification codes from the database.
 
     This function creates a scheduled task that runs daily at 3:00 AM to execute
-    the `task_remove_exp_code` task, which removes expired account verification codes,
+    the `task_remove_exp_code` task, which removes expired account activation codes,
     email change codes, and reset password codes from the database.
 
     It ensures that the task is only created once and prevents duplication of the task
     in the PeriodicTask table.
+
+    Guarantees:
+        - The task will only be created once, preventing duplication in the
+          `PeriodicTask` table.
+
+    Schedule:
+        - Frequency: Daily
+        - Time: 3:00 AM
     """
     schedule, _ = CrontabSchedule.objects.get_or_create(
         minute="0",
@@ -52,6 +60,14 @@ def create_periodic_task_for_expired_tokens_removal() -> None:
 
     It ensures that the task is only created once and prevents duplication of the task
     in the PeriodicTask table.
+
+    Guarantees:
+        - The task will only be created once, preventing duplication in the
+          `PeriodicTask` table.
+
+    Schedule:
+        - Frequency: Daily
+        - Time: 3:00 AM
     """
     schedule, _ = CrontabSchedule.objects.get_or_create(
         minute="0",
@@ -144,6 +160,14 @@ def create_periodic_task_for_delete_and_notify() -> None:
     """
     Creates a periodic task that deletes expired accounts and notifies users,
     daily at 00:00.
+
+    Guarantees:
+        - The task will only be created once, preventing duplication in the
+          `PeriodicTask` table.
+
+    Schedule:
+        - Frequency: Daily
+        - Time: 00:00 AM
     """
     schedule, _ = CrontabSchedule.objects.get_or_create(
         minute="0",
