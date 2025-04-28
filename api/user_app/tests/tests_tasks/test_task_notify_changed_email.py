@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from celery import states
 from celery.result import EagerResult
+from user_app.models import FailedTaskModel
 from user_app.tasks import task_notify_changed_email
 from user_app.tests.constants import (
     LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
@@ -52,3 +53,24 @@ def test_task_notify_changed_email_failure(
 
     assert result.state == states.FAILURE
     mock_logger_email_task_error.assert_called()
+
+
+@pytest.mark.django_db
+@patch(
+    f"{TASKS_MODULE_PATH}.{NOTIFY_CHANGED_EMAIL_FUNCTION_TO_PATCH}",
+    side_effect=SMTPException(),
+)
+def test_task_data_is_recorded_when_it_fails(mock_notify_changed_email: MagicMock):
+    """Tests if task failure data is recorded in the FailedTaskModel."""
+    result: EagerResult = task_notify_changed_email.apply(args=(NEW_EMAIL,))
+
+    with pytest.raises(SMTPException):
+        result.get()
+
+    failed_task_model = FailedTaskModel.objects.first()
+
+    assert failed_task_model is not None
+    assert failed_task_model.task_id == result.id
+    assert failed_task_model.args == [NEW_EMAIL]
+    assert failed_task_model.kwargs == {}
+    assert failed_task_model.created_at is not None

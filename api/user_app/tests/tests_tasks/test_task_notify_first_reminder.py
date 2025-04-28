@@ -7,7 +7,7 @@ import time_machine
 from celery import states
 from celery.result import EagerResult
 from django.utils import timezone
-from user_app.models import UserProfileModel
+from user_app.models import FailedTaskModel, UserProfileModel
 from user_app.models.user_models import PendingAccountsModel
 from user_app.tasks import task_notify_first_reminder
 from user_app.tests.constants import (
@@ -124,3 +124,29 @@ def test_task_notify_first_reminder_failure(
 
     assert result.status == states.FAILURE
     mock_logger_email_task_error.assert_called()
+
+
+@pytest.mark.django_db
+@patch(
+    f"{TASKS_MODULE_PATH}.{NOTIFY_ACTIVATION_ACCOUNT_REMINDER_FUNCTION_TO_PATCH}",
+    side_effect=SMTPException(),
+)
+def test_task_data_is_recorded_when_it_fails(mock_notify_first_reminder: MagicMock):
+    """Tests if task failure data is recorded in the FailedTaskModel."""
+    result: EagerResult = task_notify_first_reminder.apply(
+        args=(EMAILS_INACTIVE_USERS, ACTIVATION_DEADLINE_DAY)
+    )
+
+    with pytest.raises(SMTPException):
+        result.get()
+
+    failed_task_model = FailedTaskModel.objects.first()
+
+    assert failed_task_model is not None
+    assert failed_task_model.task_id == result.id
+    assert failed_task_model.args == [
+        EMAILS_INACTIVE_USERS,
+        ACTIVATION_DEADLINE_DAY.isoformat().replace("+00:00", "Z"),
+    ]
+    assert failed_task_model.kwargs == {}
+    assert failed_task_model.created_at is not None

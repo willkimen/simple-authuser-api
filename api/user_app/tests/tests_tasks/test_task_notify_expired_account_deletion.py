@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from celery import states
 from celery.result import EagerResult
-from user_app.models import UsersPendingDeletionNotificationModel
+from user_app.models import FailedTaskModel, UsersPendingDeletionNotificationModel
 from user_app.tasks import task_notify_expired_account_deletion
 from user_app.tests.constants import (
     LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
@@ -102,3 +102,26 @@ def test_task_notify_reset_password_failure(
 
     assert result.state == states.FAILURE
     mock_logger_email_task_error.assert_called()
+
+
+@pytest.mark.django_db
+@patch(
+    f"{TASKS_MODULE_PATH}.{NOTIFY_EXPIRED_ACCOUNT_DELETION_FUNCTION_TO_PATCH}",
+    side_effect=SMTPException(),
+)
+def test_task_data_is_recorded_when_it_fails(
+    mock_notify_expired_account_deletion: MagicMock,
+):
+    """Tests if task failure data is recorded in the FailedTaskModel."""
+    result: EagerResult = task_notify_expired_account_deletion.apply()
+
+    with pytest.raises(SMTPException):
+        result.get()
+
+    failed_task_model = FailedTaskModel.objects.first()
+
+    assert failed_task_model is not None
+    assert failed_task_model.task_id == result.id
+    assert failed_task_model.args == []
+    assert failed_task_model.kwargs == {}
+    assert failed_task_model.created_at is not None
