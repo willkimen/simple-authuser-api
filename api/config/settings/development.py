@@ -54,18 +54,6 @@ DATABASES = {
     }
 }
 
-"""
-# Database (User if you want it locally on your host machine.)
-# -----------------------------------------------------------------------------
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-"""
-
-
 # Email settings for development
 # -----------------------------------------------------------------------------
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

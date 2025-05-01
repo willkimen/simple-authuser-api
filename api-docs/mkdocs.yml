@@ -1,0 +1,39 @@
+site_name: Simple Auth User 
+
+nav:
+  - About and Motivation: index.md
+  - Features: features.md
+  - Setup and Run: setup-and-run.md
+  - Important Notes: important-notes.md
+  - Licence: license.md
+
+
+markdown_extensions:
+  - pymdownx.tasklist
+  - pymdownx.emoji
+  - pymdownx.mark 
+  - pymdownx.tilde 
+  - pymdownx.highlight 
+  - pymdownx.superfences 
+
+theme:
+    name: material
+    palette: 
+      # Palette toggle for dark mode
+      - scheme: slate
+        primary: teal 
+        toggle: 
+          icon: material/weather-sunny
+          name: Dark 
+      # Palette toggle for light mode
+      - scheme: default
+        primary: blue grey
+        toggle:
+          icon: material/weather-night 
+          name: Light
+    language: en
+    extra:
+      alternate:
+        - name: Português
+          link: /pt-BR/ 
+          lang: pt-Br
