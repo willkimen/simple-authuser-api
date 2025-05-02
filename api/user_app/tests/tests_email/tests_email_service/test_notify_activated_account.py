@@ -2,12 +2,12 @@ import smtplib
 from unittest.mock import MagicMock, patch
 
 import pytest
+from user_app.email.email_service import notify_activated_account
 from user_app.tests.constants import (
     ACTIVATION_NOTIFICATION_EMAIL_CLASS_TO_PATCH,
     EMAIL_SERVICE_MODULE_PATH,
     SEND_WITH_ERROR_HANDLING_METHOD_TO_PATCH,
 )
-from user_app.email.email_service import notify_activated_account
 
 EMAIL = "fakeemail@email.com"
 

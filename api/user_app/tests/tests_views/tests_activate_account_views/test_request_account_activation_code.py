@@ -1,6 +1,6 @@
 """
-Test the request_account_activation_code() view, which expects a user's email in a 
-POST request and sends a activation code to the user's email address.
+Test the request_account_activation_code() view, which expects an account's email in a 
+POST request and sends a activation code to the account's email address.
 """
 
 from unittest.mock import MagicMock, patch
@@ -13,12 +13,12 @@ from user_app.constants import http_response, validation_error_messages
 from user_app.tests.constants import (
     ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
-    User,
+    Account,
 )
 
 # ========== Objects and constants ============
 url: str = reverse("request_account_activation_code")
-FAKE_USER_DATA = {
+FAKE_ACCOUNT_DATA = {
     "first_name": "fake_first_name",
     "last_name": "fake_last_name",
     "email": "fake_email@email.com",
@@ -29,33 +29,33 @@ EMAIL_NONEXISTENT = "nonexistent@email.com"
 
 # ================= Fixtures ===============
 @pytest.fixture
-def active_user_email() -> str:
+def active_account_email() -> str:
     """
-    Fixture that creates a user with an activated account for testing purposes.
+    Fixture that creates an account with an activated account for testing purposes.
 
-    This fixture creates a User instance with an active account status. It returns
-    the email address of the activated user.
+    This fixture creates a Account instance with an active account status. It returns
+    the email address of the activated account.
 
     Returns:
-        str: The email address of the user with the activated account.
+        str: The email address of the account with the activated account.
     """
 
-    return User.objects.create_user(**FAKE_USER_DATA, is_active=True).email
+    return Account.objects.create_user(**FAKE_ACCOUNT_DATA, is_active=True).email
 
 
 @pytest.fixture
-def deactive_user_email() -> str:
+def deactive_account_email() -> str:
     """
-    Fixture that creates a user with a deactivated account for testing purposes.
+    Fixture that creates an account with a deactivated account for testing purposes.
 
-    This fixture creates a User instance with a deactivated account status (default).
-    It returns the email address of the deactivated user.
+    This fixture creates a Account instance with a deactivated account status (default).
+    It returns the email address of the deactivated account.
 
     Returns:
-        str: The email address of the user with the deactivated account.
+        str: The email address of the account with the deactivated account.
     """
 
-    return User.objects.create_user(**FAKE_USER_DATA, is_active=False).email
+    return Account.objects.create_user(**FAKE_ACCOUNT_DATA, is_active=False).email
 
 
 # ============= Tests ==================
@@ -203,11 +203,11 @@ def test_does_not_send_email_with_invalid_email_format(
     f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-def test_does_not_send_email_when_user_does_not_exists(
+def test_does_not_send_email_when_account_does_not_exists(
     allow_request_function_mock: MagicMock, client: APIClient
 ):
     """
-    Test if the email sending request returns 404 when the user does not exist.
+    Test if the email sending request returns 404 when the account does not exist.
 
     Args:
         allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
@@ -215,10 +215,10 @@ def test_does_not_send_email_when_user_does_not_exists(
 
     This test checks that the server returns a 404 Not Found status code and
     an appropriate error message when the email field contains
-    an email address that does not belong to any user.
+    an email address that does not belong to any account.
     """
-    expected_detail_message = http_response.USER_NOT_FOUND["detail"]
-    expected_code = http_response.USER_NOT_FOUND["code"]
+    expected_detail_message = http_response.ACCOUNT_NOT_FOUND["detail"]
+    expected_code = http_response.ACCOUNT_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data={"email": EMAIL_NONEXISTENT}, format="json")
@@ -233,30 +233,30 @@ def test_does_not_send_email_when_user_does_not_exists(
     f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-def test_does_not_send_email_when_user_has_already_activated(
-    allow_request_function_mock: MagicMock, client: APIClient, active_user_email: str
+def test_does_not_send_email_when_account_has_already_activated(
+    allow_request_function_mock: MagicMock, client: APIClient, active_account_email: str
 ):
     """
-    Test if the email sending request returns 400 when the user
+    Test if the email sending request returns 400 when the account
     has already activated their account.
 
     Args:
         allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        active_user_email (str): The email address of the user with
+        active_account_email (str): The email address of the account with
                                  an activated account.
 
     This test checks that the server returns a 400 Bad Request status code and
     an appropriate error message when the email field contains an email address
-    of a user who has already activated their account.
+    of an account who has already activated their account.
     """
-    expected_detail_message = http_response.USER_HAS_ALREADY_ACTIVATED[
-        "detail"
-    ]
-    expected_code = http_response.USER_HAS_ALREADY_ACTIVATED["code"]
+    expected_detail_message = http_response.ACCOUNT_HAS_ALREADY_ACTIVATED["detail"]
+    expected_code = http_response.ACCOUNT_HAS_ALREADY_ACTIVATED["code"]
     expected_status_code = status.HTTP_400_BAD_REQUEST
 
-    actual_response = client.post(url, data={"email": active_user_email}, format="json")
+    actual_response = client.post(
+        url, data={"email": active_account_email}, format="json"
+    )
 
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
@@ -269,7 +269,9 @@ def test_does_not_send_email_when_user_has_already_activated(
     return_value=True,
 )
 def test_send_email_successfully(
-    allow_request_function_mock: MagicMock, client: APIClient, deactive_user_email: str
+    allow_request_function_mock: MagicMock,
+    client: APIClient,
+    deactive_account_email: str,
 ):
     """
     Test if the email sending request returns 200 when the email is sent successfully.
@@ -277,20 +279,18 @@ def test_send_email_successfully(
     Args:
         allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
         client (APIClient): The API client used to make requests.
-        deactive_user_email (str): The email address of the user with a
+        deactive_account_email (str): The email address of the account with a
                                    deactivated account.
 
     This test checks that the server returns a 200 OK status code and an appropriate
     success message when the activation email is sent successfully.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_detail_message = (
-        http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
-    )
-    expected_code = http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY["detail"]
+    expected_code = http_response.EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY["code"]
 
     actual_response = client.post(
-        url, data={"email": deactive_user_email}, format="json"
+        url, data={"email": deactive_account_email}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code

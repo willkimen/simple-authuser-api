@@ -46,7 +46,7 @@ logger = logging.getLogger(EMAIL_TASK_ERROR_LOGGER_NAME)
 
 def get_emails_and_deadline(is_first_reminder: bool) -> tuple[list[str], datetime]:
     """
-    Fetches the emails of users who need to be notified about their pending
+    Fetches the emails of accounts who need to be notified about their pending
     account activation.
     Also returns the activation deadline for the accounts.
 
@@ -72,7 +72,7 @@ def get_emails_and_deadline(is_first_reminder: bool) -> tuple[list[str], datetim
         return ([], None)
 
     # Extract emails and activation_deadline
-    emails = [pa.user.email for pa in pending_accounts]
+    emails = [pa.account.email for pa in pending_accounts]
     activation_deadline: datetime = pending_accounts[0].activation_deadline
 
     return (emails, activation_deadline)
@@ -128,16 +128,16 @@ def task_remove_exp_token() -> None:
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
 )
-def task_send_account_activation_code(self, user_email: str) -> int:
+def task_send_account_activation_code(self, email: str) -> int:
     """
     Celery task to send an activation code via email.
 
-    This task attempts to send a verification code to the user's email address.
+    This task attempts to send a verification code to the account's email address.
     If an SMTP exception occurs, the task will automatically retry up with
     exponential backoff.
     """
     try:
-        sent_count: int = send_account_activation_code(user_email)
+        sent_count: int = send_account_activation_code(email)
         return sent_count
     except smtplib.SMTPException as e:
         # Logs the error after the last retry attempt.
@@ -146,7 +146,7 @@ def task_send_account_activation_code(self, user_email: str) -> int:
                 email_task_error_message_format.format(
                     tag=FAILED_SEND_ACCOUNT_ACTIVATION_CODE_TAG,
                     task_id=self.request.id,
-                    to=user_email,
+                    to=email,
                     error=str(e),
                 )
             )
@@ -162,7 +162,7 @@ def task_send_account_activation_code(self, user_email: str) -> int:
 )
 def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
     """
-    Celery task to send a verification code for changing the user's email.
+    Celery task to send a verification code for changing the account's email.
 
     This task attempts to send a verification code tothe new email (`new_email`).
     If an SMTP exception occurs, the task will automatically retry up with
@@ -193,16 +193,16 @@ def task_send_email_change_code(self, actual_email: str, new_email: str) -> int:
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
 )
-def task_send_reset_password_code(self, user_email: str) -> int:
+def task_send_reset_password_code(self, email: str) -> int:
     """
     Celery task to send a password reset verification code via email.
 
-    This task attempts to send a verification code to the user's email address
+    This task attempts to send a verification code to the account's email address
     to allow password reset. If an SMTP exception occurs, the task will automatically
     retry up with exponential backoff.
     """
     try:
-        sent_count: int = send_reset_password_code(user_email)
+        sent_count: int = send_reset_password_code(email)
         return sent_count
     except smtplib.SMTPException as e:
         # Logs the error after the last retry attempt.
@@ -211,7 +211,7 @@ def task_send_reset_password_code(self, user_email: str) -> int:
                 email_task_error_message_format.format(
                     tag=FAILED_SEND_RESET_PASSWORD_CODE_TAG,
                     task_id=self.request.id,
-                    to=user_email,
+                    to=email,
                     error=str(e),
                 )
             )
@@ -225,15 +225,15 @@ def task_send_reset_password_code(self, user_email: str) -> int:
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
 )
-def task_notify_activated_account(self, user_email: str) -> int:
+def task_notify_activated_account(self, email: str) -> int:
     """
-    Celery task to send a notification email informing the user that their
+    Celery task to send a notification email informing the account that their
     account has been activated.
     If an SMTP exception occurs, the task will automatically
     retry up with exponential backoff.
     """
     try:
-        sent_count: int = notify_activated_account(user_email)
+        sent_count: int = notify_activated_account(email)
         return sent_count
     except smtplib.SMTPException as e:
         # Logs the error after the last retry attempt.
@@ -242,7 +242,7 @@ def task_notify_activated_account(self, user_email: str) -> int:
                 email_task_error_message_format.format(
                     tag=FAILED_NOTIFY_ACTIVATED_ACCOUNT_TAG,
                     task_id=self.request.id,
-                    to=user_email,
+                    to=email,
                     error=str(e),
                 )
             )
@@ -256,15 +256,15 @@ def task_notify_activated_account(self, user_email: str) -> int:
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
 )
-def task_notify_changed_email(self, user_email: str) -> int:
+def task_notify_changed_email(self, email: str) -> int:
     """
-    Celery task to send a notification email informing the user that their
+    Celery task to send a notification email informing the account that their
     email addredd has been changed.
     If an SMTP exception occurs, the task will automatically
     retry up with exponential backoff.
     """
     try:
-        sent_count: int = notify_changed_email(user_email)
+        sent_count: int = notify_changed_email(email)
         return sent_count
     except smtplib.SMTPException as e:
         # Logs the error after the last retry attempt.
@@ -273,7 +273,7 @@ def task_notify_changed_email(self, user_email: str) -> int:
                 email_task_error_message_format.format(
                     tag=FAILED_NOTIFY_CHANGED_EMAIL_TAG,
                     task_id=self.request.id,
-                    to=user_email,
+                    to=email,
                     error=str(e),
                 )
             )
@@ -287,15 +287,15 @@ def task_notify_changed_email(self, user_email: str) -> int:
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
 )
-def task_notify_reset_password(self, user_email: str) -> int:
+def task_notify_reset_password(self, email: str) -> int:
     """
-    Celery task to send a notification email informing the user that their
+    Celery task to send a notification email informing the account that their
     password has been reset.
     If an SMTP exception occurs, the task will automatically
     retry up with exponential backoff.
     """
     try:
-        sent_count: int = notify_reset_password(user_email)
+        sent_count: int = notify_reset_password(email)
         return sent_count
     except smtplib.SMTPException as e:
         # Logs the error after the last retry attempt.
@@ -304,7 +304,7 @@ def task_notify_reset_password(self, user_email: str) -> int:
                 email_task_error_message_format.format(
                     tag=FAILED_NOTIFY_RESET_PASSWORD_TAG,
                     task_id=self.request.id,
-                    to=user_email,
+                    to=email,
                     error=str(e),
                 )
             )
@@ -318,15 +318,15 @@ def task_notify_reset_password(self, user_email: str) -> int:
     retry_backoff_max=RETRY_BACKOFF_MAX,
     max_retries=MAX_RETRIES,
 )
-def task_notify_deleted_account(self, user_email: str) -> int:
+def task_notify_deleted_account(self, email: str) -> int:
     """
-    Celery task to send a notification email informing the user that their
+    Celery task to send a notification email informing the account that their
     account has been deleted.
     If an SMTP exception occurs, the task will automatically
     retry up with exponential backoff.
     """
     try:
-        sent_count: int = notify_deleted_account(user_email)
+        sent_count: int = notify_deleted_account(email)
         return sent_count
     except smtplib.SMTPException as e:
         # Logs the error after the last retry attempt.
@@ -335,7 +335,7 @@ def task_notify_deleted_account(self, user_email: str) -> int:
                 email_task_error_message_format.format(
                     tag=FAILED_NOTIFY_DELETED_ACCOUNT_TAG,
                     task_id=self.request.id,
-                    to=user_email,
+                    to=email,
                     error=str(e),
                 )
             )
@@ -353,7 +353,7 @@ def task_notify_first_reminder(
     self, emails: list[str], activation_deadline: datetime | str
 ) -> int:
     """
-    Celery task to send the first reminder notification email to users
+    Celery task to send the first reminder notification email to accounts
     informing them that they have not activated their accounts.
     If an SMTP exception occurs, the task will automatically
     retry up with exponential backoff.
@@ -392,7 +392,7 @@ def task_notify_second_reminder(
     self, emails: list[str], activation_deadline: datetime | str
 ) -> int:
     """
-    Celery task to send the second reminder notification email to users
+    Celery task to send the second reminder notification email to accounts
     informing them that they have not activated their accounts.
     If an SMTP exception occurs, the task will automatically
     retry up with exponential backoff.
@@ -426,7 +426,7 @@ def wrapper_task_notify_first_reminder() -> None:
     """
     Wrapper task to handle the first reminder notification.
 
-    It separates the logic of retrieving user emails and activation deadline
+    It separates the logic of retrieving account emails and activation deadline
     from the actual task that sends the reminder notification.
     """
     emails, activation_deadline = get_emails_and_deadline(is_first_reminder=True)
@@ -439,7 +439,7 @@ def wrapper_task_notify_second_reminder() -> None:
     """
     Wrapper task to handle the second reminder notification.
 
-    It separates the logic of retrieving user emails and activation deadline
+    It separates the logic of retrieving account emails and activation deadline
     from the actual task that sends the reminder notification.
     """
     emails, activation_deadline = get_emails_and_deadline(is_first_reminder=False)
@@ -450,7 +450,7 @@ def wrapper_task_notify_second_reminder() -> None:
 @shared_task
 def task_delete_expired_accounts():
     """
-    Task that deletes users who have not activated their accounts in a timely manner.
+    Task that deletes accounts who have not activated their accounts in a timely manner.
     """
     PendingAccountsModel.objects.delete_expired_accounts()
 
@@ -464,7 +464,7 @@ def task_delete_expired_accounts():
 )
 def task_notify_expired_account_deletion(self) -> int:
     """
-    Task to send the notification email to users informing about the removal
+    Task to send the notification email to accounts informing about the removal
     of their accounts from the system, for not activating them in a timely manner.
     After successful sending, these emails are removed.
 
@@ -494,12 +494,12 @@ def task_notify_expired_account_deletion(self) -> int:
 @shared_task
 def task_delete_expired_accounts_and_notify():
     """
-    Celery task that orchestrates the full cleanup flow of expired user accounts.
+    Celery task that orchestrates the full cleanup flow of expired accounts.
 
     This task performs the following steps:
-        1. Deletes users who failed to activate their accounts within the allowed time,
+        1. Deletes accounts who failed to activate their accounts within the allowed time,
            and stores their emails in a notification table.
-        2. After successful deletion, sends an email notification to those users,
+        2. After successful deletion, sends an email notification to those accounts,
            informing them about the account removal.
 
     Implementation note:

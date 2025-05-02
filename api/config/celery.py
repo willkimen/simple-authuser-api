@@ -44,12 +44,8 @@ app.conf.task_routes = {
     "user_app.tasks.task_delete_expired_accounts_and_nofity": {
         "queue": REMOVALS_QUEUE_NAME
     },
-    "user_app.tasks.wrapper_task_notify_first_reminder": {
-        "queue": EMAIL_QUEUE_NAME
-    },
-    "user_app.tasks.wrapper_task_notify_second_reminder": {
-        "queue": EMAIL_QUEUE_NAME
-    },
+    "user_app.tasks.wrapper_task_notify_first_reminder": {"queue": EMAIL_QUEUE_NAME},
+    "user_app.tasks.wrapper_task_notify_second_reminder": {"queue": EMAIL_QUEUE_NAME},
 }
 
 app.autodiscover_tasks()

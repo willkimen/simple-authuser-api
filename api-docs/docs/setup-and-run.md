@@ -123,32 +123,32 @@ If accessed via **HTTP (port 80)**, Nginx will automatically redirect to **HTTPS
 
 | Method | Route                                   | Description          |
 | ------ | --------------------------------------- | -------------------- |
-| POST   | `/api/v1/user/profile/register/`        | Create a new user    |
-| PUT    | `/api/v1/user/profile/update/`          | Update user data     |
-| GET    | `/api/v1/user/profile/detail/`          | Retrieve user data   |
-| DELETE | `/api/v1/user/profile/delete/`          | Delete user account  |
-| POST   | `/api/v1/user/profile/change_password/` | Change user password |
+| POST   | `/api/v1/account/register/`             | Create a new user    |
+| PUT    | `/api/v1/account/update/`               | Update user data     |
+| GET    | `/api/v1/account/detail/`               | Retrieve user data   |
+| DELETE | `/api/v1/account/delete/`               | Delete user account  |
+| POST   | `/api/v1/account/change_password/`      | Change user password |
 
 #### 📧 Account Activation
 
-| Method | Route                                            | Description                     |
-| ------ | ------------------------------------------------ | ------------------------------- |
-| POST   | `/api/v1/user/email/send_code/activate_account/` | Request account activation code |
-| POST   | `/api/v1/user/code/activate/`                    | Activate account using the code |
+| Method | Route                                               | Description                     |
+| ------ | --------------------------------------------------- | ------------------------------- |
+| POST   | `/api/v1/account/email/send_code/activate_account/` | Request account activation code |
+| POST   | `/api/v1/account/code/activate/`                    | Activate account using the code |
 
 #### 📨 Email Change
 
-| Method | Route                                        | Description                  |
-| ------ | -------------------------------------------- | ---------------------------- |
-| POST   | `/api/v1/user/email/send_code/change_email/` | Request code to change email |
-| POST   | `/api/v1/user/code/change_email/`            | Change email using the code  |
+| Method | Route                                           | Description                  |
+| ------ | ----------------------------------------------- | ---------------------------- |
+| POST   | `/api/v1/account/email/send_code/change_email/` | Request code to change email |
+| POST   | `/api/v1/account/code/change_email/`            | Change email using the code  |
 
 #### 🔒 Password Reset
 
-| Method | Route                                          | Description                   |
-| ------ | ---------------------------------------------- | ----------------------------- |
-| POST   | `/api/v1/user/email/send_code/reset_password/` | Request password reset code   |
-| POST   | `/api/v1/user/code/reset_password/`            | Reset password using the code |
+| Method | Route                                             | Description                   |
+| ------ | ------------------------------------------------- | ----------------------------- |
+| POST   | `/api/v1/account/email/send_code/reset_password/` | Request password reset code   |
+| POST   | `/api/v1/account/code/reset_password/`            | Reset password using the code |
 
 #### 🔐 JWT Endpoints
 

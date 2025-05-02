@@ -4,13 +4,13 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from user_app.constants import validation_error_messages
 
-# Get the custom user model
-User = get_user_model()
+# Get the custom account model
+Account = get_user_model()
 
 
-class UserRequestSerializer(serializers.ModelSerializer):
+class AccountRequestSerializer(serializers.ModelSerializer):
     """
-    Serializer to validate and register new users with data coming from the request.
+    Serializer to validate and register new accounts with data coming from the request.
 
     Attributes:
         confirmation_password (CharField): Additional field to confirm the password.
@@ -20,7 +20,7 @@ class UserRequestSerializer(serializers.ModelSerializer):
     confirmation_password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
+        model = Account
         fields = [
             "first_name",
             "last_name",
@@ -33,13 +33,13 @@ class UserRequestSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Creates and returns a new user after validating the data.
+        Creates and returns a new account after validating the data.
         """
         # Remove the confirmation_password field from the validated data
         validated_data.pop("confirmation_password", None)
 
-        # Create and return the user with the provided data
-        return User.objects.create_user(**validated_data)
+        # Create and return the account with the provided data
+        return Account.objects.create_user(**validated_data)
 
     def validate(self, data: dict[str, str]) -> dict[str, str]:
         """
@@ -67,26 +67,26 @@ class UserRequestSerializer(serializers.ModelSerializer):
         return password
 
 
-class UserResponseSerializer(serializers.ModelSerializer):
+class AccountResponseSerializer(serializers.ModelSerializer):
     """
-    Serializer for returning user data in the response.
+    Serializer for returning account data in the response.
 
-    This serializer is used for formatting the user data in the response
+    This serializer is used for formatting the account data in the response
     after a successful registration. It excludes sensitive fields like the password.
     """
 
     class Meta:
-        model = User
+        model = Account
         fields = ["id", "first_name", "last_name", "email", "is_active"]
 
 
-class UserUpdateSerializer(serializers.ModelSerializer):
+class AccountUpdateSerializer(serializers.ModelSerializer):
     """
-    Serializer for returning user data in the response for udpate() view.
+    Serializer for returning account data in the response for udpate() view.
     """
 
     class Meta:
-        model = User
+        model = Account
         fields = [
             "first_name",
             "last_name",
@@ -101,7 +101,7 @@ class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
 
-class UserChangePasswordSerializer(serializers.Serializer):
+class AccountChangePasswordSerializer(serializers.Serializer):
     actual_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
@@ -118,7 +118,7 @@ class UserChangePasswordSerializer(serializers.Serializer):
         return new_password
 
 
-class UserResetPasswordSerializer(serializers.Serializer):
+class AccountResetPasswordSerializer(serializers.Serializer):
     """
     Serializer used to validate the data provided during the password reset process.
     """

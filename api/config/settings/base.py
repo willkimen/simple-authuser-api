@@ -106,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # User model configuration
 # -----------------------------------------------------------------------------
-AUTH_USER_MODEL = "user_app.UserProfileModel"
+AUTH_USER_MODEL = "user_app.AccountModel"
 
 
 # Internationalization

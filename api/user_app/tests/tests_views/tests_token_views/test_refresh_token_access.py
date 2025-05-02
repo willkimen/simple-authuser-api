@@ -3,7 +3,7 @@ This module contains tests for the JWT refresh functionality.
 It verifies the behavior of the JWT refresh endpoint (`refresh_token_access`). 
 The endpoint expects a refresh token and returns a new access token if 
 the provided refresh token is valid. It handles various scenarios including 
-blacklisted tokens, non-existent users, and inactive users.
+blacklisted tokens, non-existent accounts, and inactive accounts.
 """
 
 from datetime import timedelta
@@ -15,13 +15,13 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-from user_app.constants import http_response, authentication
+from user_app.constants import authentication, http_response
 from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
@@ -44,8 +44,8 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def activated_user():
-    return User.objects.create(
+def activated_account():
+    return Account.objects.create(
         id=UID,
         first_name="fake_first_name",
         last_name="fake_last_name",
@@ -55,9 +55,9 @@ def activated_user():
 
 
 @pytest.fixture
-def payload(activated_user) -> dict:
+def payload(activated_account) -> dict:
     return {
-        "uid": activated_user.id,
+        "uid": activated_account.id,
         "typ": "refresh",
         "jti": "fake_jti",
         "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -74,7 +74,7 @@ def blacklisted_refresh_token(payload: dict) -> str:
     """
 
     BlacklistTokenModel.objects.create(
-        user_id=payload["uid"],
+        account_id=payload["uid"],
         jti=payload["jti"],
         typ=payload["typ"],
         exp=payload["exp"],
@@ -100,33 +100,33 @@ def incorrect_type_token(payload: dict) -> str:
 
 
 @pytest.fixture
-def refresh_token_for_nonexistent_user(payload: dict) -> str:
+def refresh_token_for_nonexistent_account(payload: dict) -> str:
     """
-    Provides a refresh token for a non-existent user.
+    Provides a refresh token for a non-existent account.
 
     Returns:
-        str: An encoded JWT refresh token for a non-existent user.
+        str: An encoded JWT refresh token for a non-existent account.
     """
     payload["uid"] = UID_NON_EXIST
     return jwt.encode(payload, FAKE_SECRET)
 
 
 @pytest.fixture
-def refresh_token_for_inactive_user(payload: dict) -> str:
+def refresh_token_for_inactive_account(payload: dict) -> str:
     """
-    Provides a refresh token for an inactive user.
+    Provides a refresh token for an inactive account.
 
     Returns:
-        str: An encoded JWT refresh token for an inactive user.
+        str: An encoded JWT refresh token for an inactive account.
     """
-    inactive_user = User.objects.create(
+    inactive_account = Account.objects.create(
         id=20,
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fakeotheremail@email.com",
         is_active=False,
     )
-    payload["uid"] = inactive_user.id
+    payload["uid"] = inactive_account.id
 
     return jwt.encode(payload, FAKE_SECRET)
 
@@ -136,10 +136,10 @@ def valid_refresh_token(payload: dict) -> str:
     """
     Provides a valid refresh token.
 
-    This fixture creates a user and generates a valid refresh token.
+    This fixture creates an account and generates a valid refresh token.
 
     Returns:
-        str: An encoded JWT refresh token for an active user.
+        str: An encoded JWT refresh token for an active account.
     """
     return jwt.encode(payload, FAKE_SECRET)
 
@@ -198,23 +198,23 @@ def test_non_refresh_token_not_generate_new_access_token(
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_nonexistent_user_not_generate_access_token(
-    client: APIClient, refresh_token_for_nonexistent_user: str
+    client: APIClient, refresh_token_for_nonexistent_account: str
 ):
     """
-    Tests that a refresh token for a non-existent user does not
+    Tests that a refresh token for a non-existent account does not
     generate an access token.
 
     Args:
         client (APIClient): The test client used to make HTTP requests.
-        refresh_token_for_nonexistent_user (str): The refresh token for a
-                                                  non-existent user.
+        refresh_token_for_nonexistent_account (str): The refresh token for a
+                                                  non-existent account.
     """
-    expected_detail_message = http_response.USER_NOT_FOUND["detail"]
-    expected_code = http_response.USER_NOT_FOUND["code"]
+    expected_detail_message = http_response.ACCOUNT_NOT_FOUND["detail"]
+    expected_code = http_response.ACCOUNT_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(
-        url, data={"refresh": refresh_token_for_nonexistent_user}, format="json"
+        url, data={"refresh": refresh_token_for_nonexistent_account}, format="json"
     )
 
     assert expected_detail_message == actual_response.data["detail"]
@@ -224,24 +224,22 @@ def test_nonexistent_user_not_generate_access_token(
 
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_inactive_user_not_generate_access_token(
-    client: APIClient, refresh_token_for_inactive_user: str
+def test_inactive_account_not_generate_access_token(
+    client: APIClient, refresh_token_for_inactive_account: str
 ):
     """
-    Tests that a refresh token for an inactive user does not generate an access token.
+    Tests that a refresh token for an inactive account does not generate an access token.
 
     Args:
         client (APIClient): The test client used to make HTTP requests.
-        refresh_token_for_inactive_user (str): The refresh token for an inactive user.
+        refresh_token_for_inactive_account (str): The refresh token for an inactive account.
     """
-    expected_detail_message = http_response.USER_ACCOUNT_NOT_ACTIVATED[
-        "detail"
-    ]
-    expected_code = http_response.USER_ACCOUNT_NOT_ACTIVATED["code"]
+    expected_detail_message = http_response.ACCOUNT_NOT_ACTIVATED["detail"]
+    expected_code = http_response.ACCOUNT_NOT_ACTIVATED["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
-        url, data={"refresh": refresh_token_for_inactive_user}, format="json"
+        url, data={"refresh": refresh_token_for_inactive_account}, format="json"
     )
 
     assert expected_detail_message == actual_response.data["detail"]

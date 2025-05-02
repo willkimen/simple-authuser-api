@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from celery import states
 from celery.result import EagerResult
-from user_app.models import FailedTaskModel, UsersPendingDeletionNotificationModel
+from user_app.models import FailedTaskModel, AccountsPendingDeletionNotificationModel
 from user_app.tasks import task_notify_expired_account_deletion
 from user_app.tests.constants import (
     LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
@@ -18,11 +18,11 @@ from user_app.tests.constants import (
 def persistent_emails() -> list[str]:
     """
     This fixture persists some emails in
-    UsersPendingDeletionNotificationModel for testing.
+    AccountsPendingDeletionNotificationModel for testing.
     """
     emails = ["fake1@email.com", "fake2@email.com", "fake3@email.com"]
-    UsersPendingDeletionNotificationModel.objects.bulk_create(
-        [UsersPendingDeletionNotificationModel(email=email) for email in emails]
+    AccountsPendingDeletionNotificationModel.objects.bulk_create(
+        [AccountsPendingDeletionNotificationModel(email=email) for email in emails]
     )
 
     return emails
@@ -49,9 +49,9 @@ def test_task_notify_expired_account_deletion_success(persistent_emails: list[st
 
 
 @pytest.mark.django_db
-def test_does_not_send_notification_when_there_are_no_users():
+def test_does_not_send_notification_when_there_are_no_accounts():
     """
-    When there are no users to be notified, returns -1.
+    When there are no accounts to be notified, returns -1.
     """
     expected_send_count = -1
 
@@ -65,10 +65,10 @@ def test_does_not_send_notification_when_there_are_no_users():
 @pytest.mark.django_db
 def test_after_notification_emails_are_deleted(persistent_emails: list[str]):
     """
-    After notifications are sent to users, the emails should be deleted.
+    After notifications are sent to accounts, the emails should be deleted.
     """
     for email in persistent_emails:
-        assert UsersPendingDeletionNotificationModel.objects.filter(
+        assert AccountsPendingDeletionNotificationModel.objects.filter(
             email=email
         ).exists()
 
@@ -77,7 +77,7 @@ def test_after_notification_emails_are_deleted(persistent_emails: list[str]):
     assert result.successful() == True
     assert result.status == states.SUCCESS
     for email in persistent_emails:
-        assert not UsersPendingDeletionNotificationModel.objects.filter(
+        assert not AccountsPendingDeletionNotificationModel.objects.filter(
             email=email
         ).exists()
 

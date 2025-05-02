@@ -1,11 +1,11 @@
 """
-Models related to user management and account activation.
+Models related to account management and account activation.
 
 This module defines models and managers for:
-    - Creating users and superusers using email as the primary identifier.
+    - Creating accounts(users) and superusers using email as the primary identifier.
     - Managing pending accounts, including sending activation reminders
       and automatically deleting accounts after the activation period expires.
-    - Storing emails of users who will be notified about the permanent
+    - Storing emails of account who will be notified about the permanent
       deletion of their accounts.
 """
 
@@ -20,7 +20,7 @@ from django.utils import timezone
 from django.utils.timezone import now
 
 
-class UserProfileManager(BaseUserManager):
+class AccountManager(BaseUserManager):
     """
     This manager provides methods for creating a regular user and a superuser,
     where the email is used as the username.
@@ -28,7 +28,7 @@ class UserProfileManager(BaseUserManager):
 
     def create_user(self, email: str, password: str, is_active=False, **extra_fields):
         """
-        Create a user of the UserProfileManager type, which is by default
+        Create a user of the AccountManager type, which is by default
         persisted as inactive.
         Fields like email and password are required, and if they are not provided,
         the method will raise a ValueError exception.
@@ -70,14 +70,14 @@ class UserProfileManager(BaseUserManager):
         return user
 
 
-class UserProfileModel(AbstractUser):
+class AccountModel(AbstractUser):
     """
     Extends the built-in AbstractUser model to use 'email' instead of 'username' for
     authentication.
 
-    This model replaces the default 'username' field with 'email' for user
+    This model replaces the default 'username' field with 'email' for account
     identification and authentication.
-    It also defines additional user profile fields such as 'first_name' and
+    It also defines additional account fields such as 'first_name' and
     'last_name'.
 
     Configuration:
@@ -88,7 +88,7 @@ class UserProfileModel(AbstractUser):
                                      creating a superuser. This list is empty because
                                      'email' is used for authentication.
 
-        objects (UserProfileManager): Specifies a custom manager for this model to
+        objects (AccountManager): Specifies a custom manager for this model to
                                       handle user-related queries.
     """
 
@@ -102,18 +102,18 @@ class UserProfileModel(AbstractUser):
     # List of required fields besides email and password (empty in this case)
     REQUIRED_FIELDS: list[str] = []
 
-    objects = UserProfileManager()  # Set the custom manager
+    objects = AccountManager()  # Set the custom manager
 
     class Meta:
-        db_table = "user_profile"
-        verbose_name = "User Profile"
-        verbose_name_plural = "Users Profile"
+        db_table = "account"
+        verbose_name = "Account"
+        verbose_name_plural = "Accounts"
 
 
 class PendingAccountsManager(models.Manager):
     def get_first_reminder_accounts_today(self) -> list[PendingAccountsModel]:
         """
-        Returns the PendingAccountsModel instances for users who should receive
+        Returns the PendingAccountsModel instances for accounts who should receive
         their first reminder today.
 
         How it works:
@@ -121,11 +121,13 @@ class PendingAccountsManager(models.Manager):
             - Returns the full list of matching PendingAccountsModel instances.
         """
         today = now().date()
-        return list(self.select_related("user").filter(first_reminder_at__date=today))
+        return list(
+            self.select_related("account").filter(first_reminder_at__date=today)
+        )
 
     def get_second_reminder_accounts_today(self) -> list[PendingAccountsModel]:
         """
-        Returns the PendingAccountsModel instances for users who should receive
+        Returns the PendingAccountsModel instances for accounts who should receive
         their second reminder today.
 
         How it works:
@@ -133,16 +135,18 @@ class PendingAccountsManager(models.Manager):
             - Returns the full list of matching PendingAccountsModel instances.
         """
         today = now().date()
-        return list(self.select_related("user").filter(second_reminder_at__date=today))
+        return list(
+            self.select_related("account").filter(second_reminder_at__date=today)
+        )
 
     def delete_expired_accounts(self) -> None:
         """
-        Deletes users whose account activation period has expired.
+        Deletes accounts whose account activation period has expired.
         Saves their emails into the notification table before deletion.
         """
         # Filters PendingAccountsModel whose account activation period has expired.
         pending_accounts: list[PendingAccountsModel] = list(
-            self.select_related("user").filter(
+            self.select_related("account").filter(
                 activation_deadline__date__lt=timezone.now().date()
             )
         )
@@ -150,36 +154,36 @@ class PendingAccountsManager(models.Manager):
         if pending_accounts:
             with transaction.atomic():
                 emails_to_persist = []
-                user_ids_to_delete = []
+                account_ids_to_delete = []
 
                 for pending_account in pending_accounts:
-                    user = pending_account.user
+                    account = pending_account.account
                     emails_to_persist.append(
-                        UsersPendingDeletionNotificationModel(email=user.email)
+                        AccountsPendingDeletionNotificationModel(email=account.email)
                     )
-                    user_ids_to_delete.append(user.id)
+                    account_ids_to_delete.append(account.id)
 
-                # Save emails from users who will be deleted for later notification.
-                UsersPendingDeletionNotificationModel.objects.bulk_create(
+                # Save emails from accounts who will be deleted for later notification.
+                AccountsPendingDeletionNotificationModel.objects.bulk_create(
                     emails_to_persist
                 )
 
-                # Delete users (automatic cascade in relationships)
-                UserProfileModel.objects.filter(id__in=user_ids_to_delete).delete()
+                # Delete account (automatic cascade in relationships)
+                AccountModel.objects.filter(id__in=account_ids_to_delete).delete()
 
 
 class PendingAccountsModel(models.Model):
     """
-    Model that stores data about users who have not yet activated their accounts.
+    Model that stores data about accounts who have not yet activated their accounts.
 
     This model:
-        - Creates a one-to-many relationship with the user model.
+        - Creates a one-to-many relationship with the account model.
         - Stores notification dates for account activation reminders.
-        - Defines the final deadline for activation, after which the user's data
+        - Defines the final deadline for activation, after which the account's data
           will be permanently deleted.
 
     Fields:
-        user (ForeignKey): A reference to the user who has not activated
+        account (ForeignKey): A reference to the account who has not activated
                            their account.
         first_reminder_at (DateTimeField): The date and hour of the first
                                            reminder email.
@@ -191,15 +195,15 @@ class PendingAccountsModel(models.Model):
         CUTOFF_HOUR:
             - Defines the hour that determines how the system calculates the first and
               second reminder dates.
-            - When a user registers, their `date_joined` timestamp is recorded.
-            - If the user registers before this hour (CUTOFF_HOUR), the current day
+            - When an account registers, their `date_joined` timestamp is recorded.
+            - If the account registers before this hour (CUTOFF_HOUR), the current day
               is considered as "Day 1" of their pending activation period.
-            - If the user registers at or after this hour (CUTOFF_HOUR), "Day 1"
+            - If the account registers at or after this hour (CUTOFF_HOUR), "Day 1"
               starts on the next day.
 
         REMINDER_DAYS:
             - A dictionary that defines how many days after registration the reminders
-              are sent, depending on whether the user registered before or after
+              are sent, depending on whether the account registered before or after
               `CUTOFF_HOUR`.
 
             - Example:
@@ -212,11 +216,11 @@ class PendingAccountsModel(models.Model):
             - "after_cutoff" applies when registration is at or after `CUTOFF_HOUR`.
 
     Usage:
-        - This model is used to keep track of users who haven't activated their
+        - This model is used to keep track of accounts who haven't activated their
           accounts yet.
         - The system will automatically send email reminders based
           on `first_reminder_at` and `second_reminder_at`.
-        - If the user does not activate their account before `activation_deadline`,
+        - If the account does not activate their account before `activation_deadline`,
           their data will be permanently removed.
     """
 
@@ -226,11 +230,11 @@ class PendingAccountsModel(models.Model):
         "after_cutoff": {"first_day": 2, "second_day": 5},
     }
 
-    user = models.ForeignKey(
+    account = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=False,
-        related_name="pending_account",
+        related_name="pending_accounts",
     )
     first_reminder_at = models.DateTimeField(null=False, blank=False)
     second_reminder_at = models.DateTimeField(null=False, blank=False)
@@ -249,9 +253,9 @@ class PendingAccountsModel(models.Model):
 
         How it works:
             - The `first_reminder_at` and `second_reminder_at` dates are calculated
-              based on when the user registered (`UserProfile.date_joined`).
+              based on when the account registered (`AccountModel.date_joined`).
 
-            - If the user registered on or after the time defined in `CUTOFF_HOUR`:
+            - If the account registered on or after the time defined in `CUTOFF_HOUR`:
 
                 - The first reminder will be scheduled for
                   `REMINDER_DAYS["after_cutoff"]["first_day"]`
@@ -264,7 +268,7 @@ class PendingAccountsModel(models.Model):
                 - This happens because, in this case, "Day 1" of the activation period
                   starts the day after registration.
 
-            - If the user registered before `CUTOFF_HOUR`:
+            - If the account registered before `CUTOFF_HOUR`:
 
                 - The first reminder will be scheduled for
                   `REMINDER_DAYS["before_cutoff"]["first_day"]`
@@ -283,25 +287,25 @@ class PendingAccountsModel(models.Model):
         Usage:
             - When persisting this model, the developer does not need to manually
               set the reminder dates or the activation deadline.
-            - But only the user instance needs to be provided:
+            - But only the account instance needs to be provided:
                 ```
-                PendingAccountsModel.objects.create(user=user_instance)
+                PendingAccountsModel.objects.create(account=account_instance)
                 ```
                 or
                 ```
-                PendingAccountsModel.objects.create(user_id=user_instance.id)
+                PendingAccountsModel.objects.create(account=account_instance.id)
                 ```
         """
 
-        if self.user.date_joined.hour >= self.CUTOFF_HOUR:
+        if self.account.date_joined.hour >= self.CUTOFF_HOUR:
             first_day = self.REMINDER_DAYS["after_cutoff"]["first_day"]
             second_day = self.REMINDER_DAYS["after_cutoff"]["second_day"]
         else:
             first_day = self.REMINDER_DAYS["before_cutoff"]["first_day"]
             second_day = self.REMINDER_DAYS["before_cutoff"]["second_day"]
 
-        self.first_reminder_at = self.user.date_joined + timedelta(days=first_day)
-        self.second_reminder_at = self.user.date_joined + timedelta(days=second_day)
+        self.first_reminder_at = self.account.date_joined + timedelta(days=first_day)
+        self.second_reminder_at = self.account.date_joined + timedelta(days=second_day)
 
         self.activation_deadline = self.second_reminder_at.replace(
             hour=23, minute=59, second=59, microsecond=0
@@ -310,16 +314,16 @@ class PendingAccountsModel(models.Model):
         super().save(*args, **kwargs)
 
 
-class UsersPendingDeletionNotificationModel(models.Model):
+class AccountsPendingDeletionNotificationModel(models.Model):
     """
-    Model to store emails of users who will be notified about their
+    Model to store emails of accounts who will be notified about their
     permanent account deletion.
 
     Fields:
-        email (EmailField): The unique email address of the user to notify.
+        email (EmailField): The unique email address of the account to notify.
     """
 
     email = models.EmailField(unique=True, null=False, blank=False)
 
     class Meta:
-        db_table = "users_pending_deletion_notification"
+        db_table = "accounts_pending_deletion_notification"

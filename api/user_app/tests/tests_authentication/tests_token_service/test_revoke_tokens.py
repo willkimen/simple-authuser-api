@@ -20,26 +20,26 @@ def convert_unix_timestamp_to_aware_datetime(unix_timestamp: int) -> datetime:
 
 # ============== Fixtures ==================
 @pytest.fixture
-def persisted_valid_payload(activated_user) -> dict:
+def persisted_valid_payload(activated_account) -> dict:
     """
     Creates an token paylaod and saves it in the database.
 
     Args:
-        user (User): The user associated with the token.
+        account (Account): The account associated with the token.
 
     Returns:
         dict: Dictionary representing the token payload with UID, type,
         JTI, and expiration.
     """
     payload = {
-        "uid": activated_user.id,
+        "uid": activated_account.id,
         "typ": "access",
         "jti": "fake_access_jti",
         "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
     }
 
     ValidTokenModel.objects.create(
-        user_id=payload["uid"],
+        account_id=payload["uid"],
         jti=payload["jti"],
         exp=payload["exp"],
         typ=payload["typ"],
@@ -49,25 +49,25 @@ def persisted_valid_payload(activated_user) -> dict:
 
 
 @pytest.fixture
-def expired_payload(activated_user) -> dict:
+def expired_payload(activated_account) -> dict:
     """
     Creates an expired token payload and saves it in the database.
 
     Args:
-        user (User): The user associated with the expired token.
+        account (Account): The account associated with the expired token.
 
     Returns:
         dict: Dictionary representing the expired token payload.
     """
     expired_payload = {
-        "uid": activated_user.id,
+        "uid": activated_account.id,
         "typ": "refresh",
         "jti": "fake_expired_refresh_jti",
         "exp": int((timezone.now() - timedelta(seconds=60)).timestamp()),
     }
 
     ValidTokenModel.objects.create(
-        user_id=expired_payload["uid"],
+        account_id=expired_payload["uid"],
         jti=expired_payload["jti"],
         exp=expired_payload["exp"],
         typ=expired_payload["typ"],
@@ -77,13 +77,13 @@ def expired_payload(activated_user) -> dict:
 
 
 @pytest.fixture
-def payloads(activated_user) -> list[dict]:
+def payloads(activated_account) -> list[dict]:
     """
     Creates a list of tokens, some expired and others valid,
     and saves them in the database.
 
     Args:
-        user (User): The user associated with the tokens.
+        account (Account): The account associated with the tokens.
 
     Returns:
         list[dict]: List of dictionaries representing the token payloads.
@@ -93,25 +93,25 @@ def payloads(activated_user) -> list[dict]:
 
     payloads = [
         {
-            "uid": activated_user.id,
+            "uid": activated_account.id,
             "typ": "access",
             "jti": "jti_1",
             "exp": expired_date,
         },
         {
-            "uid": activated_user.id,
+            "uid": activated_account.id,
             "typ": "access",
             "jti": "jti_2",
             "exp": date,
         },
         {
-            "uid": activated_user.id,
+            "uid": activated_account.id,
             "typ": "refresh",
             "jti": "jti_3",
             "exp": expired_date,
         },
         {
-            "uid": activated_user.id,
+            "uid": activated_account.id,
             "typ": "refresh",
             "jti": "jti_4",
             "exp": date,
@@ -120,7 +120,7 @@ def payloads(activated_user) -> list[dict]:
 
     [
         ValidTokenModel.objects.create(
-            user_id=payload["uid"],
+            account_id=payload["uid"],
             jti=payload["jti"],
             exp=payload["exp"],
             typ=payload["typ"],
@@ -152,7 +152,7 @@ def test_token_persisted_in_blacklist(
     revoke_tokens(persisted_valid_payload["uid"])
 
     assert BlacklistTokenModel.objects.filter(
-        user_id=persisted_valid_payload["uid"],
+        account_id=persisted_valid_payload["uid"],
         typ=persisted_valid_payload["typ"],
         jti=persisted_valid_payload["jti"],
         exp=persisted_valid_payload["exp"],
@@ -183,7 +183,7 @@ def test_expired_token_does_not_persisted_in_blacklist(
     revoke_tokens(persisted_valid_payload["uid"])
 
     assert not BlacklistTokenModel.objects.filter(
-        user_id=expired_payload["uid"],
+        account_id=expired_payload["uid"],
         typ=expired_payload["typ"],
         jti=expired_payload["jti"],
         exp=expired_payload["exp"],
@@ -204,13 +204,13 @@ def test_all_tokens_are_deleted(
     Tests if all  tokens are deleted after revocation.
 
     Verifies:
-    - That all tokens associated with the user have been removed
+    - That all tokens associated with the account have been removed
       from the database.
     - That the function to create a new token pair was called.
     """
     revoke_tokens(persisted_valid_payload["uid"])
     assert not ValidTokenModel.objects.filter(
-        user_id=persisted_valid_payload["uid"],
+        account_id=persisted_valid_payload["uid"],
     ).exists()
 
     create_pair_token_function_mock.assert_called()

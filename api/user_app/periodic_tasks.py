@@ -91,7 +91,7 @@ def create_periodic_task_for_notify_first_reminder() -> None:
     Creates a periodic task to send the first activation reminder.
 
     This function schedules a task that runs daily at 9:00 AM to execute
-    `wrapper_task_notify_first_reminder`, sending reminder emails to users who have not
+    `wrapper_task_notify_first_reminder`, sending reminder emails to accounts who have not
     yet activated their accounts.
 
     Guarantees:
@@ -126,7 +126,7 @@ def create_periodic_task_for_notify_second_reminder() -> None:
     Creates a periodic task to send the second activation reminder.
 
     This function schedules a task that runs daily at 9:00 AM to execute
-    `wrapper_task_notify_second_reminder`, sending a final reminder email to users who have
+    `wrapper_task_notify_second_reminder`, sending a final reminder email to accounts who have
     not yet activated their accounts.
 
     Guarantees:
@@ -158,7 +158,7 @@ def create_periodic_task_for_notify_second_reminder() -> None:
 
 def create_periodic_task_for_delete_and_notify() -> None:
     """
-    Creates a periodic task that deletes expired accounts and notifies users,
+    Creates a periodic task that deletes expired accounts and notifies accounts,
     daily at 00:00.
 
     Guarantees:

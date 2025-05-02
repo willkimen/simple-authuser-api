@@ -1,7 +1,7 @@
 """
-Tests for the update view in the user management module.
+Tests for the update view in the account management module.
 This module contains tests to ensure the correct functionality of the update view, 
-which handles the partial update of user information for authenticated users.
+which handles the partial update of account information for authenticated accounts.
 """
 
 from datetime import timedelta
@@ -18,7 +18,7 @@ from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
@@ -34,7 +34,7 @@ def client_auth_header() -> APIClient:
     Returns:
         APIClient: An API client with the Authorization header set to a valid JWT token.
     """
-    user = User.objects.create_user(
+    account = Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fake@email.com",
@@ -43,7 +43,7 @@ def client_auth_header() -> APIClient:
     )
     token = jwt.encode(
         {
-            "uid": user.id,
+            "uid": account.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -60,13 +60,11 @@ def client_auth_header() -> APIClient:
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_first_name_successfully(client_auth_header: APIClient):
     """
-    Test that a user can successfully update their first name.
+    Test that an account can successfully update their first name.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = http_response.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = http_response.USER_UPDATED_SUCCESSFULLY[
-        "detail"
-    ]
+    expected_code = http_response.ACCOUNT_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.ACCOUNT_UPDATED_SUCCESSFULLY["detail"]
     expected_new_first_name = "new_first_name"
 
     actual_response = client_auth_header.patch(
@@ -76,21 +74,19 @@ def test_update_first_name_successfully(client_auth_header: APIClient):
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
-    assert expected_new_first_name == actual_response.data["user"]["first_name"]
-    assert User.objects.filter(**actual_response.data["user"]).exists()
+    assert expected_new_first_name == actual_response.data["account"]["first_name"]
+    assert Account.objects.filter(**actual_response.data["account"]).exists()
 
 
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_last_name_successfully(client_auth_header: APIClient):
     """
-    Test that a user can successfully update their last name.
+    Test that an account can successfully update their last name.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = http_response.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = http_response.USER_UPDATED_SUCCESSFULLY[
-        "detail"
-    ]
+    expected_code = http_response.ACCOUNT_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.ACCOUNT_UPDATED_SUCCESSFULLY["detail"]
     expected_new_last_name = "new_last_name"
 
     actual_response = client_auth_header.patch(
@@ -100,21 +96,19 @@ def test_update_last_name_successfully(client_auth_header: APIClient):
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
-    assert expected_new_last_name == actual_response.data["user"]["last_name"]
-    assert User.objects.filter(**actual_response.data["user"]).exists()
+    assert expected_new_last_name == actual_response.data["account"]["last_name"]
+    assert Account.objects.filter(**actual_response.data["account"]).exists()
 
 
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_first_and_last_name_successfully(client_auth_header: APIClient):
     """
-    Test that a user can successfully update both their first and last names.
+    Test that an account can successfully update both their first and last names.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = http_response.USER_UPDATED_SUCCESSFULLY["code"]
-    expected_detail_message = http_response.USER_UPDATED_SUCCESSFULLY[
-        "detail"
-    ]
+    expected_code = http_response.ACCOUNT_UPDATED_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.ACCOUNT_UPDATED_SUCCESSFULLY["detail"]
     expected_new_first_name = "new_first_name"
     expected_new_last_name = "new_last_name"
 
@@ -130,6 +124,6 @@ def test_update_first_and_last_name_successfully(client_auth_header: APIClient):
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
-    assert expected_new_first_name == actual_response.data["user"]["first_name"]
-    assert expected_new_last_name == actual_response.data["user"]["last_name"]
-    assert User.objects.filter(**actual_response.data["user"]).exists()
+    assert expected_new_first_name == actual_response.data["account"]["first_name"]
+    assert expected_new_last_name == actual_response.data["account"]["last_name"]
+    assert Account.objects.filter(**actual_response.data["account"]).exists()

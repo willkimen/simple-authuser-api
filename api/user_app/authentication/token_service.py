@@ -1,5 +1,5 @@
 """
-This module handles the creation, verification, and revocation of JWT tokens for user 
+This module handles the creation, verification, and revocation of JWT tokens for account 
 authentication. It contains functions for generating access and refresh tokens, 
 verifying the validity of existing tokens, and revoking tokens by adding them to 
 a blacklist. The generated tokens are signed with a secret key and have a 
@@ -35,12 +35,12 @@ from user_app.constants.authentication import (
 from user_app.models import BlacklistTokenModel, ValidTokenModel
 
 
-def create_payload(user_id: int, is_refresh: bool = False) -> dict:
+def create_payload(id: int, is_refresh: bool = False) -> dict:
     """
-    Create a JWT payload for a user.
+    Create a JWT payload for an account.
 
     Args:
-        user_id (int): The ID of the user.
+        id (int): The ID of the account.
         is_refresh (bool): Indicates whether the payload is for a refresh token.
                            If True, creates a refresh token payload; otherwise,
                            creates an access token payload.
@@ -49,9 +49,9 @@ def create_payload(user_id: int, is_refresh: bool = False) -> dict:
         dict: The generated JWT payload.
     """
 
-    # Create a unique JWT ID (JTI) using the user ID and the current timestamp.
+    # Create a unique JWT ID (JTI) using the account ID and the current timestamp.
     unix_timestamp = str(int(time.time()))
-    hash = str(user_id) + unix_timestamp
+    hash = str(id) + unix_timestamp
     jti: str = hashlib.sha256(hash.encode()).hexdigest()
 
     # Create an expiration timestamp for the token.
@@ -64,16 +64,16 @@ def create_payload(user_id: int, is_refresh: bool = False) -> dict:
     )
 
     return {
-        "uid": user_id,
+        "uid": id,
         "typ": "refresh" if is_refresh else "access",
         "jti": jti,
         "exp": int(exp),
     }
 
 
-def create_token(user_id: int, is_refresh: bool = False) -> str:
+def create_token(id: int, is_refresh: bool = False) -> str:
     """
-    Generates a JWT token for a given user.
+    Generates a JWT token for a given account.
 
     If `is_refresh` is set to True, a refresh token is generated
     and stored in the database else a access is generated and stored in database.
@@ -81,7 +81,7 @@ def create_token(user_id: int, is_refresh: bool = False) -> str:
     stored in the environment variable `TOKEN_SECRET`.
 
     Args:
-        user_id (int): The ID of the user for whom the token is generated.
+        id (int): The ID of the account for whom the token is generated.
         is_refresh (bool, optional): Determines if the token is a refresh token.
         Defaults to False.
 
@@ -89,27 +89,27 @@ def create_token(user_id: int, is_refresh: bool = False) -> str:
         str: The encoded JWT token.
     """
 
-    payload: dict = create_payload(user_id, is_refresh)
+    payload: dict = create_payload(id, is_refresh)
 
     # Save the jti token in database
     ValidTokenModel.objects.create(
-        user_id=user_id, jti=payload["jti"], exp=payload["exp"], typ=payload["typ"]
+        account_id=id, jti=payload["jti"], exp=payload["exp"], typ=payload["typ"]
     )
 
     return jwt.encode(payload, settings.TOKEN_SECRET)
 
 
-def create_pair_token(user_id: int) -> dict:
+def create_pair_token(id: int) -> dict:
     """
-    Create a pair of JWTs (access and refresh) for a user.
+    Create a pair of JWTs (access and refresh) for an account.
 
     Returns:
         dict: A dictionary containing the access and refresh JWTs.
     """
 
     return {
-        "access": create_token(user_id),
-        "refresh": create_token(user_id, is_refresh=True),
+        "access": create_token(id),
+        "refresh": create_token(id, is_refresh=True),
     }
 
 
@@ -152,38 +152,38 @@ def check_token(token: str) -> dict:
     return payload
 
 
-def revoke_tokens(user_id: int) -> dict[str, str]:
+def revoke_tokens(id: int) -> dict[str, str]:
     """
-    Revokes both access and refresh tokens for a user and generates a new token pair.
+    Revokes both access and refresh tokens for an account and generates a new token pair.
 
     This function revokes all active  tokens that haven't yet expired by adding them to
-    the blacklist. Afterward, it deletes all tokens associated with the user
+    the blacklist. Afterward, it deletes all tokens associated with the account
     and generates a new token pair.
 
        Args:
-           user_id (int): The ID of the user whose tokens are being revoked.
+           id (int): The ID of the account whose tokens are being revoked.
 
        Returns:
-           dict[str, str]: A new pair of access and refresh tokens for the user.
+           dict[str, str]: A new pair of access and refresh tokens for the account.
     """
 
     # Finds all occurrences of unexpired refresh.
     now: datetime = timezone.now()
     tokens_not_expired: QuerySet = ValidTokenModel.objects.filter(
-        user_id=user_id, exp__gt=now
+        account_id=id, exp__gt=now
     )
 
     # Insert all refreshes not expired in blacklist.
     if tokens_not_expired:
         [
             BlacklistTokenModel.objects.create(
-                user_id=token.user_id, typ=token.typ, jti=token.jti, exp=token.exp
+                account_id=token.account_id, typ=token.typ, jti=token.jti, exp=token.exp
             )
             for token in tokens_not_expired
         ]
 
     # Delete all occurrences.
-    ValidTokenModel.objects.filter(user_id=user_id).delete()
+    ValidTokenModel.objects.filter(account_id=id).delete()
 
     # Create new token pair.
-    return create_pair_token(user_id)
+    return create_pair_token(id)

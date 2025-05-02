@@ -19,33 +19,33 @@ from .views import (
 )
 
 urlpatterns = [
-    # ============= User Endpoints ====================
-    path("user/profile/register/", register, name="register"),
-    path("user/profile/update/", update, name="update"),
-    path("user/profile/detail/", detail, name="detail"),
-    path("user/profile/delete/", delete, name="delete"),
-    path("user/profile/change_password/", change_password, name="change_password"),
-    # Activate user account
+    # ============= account Endpoints ====================
+    path("account/register/", register, name="register"),
+    path("account/update/", update, name="update"),
+    path("account/detail/", detail, name="detail"),
+    path("account/delete/", delete, name="delete"),
+    path("account/change_password/", change_password, name="change_password"),
+    # Activate account account
     path(
-        "user/email/send_code/activate_account/",
+        "account/email/send_code/activate_account/",
         request_account_activation_code,
         name="request_account_activation_code",
     ),
-    path("user/code/activate/", activate_account, name="activate_account"),
-    # Change user email
+    path("account/code/activate/", activate_account, name="activate_account"),
+    # Change account email
     path(
-        "user/email/send_code/change_email/",
+        "account/email/send_code/change_email/",
         request_email_change_code,
         name="request_email_change_code",
     ),
-    path("user/code/change_email/", change_email, name="change_email"),
-    # Reset user password
+    path("account/code/change_email/", change_email, name="change_email"),
+    # Reset account password
     path(
-        "user/email/send_code/reset_password/",
+        "account/email/send_code/reset_password/",
         request_reset_password_code,
         name="request_reset_password_code",
     ),
-    path("user/code/reset_password/", reset_password, name="reset_password"),
+    path("account/code/reset_password/", reset_password, name="reset_password"),
     # =============== JWT Endpoints =================
     # Endpoint to obtain a JWT pair (access and refresh tokens) after successful login.
     path("token/pair/", obtain_token_pair, name="obtain_token_pair"),

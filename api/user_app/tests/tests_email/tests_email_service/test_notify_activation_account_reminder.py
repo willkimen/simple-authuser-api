@@ -11,7 +11,7 @@ from user_app.tests.constants import (
 )
 
 # ========== Constants ==================
-EMAILS_INACTIVE_USERS = [
+EMAILS_INACTIVE_ACCOUNTS = [
     "fake1@email.com",
     "fake2@email.com",
     "fake3@email.com",
@@ -24,17 +24,17 @@ FAKE_DATETIME = datetime.now()
 @pytest.mark.django_db
 def test_success_send_email():
     """
-    Tests the successful sending of the reminder email to users.
+    Tests the successful sending of the reminder email to accounts.
 
     The `notify_activation_account_reminder` function should return 1 when an email
-    is successfully sent to a user.
+    is successfully sent to an account.
 
     Expected result:
-        - If a user needs to be notified, `expected_send_count` should be 1.
+        - If an account needs to be notified, `expected_send_count` should be 1.
     """
     expected_send_count = 1
     actual_sent_count: int = notify_activation_account_reminder(
-        emails=EMAILS_INACTIVE_USERS, activation_deadline=FAKE_DATETIME
+        emails=EMAILS_INACTIVE_ACCOUNTS, activation_deadline=FAKE_DATETIME
     )
     assert expected_send_count == actual_sent_count
 

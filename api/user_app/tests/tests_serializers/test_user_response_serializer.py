@@ -1,13 +1,13 @@
 import pytest
-from user_app.serializers import UserResponseSerializer
-from user_app.tests.constants import User
+from user_app.serializers import AccountResponseSerializer
+from user_app.tests.constants import Account
 
 
 # ============== Fixtures  ======================
 @pytest.fixture
-def valid_user_data() -> dict[str, str]:
+def valid_account_data() -> dict[str, str]:
     """
-    Returns valid data for a new user.
+    Returns valid data for a new account.
     """
 
     return {
@@ -19,18 +19,18 @@ def valid_user_data() -> dict[str, str]:
 
 
 @pytest.fixture
-def user(valid_user_data: dict):
-    return User.objects.create_user(**valid_user_data)
+def account(valid_account_data: dict):
+    return Account.objects.create_user(**valid_account_data)
 
 
 # ============== Tests ==================
 @pytest.mark.django_db
-def test_should_return_the_correct_fields(user):
-    serializer = UserResponseSerializer(instance=user)
+def test_should_return_the_correct_fields(account):
+    serializer = AccountResponseSerializer(instance=account)
 
-    assert user.id == serializer.data["id"]
-    assert user.first_name == serializer.data["first_name"]
-    assert user.last_name == serializer.data["last_name"]
-    assert user.email == serializer.data["email"]
-    assert user.is_active == serializer.data["is_active"]
+    assert account.id == serializer.data["id"]
+    assert account.first_name == serializer.data["first_name"]
+    assert account.last_name == serializer.data["last_name"]
+    assert account.email == serializer.data["email"]
+    assert account.is_active == serializer.data["is_active"]
     assert "password" not in serializer.data

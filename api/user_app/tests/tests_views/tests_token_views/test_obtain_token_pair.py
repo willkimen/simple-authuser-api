@@ -1,6 +1,6 @@
 """
 This module tests the login() view, which expects to receive a 
-user's email and password, and returns a access and refresh JWT in the response."""
+account's email and password, and returns a access and refresh JWT in the response."""
 
 from unittest.mock import patch
 
@@ -13,13 +13,13 @@ from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # ========== Objects and constants ============
 url: str = reverse("obtain_token_pair")
 NONEXISTENT_EMAIL = "nonexistent@email.com"
-USER_DATA = {
+ACCOUNT_DATA = {
     "first_name": "fake_first_name",
     "last_name": "fake_last_name",
     "email": "fake@email.com",
@@ -36,20 +36,20 @@ def client() -> APIClient:
 
 @pytest.fixture
 def data_user_nonexistent() -> dict[str:str]:
-    """returns data for a non-existent user."""
-    return {"email": NONEXISTENT_EMAIL, "password": USER_DATA["password"]}
+    """returns data for a non-existent account."""
+    return {"email": NONEXISTENT_EMAIL, "password": ACCOUNT_DATA["password"]}
 
 
 @pytest.fixture
-def deactivated_user() -> None:
-    """Persist an deactivated user."""
-    User.objects.create_user(**USER_DATA, is_active=False)
+def deactivated_account() -> None:
+    """Persist an deactivated account."""
+    Account.objects.create_user(**ACCOUNT_DATA, is_active=False)
 
 
 @pytest.fixture
-def activated_user() -> None:
-    """Persist an activated user."""
-    User.objects.create_user(**USER_DATA, is_active=True)
+def activated_account() -> None:
+    """Persist an activated account."""
+    Account.objects.create_user(**ACCOUNT_DATA, is_active=True)
 
 
 # =========== Tests ===================
@@ -58,14 +58,14 @@ def test_nonexistent_user_does_not_return_token_pair(
     client: APIClient, data_user_nonexistent: dict[str, str]
 ):
     """
-    Test that attempting to log in with a nonexistent user does not return a JWT pair.
+    Test that attempting to log in with a nonexistent account does not return a JWT pair.
 
     Args:
         client (APIClient): The test client used to make HTTP requests.
-        data_user_nonexistent (dict[str, str]): Dictionary containing login data for a user that does not exist.
+        data_user_nonexistent (dict[str, str]): Dictionary containing login data for an account that does not exist.
     """
-    expected_detail_message = http_response.USER_NOT_FOUND["detail"]
-    expected_code = http_response.USER_NOT_FOUND["code"]
+    expected_detail_message = http_response.ACCOUNT_NOT_FOUND["detail"]
+    expected_code = http_response.ACCOUNT_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(url, data=data_user_nonexistent, format="json")
@@ -76,27 +76,27 @@ def test_nonexistent_user_does_not_return_token_pair(
 
 
 @pytest.mark.django_db
-def test_user_with_not_activated_account_does_not_return_token_pair(
-    deactivated_user: None, client: APIClient
+def test_account_with_not_activated_account_does_not_return_token_pair(
+    deactivated_account: None, client: APIClient
 ):
     """
     Test that attempting to log in with an account that has not
     been activated does not return a JWT pair.
 
     Args:
-        user_with_not_activated_account (User): A user instance with an account that
+        account_with_not_activated_account (Account): A account instance with an account that
                                                 is not activated.
         client (APIClient): The test client used to make HTTP requests.
     """
-    expected_detail_message = http_response.USER_ACCOUNT_NOT_ACTIVATED["detail"]
-    expected_code = http_response.USER_ACCOUNT_NOT_ACTIVATED["code"]
+    expected_detail_message = http_response.ACCOUNT_NOT_ACTIVATED["detail"]
+    expected_code = http_response.ACCOUNT_NOT_ACTIVATED["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
         url,
         data={
-            "email": USER_DATA["email"],
-            "password": USER_DATA["password"],
+            "email": ACCOUNT_DATA["email"],
+            "password": ACCOUNT_DATA["password"],
         },
         format="json",
     )
@@ -108,13 +108,13 @@ def test_user_with_not_activated_account_does_not_return_token_pair(
 
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_returns_token_pair_successfully(activated_user: None, client: APIClient):
+def test_returns_token_pair_successfully(activated_account: None, client: APIClient):
     """
     Test that logging in with valid credentials for an activated
     account returns a JWT pair successfully.
 
     Args:
-        user_with_activated_account (User): A user instance with an activated account.
+        account_with_activated_account (Account): A activated account instance.
         client (APIClient): The test client used to make HTTP requests.
     """
     expected_status_code = status.HTTP_200_OK
@@ -124,8 +124,8 @@ def test_returns_token_pair_successfully(activated_user: None, client: APIClient
     actual_response = client.post(
         url,
         data={
-            "email": USER_DATA["email"],
-            "password": USER_DATA["password"],
+            "email": ACCOUNT_DATA["email"],
+            "password": ACCOUNT_DATA["password"],
         },
         format="json",
     )

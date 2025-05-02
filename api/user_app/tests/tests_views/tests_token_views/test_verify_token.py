@@ -14,7 +14,7 @@ from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
@@ -26,9 +26,9 @@ INCORRECT_TYP = "incorrect_type"
 
 # ============ Fixtures ================
 @pytest.fixture
-def user():
-    """Generic user instance."""
-    return User.objects.create_user(
+def account():
+    """Generic account instance."""
+    return Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fake@email.com",
@@ -38,10 +38,10 @@ def user():
 
 
 @pytest.fixture
-def payload(user) -> dict:
+def payload(account) -> dict:
     """Generic payload."""
     return {
-        "uid": user.id,
+        "uid": account.id,
         "typ": "access",
         "jti": "fake_jti",
         "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -66,7 +66,7 @@ def blacklisted_token(payload: dict) -> str:
     """
     payload["jti"] = JTI_IN_BLACKLIST
     BlacklistTokenModel.objects.create(
-        user_id=payload["uid"],
+        account_id=payload["uid"],
         jti=payload["jti"],
         typ=payload["typ"],
         exp=payload["exp"],

@@ -16,7 +16,7 @@ from user_app.tests.constants import (
     REVOKE_TOKENS_FUNCTION_TO_PATCH,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
@@ -25,17 +25,17 @@ NON_EXISTENT_CODE = "NON_EXISTENT_CODE"
 OLD_PASSWORD = "FAKEOLDpassword!10"
 NEW_PASSWORD = "FAKEpassword!10"
 CONFIRMATION_NEW_PASSWORD = "FAKEpassword!10"
-USER_ID = 100
+ACCOUNT_ID = 100
 
 
 # ============ Fixtures ================
 @pytest.fixture
-def activated_user():
+def activated_account():
     """
-    Fixture to create and return an activated User object.
+    Fixture to create and return an activated Account object.
     """
-    return User.objects.create_user(
-        id=USER_ID,
+    return Account.objects.create_user(
+        id=ACCOUNT_ID,
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fakeemail@email.com",
@@ -45,15 +45,15 @@ def activated_user():
 
 
 @pytest.fixture
-def expired_code(activated_user) -> str:
+def expired_code(activated_account) -> str:
     return ResetPasswordCodeModel.objects.create(
-        user=activated_user, expires_at=timezone.now() - timedelta(minutes=1)
+        account=activated_account, expires_at=timezone.now() - timedelta(minutes=1)
     ).code
 
 
 @pytest.fixture
-def valid_code(activated_user) -> str:
-    return ResetPasswordCodeModel.objects.create(user=activated_user).code
+def valid_code(activated_account) -> str:
+    return ResetPasswordCodeModel.objects.create(account=activated_account).code
 
 
 # ============ Tests ================
@@ -179,7 +179,7 @@ def test_after_reset_password_the_code_is_deleted(
 ):
     """
     Tests if the password reset code is deleted after a successful password reset and
-    if the user's tokens are revoked.
+    if the account's tokens are revoked.
     """
     assert ResetPasswordCodeModel.objects.filter(code=valid_code).exists()
 
@@ -211,8 +211,8 @@ def test_reset_password_successful(
     Tests if the password reset process is successful with a valid code and
     if new tokens are generated correctly.
     """
-    expected_detail_message = http_response.USER_PASSWORD_RESET["detail"]
-    expected_code = http_response.USER_PASSWORD_RESET["code"]
+    expected_detail_message = http_response.ACCOUNT_PASSWORD_RESET["detail"]
+    expected_code = http_response.ACCOUNT_PASSWORD_RESET["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.post(
@@ -225,8 +225,8 @@ def test_reset_password_successful(
         format="json",
     )
 
-    user = User.objects.get(id=USER_ID)
-    assert check_password(NEW_PASSWORD, user.password)
+    account = Account.objects.get(id=ACCOUNT_ID)
+    assert check_password(NEW_PASSWORD, account.password)
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]

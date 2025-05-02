@@ -15,7 +15,7 @@ from user_app.tests.constants import (
     REVOKE_TOKENS_FUNCTION_TO_PATCH,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
@@ -23,15 +23,15 @@ url: str = reverse("change_password")
 ACTUAL_PASSWORD = "FAKE_actual_password10!"
 NEW_PASSWORD = "FAKE_new_password10!"
 DIFFERENT_ACTUAL_PASSWORD = "FAKE_different_password10!"
-USER_ID = 1
+ACCOUNT_ID = 1
 
 
 # ============ Fixtures ================
 @pytest.fixture
-def user():
-    """Creates and returns a User object for use in tests."""
-    return User.objects.create_user(
-        id=USER_ID,
+def account():
+    """Creates and returns a Account object for use in tests."""
+    return Account.objects.create_user(
+        id=ACCOUNT_ID,
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fakeemail@email.com",
@@ -41,7 +41,7 @@ def user():
 
 
 @pytest.fixture
-def client(user) -> APIClient:
+def client(account) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -50,7 +50,7 @@ def client(user) -> APIClient:
     """
     token = jwt.encode(
         {
-            "uid": user.id,
+            "uid": account.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -99,10 +99,8 @@ def test_change_password_successfully(
     """
     Test that the password is changed successfully.
     """
-    expected_detail_message = http_response.USER_PASSWORD_CHANGED[
-        "detail"
-    ]
-    expected_code = http_response.USER_PASSWORD_CHANGED["code"]
+    expected_detail_message = http_response.ACCOUNT_PASSWORD_CHANGED["detail"]
+    expected_code = http_response.ACCOUNT_PASSWORD_CHANGED["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.patch(
@@ -111,11 +109,11 @@ def test_change_password_successfully(
         format="json",
     )
 
-    # Get the user after the request, to get the password change.
-    user = User.objects.get(id=USER_ID)
+    # Get the account after the request, to get the password change.
+    account = Account.objects.get(id=ACCOUNT_ID)
 
-    assert check_password(ACTUAL_PASSWORD, user.password) == False
-    assert check_password(NEW_PASSWORD, user.password) == True
+    assert check_password(ACTUAL_PASSWORD, account.password) == False
+    assert check_password(NEW_PASSWORD, account.password) == True
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]

@@ -67,12 +67,12 @@ class BlacklistTokenModel(TokenBaseModel):
     This is used to keep track of tokens that should no longer be accepted by the system.
 
     Fields:
-        user (ForeignKey): A foreign key relationship to the default user defined in
-                           settings.AUTH_USER_MODEL, representing the user that owns
+        account (ForeignKey): A foreign key relationship to the default account defined in
+                           settings.AUTH_USER_MODEL, representing the account that owns
                            this token.
     """
 
-    user = models.ForeignKey(
+    account = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=False,
@@ -90,12 +90,12 @@ class ValidTokenModel(TokenBaseModel):
     Represents a model for storing valid tokens.
 
     Fields:
-        user (ForeignKey): A foreign key relationship to the default user defined in
-                           settings.AUTH_USER_MODEL, representing the user that owns
+        account (ForeignKey): A foreign key relationship to the default account defined in
+                           settings.AUTH_USER_MODEL, representing the account that owns
                            this token.
     """
 
-    user = models.ForeignKey(
+    account = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=False,

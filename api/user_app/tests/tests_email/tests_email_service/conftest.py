@@ -1,13 +1,13 @@
 import pytest
-from user_app.tests.constants import User
+from user_app.tests.constants import Account
 
 
 @pytest.fixture
-def deactivated_user():
+def deactivated_account():
     """
-    Fixture to create and return a deactivated User object.
+    Fixture to create and return a deactivated Account object.
     """
-    return User.objects.create_user(
+    return Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fakeemail@email.com",

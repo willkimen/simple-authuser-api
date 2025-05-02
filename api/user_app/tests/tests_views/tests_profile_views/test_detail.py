@@ -2,8 +2,8 @@
 Test Module: detail() View
 
 This module contains the tests for the `detail` API view, 
-which retrieves the details of an authenticated user. 
-The tests ensure that the authenticated user receives their 
+which retrieves the details of an authenticated account. 
+The tests ensure that the authenticated account receives their 
 correct data in the response.
 """
 
@@ -20,7 +20,7 @@ from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
@@ -29,8 +29,8 @@ url: str = reverse("detail")
 
 # ============ Fixtures ================
 @pytest.fixture
-def user():
-    return User.objects.create_user(
+def account():
+    return Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fake@email.com",
@@ -40,7 +40,7 @@ def user():
 
 
 @pytest.fixture
-def client_auth_header(user) -> APIClient:
+def client_auth_header(account) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -49,7 +49,7 @@ def client_auth_header(user) -> APIClient:
     """
     token = jwt.encode(
         {
-            "uid": user.id,
+            "uid": account.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -64,21 +64,21 @@ def client_auth_header(user) -> APIClient:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_logged_user_returns_their_data_successfully(
-    client_auth_header: APIClient, user
+def test_logged_account_returns_their_data_successfully(
+    client_auth_header: APIClient, account
 ):
     """
-    This test verifies that an authenticated user can successfully retrieve their own
+    This test verifies that an authenticated account can successfully retrieve their own
     details via the `detail` API view.
     """
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client_auth_header.get(url)
 
-    assert User.objects.filter(**actual_response.data["user"]).exists()
-    assert user.id == actual_response.data["user"]["id"]
-    assert user.first_name == actual_response.data["user"]["first_name"]
-    assert user.last_name == actual_response.data["user"]["last_name"]
-    assert user.email == actual_response.data["user"]["email"]
-    assert user.is_active == actual_response.data["user"]["is_active"]
+    assert Account.objects.filter(**actual_response.data["account"]).exists()
+    assert account.id == actual_response.data["account"]["id"]
+    assert account.first_name == actual_response.data["account"]["first_name"]
+    assert account.last_name == actual_response.data["account"]["last_name"]
+    assert account.email == actual_response.data["account"]["email"]
+    assert account.is_active == actual_response.data["account"]["is_active"]
     assert expected_status_code == actual_response.status_code

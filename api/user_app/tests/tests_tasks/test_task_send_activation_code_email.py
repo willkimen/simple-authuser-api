@@ -10,17 +10,17 @@ from user_app.tests.constants import (
     LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
     SEND_ACCOUNT_ACTIVATION_CODE_FUNCTION_TO_PATCH,
     TASKS_MODULE_PATH,
-    User,
+    Account,
 )
 
 
 # ============ Fixtures =========================
 @pytest.fixture
-def deactivated_user():
+def deactivated_account():
     """
-    Fixture to create and return a deactivated User object.
+    Fixture to create and return a deactivated Account object.
     """
-    return User.objects.create_user(
+    return Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fakeemail@email.com",
@@ -30,7 +30,7 @@ def deactivated_user():
 
 # ========== Tests ==================
 @pytest.mark.django_db
-def test_task_send_account_activation_code_success(deactivated_user):
+def test_task_send_account_activation_code_success(deactivated_account):
     """
     Test the successful execution of the task_send_account_activation_code task.
 
@@ -41,7 +41,7 @@ def test_task_send_account_activation_code_success(deactivated_user):
     expected_success_send_email = 1
 
     result: EagerResult = task_send_account_activation_code.apply(
-        args=(deactivated_user.email,)
+        args=(deactivated_account.email,)
     )
     actual_sent_count: int = result.get()
 
@@ -58,13 +58,13 @@ def test_task_send_account_activation_code_success(deactivated_user):
 def test_task_send_account_activation_code_failure(
     mock_logger_email_task_error: MagicMock,
     mock_send_activation: MagicMock,
-    deactivated_user,
+    deactivated_account,
 ):
     """
     Test the failure scenario for the task_send_account_activation_code task.
     """
     result: EagerResult = task_send_account_activation_code.apply(
-        args=(deactivated_user.email,)
+        args=(deactivated_account.email,)
     )
     with pytest.raises(SMTPException):
         result.get()
@@ -79,11 +79,11 @@ def test_task_send_account_activation_code_failure(
     side_effect=SMTPException(),
 )
 def test_task_data_is_recorded_when_it_fails(
-    mock_send_activation: MagicMock, deactivated_user
+    mock_send_activation: MagicMock, deactivated_account
 ):
     """Tests if task failure data is recorded in the FailedTaskModel."""
     result: EagerResult = task_send_account_activation_code.apply(
-        args=(deactivated_user.email,)
+        args=(deactivated_account.email,)
     )
 
     with pytest.raises(SMTPException):
@@ -93,6 +93,6 @@ def test_task_data_is_recorded_when_it_fails(
 
     assert failed_task_model is not None
     assert failed_task_model.task_id == result.id
-    assert failed_task_model.args == [deactivated_user.email]
+    assert failed_task_model.args == [deactivated_account.email]
     assert failed_task_model.kwargs == {}
     assert failed_task_model.created_at is not None

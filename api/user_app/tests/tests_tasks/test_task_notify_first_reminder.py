@@ -7,8 +7,8 @@ import time_machine
 from celery import states
 from celery.result import EagerResult
 from django.utils import timezone
-from user_app.models import FailedTaskModel, UserProfileModel
-from user_app.models.user_models import PendingAccountsModel
+from user_app.models import FailedTaskModel, AccountModel
+from user_app.models.account import PendingAccountsModel
 from user_app.tasks import task_notify_first_reminder
 from user_app.tests.constants import (
     LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH,
@@ -17,7 +17,7 @@ from user_app.tests.constants import (
 )
 
 # ========== Constants ==================
-USER_DATA = {
+ACCOUNT_DATA = {
     "first_name": "Fake Name",
     "last_name": "Fake Last",
     "email": "fake@email.com",
@@ -25,7 +25,7 @@ USER_DATA = {
     "password": "FAKEfake123!",
 }
 
-EMAILS_INACTIVE_USERS = [
+EMAILS_INACTIVE_ACCOUNTS = [
     "fake1@email.com",
     "fake2@email.com",
     "fake3@email.com",
@@ -51,39 +51,39 @@ ACTIVATION_DEADLINE_DAY = SECOND_REMINDER_DAY.replace(
 
 # ============== Fixtures ==============
 @pytest.fixture
-def create_users_for_reminder():
+def create_accounts_for_reminder():
     """
-    Fixture that creates multiple users in the database for reminder.
+    Fixture that creates multiple accounts in the database for reminder.
 
     This fixture:
-        - Creates users who registered **today**, before the cutoff time
+        - Creates accounts who registered **today**, before the cutoff time
           defined by `CUTOFF_HOUR`.
 
     Usage:
-        - This fixture is useful for testing scenarios where users' registration
+        - This fixture is useful for testing scenarios where accounts' registration
           dates affect whether they should receive activation reminders.
-        - Users created before the cutoff hour will have their reminder dates
+        - Accounts created before the cutoff hour will have their reminder dates
           set accordingly.
 
     Details:
-        - The batch of users (created today before `CUTOFF_HOUR`) will have
+        - The batch of accounts (created today before `CUTOFF_HOUR`) will have
           their `PendingAccountsModel` entries created with the corresponding
           reminder dates.
 
     Example:
-        - The users registered before `CUTOFF_HOUR` will be eligible for
+        - The accounts registered before `CUTOFF_HOUR` will be eligible for
           today's reminders.
     """
     with time_machine.travel(TODAY_BEFORE_CUTOFF):
-        for email in EMAILS_INACTIVE_USERS:
-            USER_DATA["email"] = email
-            user = UserProfileModel.objects.create_user(**USER_DATA)
-            PendingAccountsModel.objects.create(user=user)
+        for email in EMAILS_INACTIVE_ACCOUNTS:
+            ACCOUNT_DATA["email"] = email
+            account = AccountModel.objects.create_user(**ACCOUNT_DATA)
+            PendingAccountsModel.objects.create(account=account)
 
 
 # =============== Tests ================
 @pytest.mark.django_db
-def test_task_notify_first_reminder_success(create_users_for_reminder):
+def test_task_notify_first_reminder_success(create_accounts_for_reminder):
     """
     Test the successful execution of the task_notify_first_reminder task.
 
@@ -95,7 +95,7 @@ def test_task_notify_first_reminder_success(create_users_for_reminder):
         expected_success_send_email = 1
 
         result: EagerResult = task_notify_first_reminder.apply(
-            args=(EMAILS_INACTIVE_USERS, ACTIVATION_DEADLINE_DAY)
+            args=(EMAILS_INACTIVE_ACCOUNTS, ACTIVATION_DEADLINE_DAY)
         )
         actual_sent_count: int = result.get()
 
@@ -116,7 +116,7 @@ def test_task_notify_first_reminder_failure(
     Test the failure scenario for the task_notify_first_reminder task.
     """
     result: EagerResult = task_notify_first_reminder.apply(
-        args=(EMAILS_INACTIVE_USERS, ACTIVATION_DEADLINE_DAY)
+        args=(EMAILS_INACTIVE_ACCOUNTS, ACTIVATION_DEADLINE_DAY)
     )
 
     with pytest.raises(SMTPException):
@@ -134,7 +134,7 @@ def test_task_notify_first_reminder_failure(
 def test_task_data_is_recorded_when_it_fails(mock_notify_first_reminder: MagicMock):
     """Tests if task failure data is recorded in the FailedTaskModel."""
     result: EagerResult = task_notify_first_reminder.apply(
-        args=(EMAILS_INACTIVE_USERS, ACTIVATION_DEADLINE_DAY)
+        args=(EMAILS_INACTIVE_ACCOUNTS, ACTIVATION_DEADLINE_DAY)
     )
 
     with pytest.raises(SMTPException):
@@ -145,7 +145,7 @@ def test_task_data_is_recorded_when_it_fails(mock_notify_first_reminder: MagicMo
     assert failed_task_model is not None
     assert failed_task_model.task_id == result.id
     assert failed_task_model.args == [
-        EMAILS_INACTIVE_USERS,
+        EMAILS_INACTIVE_ACCOUNTS,
         ACTIVATION_DEADLINE_DAY.isoformat().replace("+00:00", "Z"),
     ]
     assert failed_task_model.kwargs == {}

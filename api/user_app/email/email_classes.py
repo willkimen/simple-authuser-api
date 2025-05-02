@@ -87,11 +87,11 @@ class ActivationCodeEmail(EmailBase):
     Sends an account activation email containing a verification code.
 
     This class is responsible for sending an email with a verification code
-    to activate a user's account. The email is sent in both plain text and HTML formats.
+    to activate an account. The email is sent in both plain text and HTML formats.
     """
 
-    def __init__(self, user_email: str, code: str = None, **kwargs) -> None:
-        self.user_email = user_email
+    def __init__(self, email: str, code: str = None, **kwargs) -> None:
+        self.email = email
         self.code = code
         self.subject = "Confirm your email address"
         self.body = dedent(
@@ -128,7 +128,7 @@ class ActivationCodeEmail(EmailBase):
         )
 
         super().__init__(
-            subject=self.subject, body=self.body, to=[self.user_email], **kwargs
+            subject=self.subject, body=self.body, to=[self.email], **kwargs
         )
 
         self.attach_alternative(self.html_body, "text/html")
@@ -138,14 +138,14 @@ class ActivationNotificationEmail(EmailBase):
     """
     Sends an account activation notification email.
 
-    This class is responsible for sending an email to inform the user that
+    This class is responsible for sending an email to inform the account that
     their account has been successfully activated. The email is sent in both
     plain text and HTML formats and includes a login link and support contact
     information.
     """
 
-    def __init__(self, user_email: str, **kwargs) -> None:
-        self.user_email = user_email
+    def __init__(self, email: str, **kwargs) -> None:
+        self.email = email
         self.subject = "Your account has been activated"
         self.body: str = dedent(
             f"""
@@ -167,7 +167,7 @@ class ActivationNotificationEmail(EmailBase):
         )
 
         super().__init__(
-            subject=self.subject, body=self.body, to=[self.user_email], **kwargs
+            subject=self.subject, body=self.body, to=[self.email], **kwargs
         )
 
         self.attach_alternative(self.html_body, "text/html")
@@ -175,12 +175,12 @@ class ActivationNotificationEmail(EmailBase):
 
 class ChangeCodeEmail(EmailBase):
     """
-    Sends a verification email for changing the user's email address.
+    Sends a verification email for changing the account's email address.
 
-    This class sends an email to the user containing a verification code
-    for changing their email address. The email informs the user about
+    This class sends an email to the account containing a verification code
+    for changing their email address. The email informs the account about
     the request to change the email from the current address to the new one,
-    and provides the verification code that the user needs to use to verification
+    and provides the verification code that the account needs to use to verification
     the change.
     """
 
@@ -223,10 +223,10 @@ class ChangeCodeEmail(EmailBase):
 class ChangeNotificationEmail(EmailBase):
     """
     Sends an email notification confirming the successful change of the
-    user's email address.
+    account's email address.
 
-    This class sends an email to the user notifying them that their email address
-    has been successfully changed. The email includes a login link for the user to
+    This class sends an email to the account notifying them that their email address
+    has been successfully changed. The email includes a login link for the account to
     access their account with the new email address.
     """
 
@@ -261,15 +261,15 @@ class ChangeNotificationEmail(EmailBase):
 
 class ResetPasswordCodeEmail(EmailBase):
     """
-    Sends a password reset email with a verification code to the user's email address.
+    Sends a password reset email with a verification code to the account's email address.
 
-    This class sends an email containing a verification code to the user's email
-    address to initiate the password reset process. The user will need to visit a
+    This class sends an email containing a verification code to the account's email
+    address to initiate the password reset process. The account will need to visit a
     provided link and submit the verification code to reset their password.
     """
 
-    def __init__(self, user_email: str, code: str, **kwargs) -> str:
-        self.user_email = user_email
+    def __init__(self, email: str, code: str, **kwargs) -> str:
+        self.email = email
         self.code = code
         self.subject = "Reset Your Account Password"
         self.body: str = dedent(
@@ -300,7 +300,7 @@ class ResetPasswordCodeEmail(EmailBase):
         )
 
         super().__init__(
-            subject=self.subject, body=self.body, to=[self.user_email], **kwargs
+            subject=self.subject, body=self.body, to=[self.email], **kwargs
         )
 
         self.attach_alternative(self.html_body, "text/html")
@@ -308,18 +308,18 @@ class ResetPasswordCodeEmail(EmailBase):
 
 class PasswordResetNotificationEmail(EmailBase):
     """
-    Sends a notification email to inform the user that their password has been
+    Sends a notification email to inform the account that their password has been
     reset successfully.
 
-    This class sends an email notifying the user that their password has been
+    This class sends an email notifying the account that their password has been
     successfully reset.
-    The user will be informed that they can now log in using the new password.
+    The account will be informed that they can now log in using the new password.
     The email provides a link to the login page and includes a safety message
-    in case the reset was not requested by the user.
+    in case the reset was not requested by the account.
     """
 
-    def __init__(self, user_email: str, **kwargs) -> None:
-        self.user_email = user_email
+    def __init__(self, email: str, **kwargs) -> None:
+        self.email = email
         self.subject = "Your Password Has Been Reset"
         self.body: str = dedent(
             f"""
@@ -341,7 +341,7 @@ class PasswordResetNotificationEmail(EmailBase):
         )
 
         super().__init__(
-            subject=self.subject, body=self.body, to=[self.user_email], **kwargs
+            subject=self.subject, body=self.body, to=[self.email], **kwargs
         )
 
         self.attach_alternative(self.html_body, "text/html")
@@ -349,11 +349,11 @@ class PasswordResetNotificationEmail(EmailBase):
 
 class DeletedAccountNotificationEmail(EmailBase):
     """
-    Class that sends a notification email to the user when their account is deleted.
+    Class that sends a notification email to the account when their account is deleted.
     """
 
-    def __init__(self, user_email: str, **kwargs) -> None:
-        self.user_email = user_email
+    def __init__(self, email: str, **kwargs) -> None:
+        self.email = email
         self.subject = "Your Account Has Been Deleted"
         self.body: str = dedent(
             f"""
@@ -373,7 +373,7 @@ class DeletedAccountNotificationEmail(EmailBase):
         super().__init__(
             subject=self.subject,
             body=self.body,
-            to=[self.user_email],
+            to=[self.email],
             **kwargs,
         )
 
@@ -382,7 +382,7 @@ class DeletedAccountNotificationEmail(EmailBase):
 
 class DeactivatedAccountNotificationEmail(EmailBase):
     """
-    Class that sends a notification email to the user informing them that
+    Class that sends a notification email to the account informing them that
     they have not yet activated their account.
     """
 
@@ -431,7 +431,7 @@ class DeactivatedAccountNotificationEmail(EmailBase):
 
 class ExpiredAccountDeletionEmail(EmailBase):
     """
-    Class that sends a notification email to the user informing them that
+    Class that sends a notification email to the account informing them that
     their account has been deleted due to non-activation within the deadline.
     """
 

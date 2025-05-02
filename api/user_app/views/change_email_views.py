@@ -1,5 +1,5 @@
 """
-This module provides views related to user email changes.
+This module provides views related to account email changes.
 """
 
 from datetime import datetime
@@ -14,23 +14,23 @@ from rest_framework.response import Response
 from user_app.authentication.authentication_classes import JWTAuthentication
 from user_app.authentication.token_service import revoke_tokens
 from user_app.constants.http_response import (
+    ACCOUNT_EMAIL_CHANGED,
     CODE_EXPIRED,
     CODE_NOT_FOUND,
     EMAIL_ALREADY_EXISTS,
     EMAIL_ALREADY_IN_USE,
-    EMAIL_SEND_TO_USER_SUCCESSFULLY,
-    USER_EMAIL_CHANGED,
+    EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY,
     VALIDATION_ERRORS,
 )
 from user_app.documentation_scheme.authentication import authentication_errors_response
 from user_app.documentation_scheme.change_email import (
+    account_email_changed_response,
     change_email_request,
     code_expired_response,
     code_not_found_response,
     email_already_exists_response,
-    email_send_to_user_response,
+    email_send_to_account_response,
     email_validation_errors_and_email_already_in_use_response,
-    user_email_changed_response,
 )
 from user_app.models import ChangeEmailCodeModel
 from user_app.serializers import EmailSerializer
@@ -38,13 +38,13 @@ from user_app.tasks import task_notify_changed_email, task_send_email_change_cod
 from user_app.throttlings import FivePerMinuteRateLimit
 from user_app.utils import deep_merge_dict
 
-User = get_user_model()
+Account = get_user_model()
 
 
 @extend_schema(
     request=EmailSerializer,
     responses={
-        200: email_send_to_user_response,
+        200: email_send_to_account_response,
         400: email_validation_errors_and_email_already_in_use_response,
         401: authentication_errors_response,
         409: email_already_exists_response,
@@ -55,7 +55,7 @@ User = get_user_model()
 def request_email_change_code(request: Request) -> Response:
     """
     Sends a verification code to the new email address provided,
-    so that the user can later confirm the email exchange.
+    so that the account can later confirm the email exchange.
 
     The request should include the new email address they want to switch.
 
@@ -64,7 +64,7 @@ def request_email_change_code(request: Request) -> Response:
 
     Authentication:
 
-        - The user must be authenticated using JWT tokens.
+        - The account must be authenticated using JWT tokens.
 
         - The token should be provided in the `Authorization` header as a Bearer token.
     """
@@ -83,25 +83,25 @@ def request_email_change_code(request: Request) -> Response:
 
     new_email: str = email_serializer.data["email"]
 
-    # Checks whether the email received is the same as the authenticated user's,
+    # Checks whether the email received is the same as the authenticated account's,
     # i.e., it is already the email in use.
     if request.user.email == new_email:
         return Response(EMAIL_ALREADY_IN_USE, status=status.HTTP_400_BAD_REQUEST)
 
-    # Checks whether the received email is for another user in the database.
-    if User.objects.filter(email=new_email).exists():
+    # Checks whether the received email is for another account in the database.
+    if Account.objects.filter(email=new_email).exists():
         return Response(EMAIL_ALREADY_EXISTS, status=status.HTTP_409_CONFLICT)
 
-    # Send code to user email.
+    # Send code to account email.
     task_send_email_change_code.delay(request.user.email, new_email)
 
-    return Response(EMAIL_SEND_TO_USER_SUCCESSFULLY, status=status.HTTP_200_OK)
+    return Response(EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY, status=status.HTTP_200_OK)
 
 
 @extend_schema(
     request=change_email_request,
     responses={
-        200: user_email_changed_response,
+        200: account_email_changed_response,
         401: authentication_errors_response,
         404: code_not_found_response,
         410: code_expired_response,
@@ -114,11 +114,11 @@ def change_email(request: Request) -> Response:
     """
     Confirms the email change by validating the verification code.
 
-    The user must be logged in and provide the verification code sent
+    The account must be logged in and provide the verification code sent
     to their new email address.
     The request should include the verification code.
 
-    If the code is valid and not expired, the user's current email will
+    If the code is valid and not expired, the account's current email will
     be replaced with the new one.
 
     After the change, all existing authentication tokens (access and refresh)
@@ -126,7 +126,7 @@ def change_email(request: Request) -> Response:
 
     Authentication:
 
-        - The user must be authenticated using JWT tokens.
+        - The account must be authenticated using JWT tokens.
 
         - The token should be provided in the `Authorization` header as a Bearer token.
     """
@@ -156,5 +156,5 @@ def change_email(request: Request) -> Response:
     task_notify_changed_email.delay(request.user.email)
 
     return Response(
-        deep_merge_dict(USER_EMAIL_CHANGED, token_pair), status=status.HTTP_200_OK
+        deep_merge_dict(ACCOUNT_EMAIL_CHANGED, token_pair), status=status.HTTP_200_OK
     )

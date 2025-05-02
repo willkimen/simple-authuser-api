@@ -12,33 +12,35 @@ from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
-FAKE_USER_DATA = {
+FAKE_ACCOUNT_DATA = {
     "first_name": "fake_first_name",
     "last_name": "fake_last_name",
     "password": "FAKEpassowrd1234!",
     "is_active": True,
 }
 url: str = reverse("request_email_change_code")
-ACTUAL_LOGGED_USER_EMAIL = "loggeduser@email.com"
+ACTUAL_LOGGED_ACCOUNT_EMAIL = "loggeduser@email.com"
 EMAIL_ALREADY_EXISTS = "emailalreadyexists@email.com"
 NEW_EMAIL = "newemail@email.com"
 
 
 # ============ Fixtures ================
 @pytest.fixture
-def activated_user():
+def activated_account():
     """
-    Provides a user object that is persisted in the database.
+    Provides an account object that is persisted in the database.
     """
-    return User.objects.create_user(**FAKE_USER_DATA, email=ACTUAL_LOGGED_USER_EMAIL)
+    return Account.objects.create_user(
+        **FAKE_ACCOUNT_DATA, email=ACTUAL_LOGGED_ACCOUNT_EMAIL
+    )
 
 
 @pytest.fixture
-def client_auth_header(activated_user) -> APIClient:
+def client_auth_header(activated_account) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -47,7 +49,7 @@ def client_auth_header(activated_user) -> APIClient:
     """
     token = jwt.encode(
         {
-            "uid": activated_user.id,
+            "uid": activated_account.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -66,8 +68,8 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
     client_auth_header: APIClient,
 ):
     """
-    Tests the scenario where the new email provided by the user is the
-    same as the email of the logged-in user.
+    Tests the scenario where the new email provided by the account is the
+    same as the email of the logged-in account.
     """
 
     expected_status_code = status.HTTP_400_BAD_REQUEST
@@ -75,7 +77,7 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
     expected_detail_message = http_response.EMAIL_ALREADY_IN_USE["detail"]
 
     actual_response = client_auth_header.post(
-        url, data={"email": ACTUAL_LOGGED_USER_EMAIL}, format="json"
+        url, data={"email": ACTUAL_LOGGED_ACCOUNT_EMAIL}, format="json"
     )
 
     assert expected_code == actual_response.data["code"]
@@ -89,11 +91,11 @@ def test_do_not_send_code_if_email_already_exists_in_database(
     client_auth_header: APIClient,
 ):
     """
-    Tests the scenario where the new email provided by the user already
+    Tests the scenario where the new email provided by the account already
     exists in the system.
     """
-    # Create a user to have an email in the database that already exists
-    User.objects.create_user(**FAKE_USER_DATA, email=EMAIL_ALREADY_EXISTS)
+    # Create an account to have an email in the database that already exists
+    Account.objects.create_user(**FAKE_ACCOUNT_DATA, email=EMAIL_ALREADY_EXISTS)
 
     expected_status_code = status.HTTP_409_CONFLICT
     expected_code = http_response.EMAIL_ALREADY_EXISTS["code"]
@@ -114,13 +116,11 @@ def test_send_code_successfully(client_auth_header: APIClient):
     """
     Tests the successful case of sending the confirmation email to
     the new email address.
-    The user provides a valid new email that is not registered to any other account.
+    The account provides a valid new email that is not registered to any other account.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
-    expected_detail_message = (
-        http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
-    )
+    expected_code = http_response.EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY["detail"]
 
     actual_response = client_auth_header.post(
         url, data={"email": NEW_EMAIL}, format="json"

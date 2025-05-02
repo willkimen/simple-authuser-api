@@ -1,7 +1,7 @@
 """
-Module for testing the user account deletion functionality.
-This module contains tests for the `delete` view of the user account API. 
-The `delete` view allows authenticated users to delete their own accounts. 
+Module for testing the account account deletion functionality.
+This module contains tests for the `delete` view of the account API. 
+The `delete` view allows authenticated accounts to delete their own accounts. 
 """
 
 from datetime import timedelta
@@ -24,22 +24,22 @@ from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
 url: str = reverse("delete")
-USER_ID = 100
+ACCOUNT_ID = 100
 
 
 # ============ Fixtures ================
 @pytest.fixture
-def user():
+def account():
     """
-    Provides a activated user object that is persisted in the database.
+    Provides a activated account object that is persisted in the database.
     """
-    return User.objects.create_user(
-        id=USER_ID,
+    return Account.objects.create_user(
+        id=ACCOUNT_ID,
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fake@email.com",
@@ -49,43 +49,43 @@ def user():
 
 
 @pytest.fixture
-def user_with_stored_verification_codes(user):
+def account_with_stored_verification_codes(account):
     """
-    Fixture that associates a persisted user with verification codes stored
+    Fixture that associates a persisted account with verification codes stored
     in the database.
 
     Args:
-        user: A persisted user instance from the database.
+        account: A persisted account instance from the database.
 
     Returns:
-        user: The same user instance with associated verification codes.
+        account: The same account instance with associated verification codes.
 
     This fixture:
-        - Creates an account activation code for the user.
-        - Creates a change email verification code for the user.
-        - Creates a password reset verification code for the user.
+        - Creates an account activation code for the account.
+        - Creates a change email verification code for the account.
+        - Creates a password reset verification code for the account.
     """
-    AccountActivationCodeModel.objects.create(user=user)
-    ChangeEmailCodeModel.objects.create(user=user)
-    ResetPasswordCodeModel.objects.create(user=user)
-    return user
+    AccountActivationCodeModel.objects.create(account=account)
+    ChangeEmailCodeModel.objects.create(account=account)
+    ResetPasswordCodeModel.objects.create(account=account)
+    return account
 
 
 @pytest.fixture
-def user_with_stored_tokens(user):
+def account_with_stored_tokens(account):
     """
-    Fixture that associates a persisted user with valid and blacklisted tokens
+    Fixture that associates a persisted account with valid and blacklisted tokens
     in the database.
 
     Args:
-        user: A persisted user instance from the database.
+        account: A persisted account instance from the database.
 
     Returns:
-        user: The same user instance with associated tokens.
+        account: The same account instance with associated tokens.
 
     This fixture:
-        - Creates a valid access token for the user and stores it in the database.
-        - Creates a blacklisted token for the user and stores it in the database.
+        - Creates a valid access token for the account and stores it in the database.
+        - Creates a blacklisted token for the account and stores it in the database.
     """
     payload = {
         "typ": "access",
@@ -93,15 +93,15 @@ def user_with_stored_tokens(user):
         "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
     }
 
-    ValidTokenModel.objects.create(user=user, **payload)
+    ValidTokenModel.objects.create(account=account, **payload)
     payload["jti"] = "fake_valid_jti"
-    BlacklistTokenModel.objects.create(user=user, **payload)
+    BlacklistTokenModel.objects.create(account=account, **payload)
 
-    return user
+    return account
 
 
 @pytest.fixture
-def client_auth_header(user) -> APIClient:
+def client_auth_header(account) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -110,7 +110,7 @@ def client_auth_header(user) -> APIClient:
     """
     token = jwt.encode(
         {
-            "uid": user.id,
+            "uid": account.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -124,28 +124,28 @@ def client_auth_header(user) -> APIClient:
 
 @pytest.fixture
 def client_auth_header_with_stored_verification_codes(
-    user_with_stored_verification_codes,
+    account_with_stored_verification_codes,
 ) -> APIClient:
     """
     Fixture that creates an authenticated API client with a token containing the ID
-    of a user who has associated verification codes.
+    of an account who has associated verification codes.
 
     Args:
-        user_with_stored_verification_codes: A persisted user instance with stored
+        account_with_stored_verification_codes: A persisted account instance with stored
                                              verification codes.
 
     Returns:
         APIClient: An API client instance with authentication credentials set.
 
     This fixture:
-        - Generates a JWT token with the user ID and other necessary claims.
+        - Generates a JWT token with the account ID and other necessary claims.
         - Sets the token in the API client's authorization header.
         - Returns the authenticated API client for making requests.
     """
 
     token = jwt.encode(
         {
-            "uid": user_with_stored_verification_codes.id,
+            "uid": account_with_stored_verification_codes.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -159,26 +159,26 @@ def client_auth_header_with_stored_verification_codes(
 
 @pytest.fixture
 def client_auth_header_with_stored_tokens(
-    user_with_stored_tokens,
+    account_with_stored_tokens,
 ) -> APIClient:
     """
     Fixture that creates an authenticated API client with a token containing the ID
-    of a user who has associated stored tokens (valid and blacklisted tokens).
+    of an account who has associated stored tokens (valid and blacklisted tokens).
 
     Args:
-        user_with_stored_tokens: A persisted user instance with stored tokens.
+        account_with_stored_tokens: A persisted account instance with stored tokens.
 
     Returns:
         APIClient: An API client instance with authentication credentials set.
 
     This fixture:
-        - Generates a JWT token with the user ID and other necessary claims.
+        - Generates a JWT token with the account ID and other necessary claims.
         - Sets the token in the API client's authorization header.
         - Returns the authenticated API client for making requests.
     """
     token = jwt.encode(
         {
-            "uid": user_with_stored_tokens.id,
+            "uid": account_with_stored_tokens.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -193,24 +193,22 @@ def client_auth_header_with_stored_tokens(
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_user_deletion_successful(client_auth_header: APIClient):
+def test_account_deletion_successful(client_auth_header: APIClient):
     """
-    Tests that the user can successfully delete their own account.
+    Tests that the account can successfully delete their own account.
 
     Args:
         client_auth_header (APIClient): API client with valid JWT authentication.
     """
     expected_status_code = status.HTTP_200_OK
-    expected_code = http_response.USER_DELETED_SUCCESSFULLY["code"]
-    expected_detail_message = http_response.USER_DELETED_SUCCESSFULLY[
-        "detail"
-    ]
-    expected_user_delete = User.objects.get(id=USER_ID)
+    expected_code = http_response.ACCOUNT_DELETED_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.ACCOUNT_DELETED_SUCCESSFULLY["detail"]
+    expected_account_delete = Account.objects.get(id=ACCOUNT_ID)
 
     actual_response = client_auth_header.delete(url)
 
-    assert not User.objects.filter(
-        id=expected_user_delete.id, email=expected_user_delete.email
+    assert not Account.objects.filter(
+        id=expected_account_delete.id, email=expected_account_delete.email
     ).exists()
     assert expected_code == actual_response.data["code"]
     assert expected_detail_message == actual_response.data["detail"]
@@ -219,50 +217,50 @@ def test_user_deletion_successful(client_auth_header: APIClient):
 
 @pytest.mark.django_db
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_verification_codes_are_removed_when_user_is_deleted(
+def test_verification_codes_are_removed_when_account_is_deleted(
     client_auth_header_with_stored_verification_codes: APIClient,
 ):
     """
-    Test that verifies the deletion of verification codes associated with a user when
-    the user is deleted.
+    Test that verifies the deletion of verification codes associated with an account when
+    the account is deleted.
 
     This test:
-        - Retrieves a user from the database and ensures the user exists along with
+        - Retrieves an account from the database and ensures the account exists along with
           their associated verification codes.
-        - Sends a request to delete the user from the database.
-        - Verifies that the user and all associated verification codes are
+        - Sends a request to delete the account from the database.
+        - Verifies that the account and all associated verification codes are
           deleted from the database.
 
     Args:
         client_auth_header_with_stored_verification_codes: Authenticated API client
                                                            with verification codes
-                                                           associated with the user.
+                                                           associated with the account.
 
-    The test ensures that deleting a user also removes the following associated
+    The test ensures that deleting an account also removes the following associated
     verification codes:
         - Account activation code
         - Change email verification code
         - Reset password verification code
     """
-    expected_user_delete = User.objects.get(id=USER_ID)
+    expected_account_delete = Account.objects.get(id=ACCOUNT_ID)
 
-    assert User.objects.filter(
-        id=expected_user_delete.id, email=expected_user_delete.email
+    assert Account.objects.filter(
+        id=expected_account_delete.id, email=expected_account_delete.email
     ).exists()
-    assert AccountActivationCodeModel.objects.filter(user=expected_user_delete).exists()
-    assert ChangeEmailCodeModel.objects.filter(user=expected_user_delete).exists()
-    assert ResetPasswordCodeModel.objects.filter(user=expected_user_delete).exists()
+    assert AccountActivationCodeModel.objects.filter(account=expected_account_delete).exists()
+    assert ChangeEmailCodeModel.objects.filter(account=expected_account_delete).exists()
+    assert ResetPasswordCodeModel.objects.filter(account=expected_account_delete).exists()
 
     client_auth_header_with_stored_verification_codes.delete(url)
 
-    assert not User.objects.filter(
-        id=expected_user_delete.id, email=expected_user_delete.email
+    assert not Account.objects.filter(
+        id=expected_account_delete.id, email=expected_account_delete.email
     ).exists()
     assert not AccountActivationCodeModel.objects.filter(
-        user=expected_user_delete
+        account=expected_account_delete
     ).exists()
-    assert not ChangeEmailCodeModel.objects.filter(user=expected_user_delete).exists()
-    assert not ResetPasswordCodeModel.objects.filter(user=expected_user_delete).exists()
+    assert not ChangeEmailCodeModel.objects.filter(account=expected_account_delete).exists()
+    assert not ResetPasswordCodeModel.objects.filter(account=expected_account_delete).exists()
 
 
 @pytest.mark.django_db
@@ -271,36 +269,36 @@ def test_tokens_are_removed_when_user_is_deleted(
     client_auth_header_with_stored_tokens: APIClient,
 ):
     """
-    Test that verifies the removal of tokens associated with a user when the user is deleted.
+    Test that verifies the removal of tokens associated with an account when the account is deleted.
 
     This test:
-        - Retrieves a user from the database and ensures the user exists along with their associated tokens.
-        - Sends a request to delete the user from the database.
-        - Verifies that the user and all associated tokens are deleted from the database.
+        - Retrieves an account from the database and ensures the account exists along with their associated tokens.
+        - Sends a request to delete the account from the database.
+        - Verifies that the account and all associated tokens are deleted from the database.
 
     Args:
-        client_auth_header_with_stored_tokens: Authenticated API client with tokens associated with the user.
+        client_auth_header_with_stored_tokens: Authenticated API client with tokens associated with the account.
 
-    The test ensures that deleting a user also removes the following associated tokens:
+    The test ensures that deleting an account also removes the following associated tokens:
         - Valid tokens
         - Blacklisted tokens
     """
 
-    expected_user_delete = User.objects.get(id=USER_ID)
+    expected_account_delete = Account.objects.get(id=ACCOUNT_ID)
 
-    assert User.objects.filter(
-        id=expected_user_delete.id, email=expected_user_delete.email
+    assert Account.objects.filter(
+        id=expected_account_delete.id, email=expected_account_delete.email
     ).exists()
-    assert ValidTokenModel.objects.filter(user=expected_user_delete).exists()
-    assert BlacklistTokenModel.objects.filter(user=expected_user_delete).exists()
+    assert ValidTokenModel.objects.filter(account=expected_account_delete).exists()
+    assert BlacklistTokenModel.objects.filter(account=expected_account_delete).exists()
 
     client_auth_header_with_stored_tokens.delete(url)
 
-    assert not User.objects.filter(
-        id=expected_user_delete.id, email=expected_user_delete.email
+    assert not Account.objects.filter(
+        id=expected_account_delete.id, email=expected_account_delete.email
     ).exists()
     assert not AccountActivationCodeModel.objects.filter(
-        user=expected_user_delete
+        account=expected_account_delete
     ).exists()
-    assert not ValidTokenModel.objects.filter(user=expected_user_delete).exists()
-    assert not BlacklistTokenModel.objects.filter(user=expected_user_delete).exists()
+    assert not ValidTokenModel.objects.filter(account=expected_account_delete).exists()
+    assert not BlacklistTokenModel.objects.filter(account=expected_account_delete).exists()

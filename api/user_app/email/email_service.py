@@ -1,7 +1,7 @@
 """
-This module contains functions for sending emails related to user actions, 
+This module contains functions for sending emails related to account actions, 
 such as account changes and notifications. It handles the creation and 
-sending of verification codes and notification messages to the user.
+sending of verification codes and notification messages to the account.
 """
 
 import smtplib
@@ -25,17 +25,17 @@ from user_app.email.email_classes import (
 )
 from user_app.models import (
     AccountActivationCodeModel,
+    AccountsPendingDeletionNotificationModel,
     ChangeEmailCodeModel,
     ResetPasswordCodeModel,
-    UsersPendingDeletionNotificationModel,
 )
 
 
 def send_email_change_code(actual_email: str, new_email: str) -> int:
     """
-    Sends an email with a verification code to change the user's email address.
+    Sends an email with a verification code to change the account's email address.
 
-    This function generates a random verification code for changing the user's email,
+    This function generates a random verification code for changing the account's email,
     sends the code to the new email address, and stores the code.
     """
 
@@ -45,31 +45,35 @@ def send_email_change_code(actual_email: str, new_email: str) -> int:
     )
 
     # Instance of a class that encapsulates the email sending logic.
-    email = ChangeCodeEmail(actual_email=actual_email, new_email=new_email, code=code)
+    email_change = ChangeCodeEmail(
+        actual_email=actual_email, new_email=new_email, code=code
+    )
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_change.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
     # Persists code in database.
     ChangeEmailCodeModel.objects.create(
-        code=email.code, user_id=email.actual_email, new_email=email.new_email
+        code=email_change.code,
+        account_id=email_change.actual_email,
+        new_email=email_change.new_email,
     )
-    # Removes all verification codes for a user, except the most recent one.
-    ChangeEmailCodeModel.objects.keep_latest_code(email.actual_email)
+    # Removes all verification codes for an account, except the most recent one.
+    ChangeEmailCodeModel.objects.keep_latest_code(email_change.actual_email)
 
     return sent_count
 
 
-def send_account_activation_code(user_email: str) -> int:
+def send_account_activation_code(email: str) -> int:
     """
-    Sends an account activation email to the user with a verification code.
+    Sends an account activation email to the account with a verification code.
 
     This function generates a random code for account activation, sends it to the
-    user's email, and saves the code and email in the database. The activation code is
-    used for verifying the user's email during the registration process.
+    account's email, and saves the code and email in the database. The activation code is
+    used for verifying the account's email during the registration process.
     """
 
     # Creates code and verify if already exists in database
@@ -78,25 +82,27 @@ def send_account_activation_code(user_email: str) -> int:
     )
 
     # Instance of a class that encapsulates the email sending logic.
-    email = ActivationCodeEmail(user_email=user_email, code=code)
+    email_activation = ActivationCodeEmail(email=email, code=code)
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_activation.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
     # Persists code in database.
-    AccountActivationCodeModel.objects.create(code=email.code, user_id=email.user_email)
-    # Removes all verification codes for a user, except the most recent one.
-    AccountActivationCodeModel.objects.keep_latest_code(email.user_email)
+    AccountActivationCodeModel.objects.create(
+        code=email_activation.code, account_id=email_activation.email
+    )
+    # Removes all verification codes for an account, except the most recent one.
+    AccountActivationCodeModel.objects.keep_latest_code(email_activation.email)
 
     return sent_count
 
 
-def send_reset_password_code(user_email: str) -> int:
+def send_reset_password_code(email: str) -> int:
     """
-    Sends a password reset code to the user's email address.
+    Sends a password reset code to the account's email address.
 
     This function generates a unique password reset code and sends it via email
     to the provided email address.
@@ -110,85 +116,87 @@ def send_reset_password_code(user_email: str) -> int:
     )
 
     # Instance of a class that encapsulates the email sending logic.
-    email = ResetPasswordCodeEmail(user_email=user_email, code=code)
+    email_reset = ResetPasswordCodeEmail(email=email, code=code)
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_reset.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
     # Persists code in database.
-    ResetPasswordCodeModel.objects.create(code=email.code, user_id=email.user_email)
-    # Removes all verification codes for a user, except the most recent one.
-    ResetPasswordCodeModel.objects.keep_latest_code(email.user_email)
+    ResetPasswordCodeModel.objects.create(
+        code=email_reset.code, account_id=email_reset.email
+    )
+    # Removes all verification codes for an account, except the most recent one.
+    ResetPasswordCodeModel.objects.keep_latest_code(email_reset.email)
 
     return sent_count
 
 
-def notify_activated_account(user_email: str) -> int:
+def notify_activated_account(email: str) -> int:
     """
-    Sends a notification email to the user informing them that their account
+    Sends a notification email to the account informing them that their account
     has been activated.
     """
 
     # Instance of a class that encapsulates the email sending logic.
-    email = ActivationNotificationEmail(user_email=user_email)
+    email_notification = ActivationNotificationEmail(email=email)
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_notification.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
     return sent_count
 
 
-def notify_changed_email(user_email: str) -> int:
+def notify_changed_email(email: str) -> int:
     """
-    Sends a notification email to the user informing them that their email address
+    Sends a notification email to the account informing them that their email address
     has been changed.
     """
     # Instance of a class that encapsulates the email sending logic.
-    email = ChangeNotificationEmail(new_email=user_email)
+    email_notification = ChangeNotificationEmail(new_email=email)
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_notification.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
     return sent_count
 
 
-def notify_reset_password(user_email: str) -> int:
+def notify_reset_password(email: str) -> int:
     """
-    Sends a notification email to the user informing them that their passoword
+    Sends a notification email to the account informing them that their passoword
     has been reset.
     """
     # Instance of a class that encapsulates the email sending logic.
-    email = PasswordResetNotificationEmail(user_email=user_email)
+    email_notification = PasswordResetNotificationEmail(email=email)
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_notification.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
     return sent_count
 
 
-def notify_deleted_account(user_email: str) -> int:
+def notify_deleted_account(email: str) -> int:
     """
-    Sends a notification email to the user informing them that their account
+    Sends a notification email to the account informing them that their account
     has been deleted.
     """
     # Instance of a class that encapsulates the email sending logic.
-    email = DeletedAccountNotificationEmail(user_email=user_email)
+    email_notification = DeletedAccountNotificationEmail(email=email)
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_notification.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
@@ -199,17 +207,17 @@ def notify_activation_account_reminder(
     emails: list[str], activation_deadline: datetime
 ) -> int:
     """
-    Sends the reminder email to users who have not yet activated their
+    Sends the reminder email to accounts who have not yet activated their
     accounts, based on the configured sending time.
     """
     # Instance of a class that encapsulates the email sending logic.
-    email = DeactivatedAccountNotificationEmail(
+    email_notification = DeactivatedAccountNotificationEmail(
         emails=emails, activation_deadline=activation_deadline
     )
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_notification.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
@@ -219,29 +227,29 @@ def notify_activation_account_reminder(
 
 def notify_expired_account_deletion() -> tuple[int, list[str]]:
     """
-    Recovers emails from users who will be notified about the removal
+    Recovers emails from account who will be notified about the removal
     of their accounts from the system, for not activating them in a timely manner.
     After successful sending, these emails are removed.
 
-    If there are no users to notify, returns -1.
+    If there are no account to notify, returns -1.
     """
-    # Recovers emails from users who will be notified.
+    # Recovers emails from account who will be notified.
     emails: list[str] = list(
-        UsersPendingDeletionNotificationModel.objects.values_list("email", flat=True)
+        AccountsPendingDeletionNotificationModel.objects.values_list("email", flat=True)
     )
 
     if not emails:
         return (-1, [])
 
     # Instance of a class that encapsulates the email sending logic.
-    email = ExpiredAccountDeletionEmail(emails=emails)
+    email_notification = ExpiredAccountDeletionEmail(emails=emails)
 
     # Sends the email and gets the count of successfully sent emails.
     try:
-        sent_count: int = email.send_with_error_handling()
+        sent_count: int = email_notification.send_with_error_handling()
     except smtplib.SMTPException as e:
         raise smtplib.SMTPException(str(e))
 
-    UsersPendingDeletionNotificationModel.objects.all().delete()
+    AccountsPendingDeletionNotificationModel.objects.all().delete()
 
     return (sent_count, emails)

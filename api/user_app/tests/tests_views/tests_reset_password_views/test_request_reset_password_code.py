@@ -8,39 +8,39 @@ from user_app.constants import http_response
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
     RESET_PASSWORD_VIEWS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
 url: str = reverse("request_reset_password_code")
-USER_EMAIL = "fakeemail@email.com"
+ACCOUNT_EMAIL = "fakeemail@email.com"
 NON_EXISTENT_EMAIL = "nonexistent@email.com"
 
 
 # ============ Fixtures ================
 @pytest.fixture
-def deactivate_user():
+def deactivate_account():
     """
-    Fixture to create and return a deactivated User object.
+    Fixture to create and return a deactivated Account object.
     """
-    return User.objects.create_user(
+    return Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
-        email=USER_EMAIL,
+        email=ACCOUNT_EMAIL,
         password="1234@!AA",
         is_active=False,
     )
 
 
 @pytest.fixture
-def activate_user():
+def activate_account():
     """
-    Fixture to create and return an activated User object.
+    Fixture to create and return an activated Account object.
     """
-    return User.objects.create_user(
+    return Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
-        email=USER_EMAIL,
+        email=ACCOUNT_EMAIL,
         password="1234@!AA",
         is_active=True,
     )
@@ -59,8 +59,8 @@ def test_does_not_send_code_when_non_existent_email_in_database(
     Tests that the system does not send a password reset code when the provided email
     is not found in the database.
     """
-    expected_detail_message = http_response.USER_NOT_FOUND["detail"]
-    expected_code = http_response.USER_NOT_FOUND["code"]
+    expected_detail_message = http_response.ACCOUNT_NOT_FOUND["detail"]
+    expected_code = http_response.ACCOUNT_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
     actual_response = client.post(
@@ -77,21 +77,19 @@ def test_does_not_send_code_when_non_existent_email_in_database(
     f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-def test_does_not_send_code_when_deactivate_user(
-    allow_request_function_mock: MagicMock, client: APIClient, deactivate_user
+def test_does_not_send_code_when_deactivate_account(
+    allow_request_function_mock: MagicMock, client: APIClient, deactivate_account
 ):
     """
-    Tests that the system does not send a password reset code when the user's account is
+    Tests that the system does not send a password reset code when the account is
     deactivated.
     """
-    expected_detail_message = http_response.USER_ACCOUNT_NOT_ACTIVATED[
-        "detail"
-    ]
-    expected_code = http_response.USER_ACCOUNT_NOT_ACTIVATED["code"]
+    expected_detail_message = http_response.ACCOUNT_NOT_ACTIVATED["detail"]
+    expected_code = http_response.ACCOUNT_NOT_ACTIVATED["code"]
     expected_status_code = status.HTTP_403_FORBIDDEN
 
     actual_response = client.post(
-        url, data={"email": deactivate_user.email}, format="json"
+        url, data={"email": deactivate_account.email}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code
@@ -124,21 +122,19 @@ def test_does_not_send_code_when_request_limit_is_reached(client: APIClient):
     f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-def test_sends_the_code_to_the_user_email_successfully(
-    allow_request_function_mock: MagicMock, client: APIClient, activate_user
+def test_sends_the_code_to_the_account_email_successfully(
+    allow_request_function_mock: MagicMock, client: APIClient, activate_account
 ):
     """
-    Tests that the system successfully sends the password reset code to the user's email
-    when the user is found and active.
+    Tests that the system successfully sends the password reset code to the account's email
+    when the account is found and active.
     """
-    expected_detail_message = (
-        http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["detail"]
-    )
-    expected_code = http_response.EMAIL_SEND_TO_USER_SUCCESSFULLY["code"]
+    expected_detail_message = http_response.EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY["detail"]
+    expected_code = http_response.EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.post(
-        url, data={"email": activate_user.email}, format="json"
+        url, data={"email": activate_account.email}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code

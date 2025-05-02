@@ -1,18 +1,18 @@
 import pytest
-from user_app.tests.constants import User
+from user_app.tests.constants import Account
 
 
 # ============== Fixtures  ======================
 @pytest.fixture
-def user():
+def account():
     """
-    Creates and returns a mock user object for testing purposes.
+    Creates and returns a mock account object for testing purposes.
     """
-    user_data = {
+    account_data = {
         "email": "fake@email.com",
         "password": "1234_!Fake",
         "first_name": "fake_first_name",
         "last_name": "fake_last_name",
     }
 
-    return User.objects.create_user(**user_data)
+    return Account.objects.create_user(**account_data)

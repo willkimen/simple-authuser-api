@@ -17,14 +17,14 @@ from user_app.tasks import task_remove_exp_code
 
 
 @pytest.mark.django_db
-def test_task_should_remove_exp_code(user):
+def test_task_should_remove_exp_code(account):
     """
     fully tests the task's functionality, confirming
        that expired codes are removed from the database.
     """
 
     # Persists codes with expired dates
-    code_data = {"user": user, "expires_at": timezone.now() - timedelta(days=1)}
+    code_data = {"account": account, "expires_at": timezone.now() - timedelta(days=1)}
     activation_code = AccountActivationCodeModel.objects.create(**code_data).code
     change_code = ChangeEmailCodeModel.objects.create(**code_data).code
     reset_code = ResetPasswordCodeModel.objects.create(**code_data).code

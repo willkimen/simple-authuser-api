@@ -2,28 +2,25 @@ from django.contrib.auth import get_user_model
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
-from user_app.constants import (
-    authentication,
-    http_response,
-)
 from user_app.authentication.token_exceptions import TokenException
 from user_app.authentication.token_service import check_token
+from user_app.constants import authentication, http_response
 
-User = get_user_model()
+Account = get_user_model()
 
 
 class JWTAuthentication(BaseAuthentication):
     """
     Custom JWT authentication class for Django Rest Framework.
 
-    This class extends BaseAuthentication to authenticate users using
+    This class extends BaseAuthentication to authenticate accounts using
     JSON Web Tokens (JWT).
     It extracts the token from the Authorization header of the request and
     performs multiple checks to validate its authenticity.
     If the token is valid, it returns a tuple containing the authenticated
-    user instance and the token payload.
+    account instance and the token payload.
 
-    To access the authenticated user instance in a view, use `request.user`.
+    To access the authenticated account instance in a view, use `request.account`.
     To access the token payload, use `request.auth`.
     """
 
@@ -39,7 +36,7 @@ class JWTAuthentication(BaseAuthentication):
                                the Authorization header.
 
         Returns:
-            tuple: A tuple of (user, payload) if authentication is successful.
+            tuple: A tuple of (account, payload) if authentication is successful.
 
         Raises:
             AuthenticationFailed: If the token is missing, malformed, expired,
@@ -51,9 +48,7 @@ class JWTAuthentication(BaseAuthentication):
 
         # Check if the Authorization header is missing
         if not authorization_header:
-            raise AuthenticationFailed(
-                authentication.AUTHORIZATION_HEADER_MISSING
-            )
+            raise AuthenticationFailed(authentication.AUTHORIZATION_HEADER_MISSING)
 
         # Check if the Authorization header does not start with 'Bearer'
         if authorization_header[0].lower() != b"bearer":
@@ -78,21 +73,17 @@ class JWTAuthentication(BaseAuthentication):
 
         # Verify is token is access type
         if payload["typ"] != "access":
-            raise AuthenticationFailed(
-                http_response.IS_NOT_ACCESS_TOKEN["detail"]
-            )
+            raise AuthenticationFailed(http_response.IS_NOT_ACCESS_TOKEN["detail"])
 
-        # Get the user from the payload
+        # Get the account from the payload
         try:
-            user = User.objects.get(id=payload["uid"])
+            user = Account.objects.get(id=payload["uid"])
             if user.is_active is False:
                 raise AuthenticationFailed(
-                    http_response.USER_ACCOUNT_NOT_ACTIVATED["detail"]
+                    http_response.ACCOUNT_NOT_ACTIVATED["detail"]
                 )
-        except User.DoesNotExist:
-            raise AuthenticationFailed(
-                http_response.USER_NOT_FOUND["detail"]
-            )
+        except Account.DoesNotExist:
+            raise AuthenticationFailed(http_response.ACCOUNT_NOT_FOUND["detail"])
 
         return (user, payload)
 

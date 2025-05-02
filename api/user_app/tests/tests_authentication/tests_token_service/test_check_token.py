@@ -12,7 +12,6 @@ from unittest.mock import patch
 import jwt
 import pytest
 from django.utils import timezone
-from user_app.constants import authentication
 from user_app.authentication.token_exceptions import (
     BlacklistTokenException,
     DecodeException,
@@ -20,13 +19,14 @@ from user_app.authentication.token_exceptions import (
     InvalidAlgorithmException,
     InvalidSignatureException,
 )
+from user_app.authentication.token_service import check_token
+from user_app.constants import authentication
 from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
 )
-from user_app.authentication.token_service import check_token
 
 # ========== Objects and constants ============
 INVALID_SECRET = "invalid_secret"
@@ -192,7 +192,7 @@ def test_token_in_black_list(token: str):
     payload: dict = jwt.decode(token, FAKE_SECRET, algorithms="HS256")
 
     BlacklistTokenModel.objects.create(
-        user_id=payload["uid"],
+        account_id=payload["uid"],
         jti=payload["jti"],
         exp=payload["exp"],
         typ=payload["typ"],

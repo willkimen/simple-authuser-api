@@ -13,14 +13,14 @@ from user_app.tasks import task_remove_exp_token
 
 
 @pytest.mark.django_db
-def test_task_should_remove_exp_token(user):
+def test_task_should_remove_exp_token(account):
     """
     fully tests the task's functionality, confirming
        that expired tokens are removed from the database.
     """
     # Persists tokens with expired dates
     token_data = {
-        "user": user,
+        "account": account,
         "exp": timezone.now() - timedelta(days=1),
         "typ": "fake_typ",
     }

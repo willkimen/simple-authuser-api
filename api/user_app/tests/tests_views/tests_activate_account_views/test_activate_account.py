@@ -1,8 +1,8 @@
 """
 This module tests the activate_account() view, which aims to receive a activation 
-code from the user via a POST request and activate their account.
-For the user to have their account activated by the code, 
-this code must exist in the database and be linked to the user's email.
+code from the account via a POST request and activate their account.
+For the account to have their account activated by the code, 
+this code must exist in the database and be linked to the account's email.
 """
 
 from datetime import timedelta
@@ -17,7 +17,7 @@ from user_app.models import AccountActivationCodeModel, PendingAccountsModel
 from user_app.tests.constants import (
     ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
-    User,
+    Account,
 )
 
 # ========== Objects and constants ============
@@ -27,9 +27,9 @@ CODE_NOT_EXISTS = "code_not_exists"
 
 # ============ Fixture ================
 @pytest.fixture
-def deactivated_user():
-    """Create a generic deactivated user."""
-    return User.objects.create_user(
+def deactivated_account():
+    """Create a generic deactivated account."""
+    return Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
         email="fake_email@email.com",
@@ -39,14 +39,14 @@ def deactivated_user():
 
 
 @pytest.fixture
-def expired_code(deactivated_user) -> str:
+def expired_code(deactivated_account) -> str:
     """
     Creates a AccountActivationCodeModel instance with an
     expired date (24h + 1 minute ago compared to now)
     """
 
     account_activation_code = AccountActivationCodeModel.objects.create(
-        user_id=deactivated_user.email,
+        account_id=deactivated_account.email,
     )
 
     # Create an expired date
@@ -60,15 +60,15 @@ def expired_code(deactivated_user) -> str:
 
 
 @pytest.fixture
-def code_for_deactivated_user(deactivated_user) -> str:
+def code_for_deactivated_account(deactivated_account) -> str:
     """
     This fixture creates AccountActivationCodeModel instance for account activation.
 
     Returns:
-        dict: An activation code for activated user."""
+        dict: An activation code for activated account."""
 
     account_activation_code = AccountActivationCodeModel.objects.create(
-        user_id=deactivated_user.email,
+        account_id=deactivated_account.email,
     )
 
     return account_activation_code.code
@@ -83,36 +83,36 @@ def code_for_deactivated_user(deactivated_user) -> str:
 def test_successful_account_activation(
     allow_request_function_mock: MagicMock,
     client: APIClient,
-    deactivated_user,
-    code_for_deactivated_user: str,
+    deactivated_account,
+    code_for_deactivated_account: str,
 ):
     """
     Test if the account activation request successfully activates the account.
 
     Args:
         allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
-        deactivated_user (User): An instance of a disabled user.
-        code_for_deactivated_user: Code belonging to a deactivated user.
+        deactivated_account (Account): An instance of a disabled account.
+        code_for_deactivated_account: Code belonging to a deactivated account.
         client (APIClient): The API client used to make requests.
     """
 
-    # Verify that the user's account is initially disabled.
-    assert User.objects.get(id=deactivated_user.id).is_active == False
+    # Verify that the account is initially disabled.
+    assert Account.objects.get(id=deactivated_account.id).is_active == False
 
-    expected_detail_message = http_response.ACTIVATED_USER["detail"]
-    expected_code = http_response.ACTIVATED_USER["code"]
+    expected_detail_message = http_response.ACTIVATED_ACCOUNT["detail"]
+    expected_code = http_response.ACTIVATED_ACCOUNT["code"]
     expected_status_code = status.HTTP_200_OK
 
     actual_response = client.post(
-        url, data={"code": code_for_deactivated_user}, format="json"
+        url, data={"code": code_for_deactivated_account}, format="json"
     )
 
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
     assert expected_code == actual_response.data["code"]
 
-    # Verify that the user's account is activated
-    assert User.objects.get(id=deactivated_user.id).is_active == True
+    # Verify that the account is activated
+    assert Account.objects.get(id=deactivated_account.id).is_active == True
 
 
 @pytest.mark.django_db
@@ -123,7 +123,7 @@ def test_successful_account_activation(
 def test_successfully_activated_account_removes_the_code_in_the_database(
     allow_request_function_mock: MagicMock,
     client: APIClient,
-    code_for_deactivated_user: str,
+    code_for_deactivated_account: str,
 ):
     """
     Test if the activation code is removed from the database after
@@ -131,16 +131,16 @@ def test_successfully_activated_account_removes_the_code_in_the_database(
 
     Args:
         allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
-        deactivated_user (User): An instance of a disabled user.
-        code_for_deactivated_user: Code belonging to a deactivated user.
+        deactivated_account (Account): An instance of a disabled account.
+        code_for_deactivated_account: Code belonging to a deactivated account.
         client (APIClient): The API client used to make requests.
     """
 
-    client.post(url, data={"code": code_for_deactivated_user}, format="json")
+    client.post(url, data={"code": code_for_deactivated_account}, format="json")
 
     # Assert that the activation code no longer exists in the database
     assert not AccountActivationCodeModel.objects.filter(
-        code=code_for_deactivated_user
+        code=code_for_deactivated_account
     ).exists()
 
 
@@ -272,30 +272,30 @@ def test_not_activate_account_when_request_limit_is_reached(client: APIClient):
 def test_successfully_activated_account_removes_pending_account(
     allow_request_function_mock: MagicMock,
     client: APIClient,
-    deactivated_user,
-    code_for_deactivated_user: str,
+    deactivated_account,
+    code_for_deactivated_account: str,
 ):
     """
-    Test if the PendingAccountsModel instance related to the user is removed
-    after the user successfully activates their account.
+    Test if the PendingAccountsModel instance related to the account is removed
+    after the account successfully activates their account.
 
     Args:
         allow_request_function_mock (MagicMock): Mocked method to bypass rate limiting.
-        deactivated_user (User): An instance of a disabled user.
-        code_for_deactivated_user: Code belonging to a deactivated user.
+        deactivated_account (Account): An instance of a disabled account.
+        code_for_deactivated_account: Code belonging to a deactivated account.
         client (APIClient): The API client used to make requests.
 
-    This test ensures that once the user successfully activates their account,
+    This test ensures that once the account successfully activates their account,
     their entry in the PendingAccountsModel table is removed from the database.
     """
 
-    # Create a pending account entry for the deactivated user
-    PendingAccountsModel.objects.create(user=deactivated_user)
+    # Create a pending account entry for the deactivated account
+    PendingAccountsModel.objects.create(account=deactivated_account)
 
     # Ensure the PendingAccountsModel entry exists before activation
-    assert PendingAccountsModel.objects.filter(user=deactivated_user).exists()
+    assert PendingAccountsModel.objects.filter(account=deactivated_account).exists()
 
-    client.post(url, data={"code": code_for_deactivated_user}, format="json")
+    client.post(url, data={"code": code_for_deactivated_account}, format="json")
 
     # Verify that the PendingAccountsModel entry is removed after activation
-    assert not PendingAccountsModel.objects.filter(user=deactivated_user).exists()
+    assert not PendingAccountsModel.objects.filter(account=deactivated_account).exists()

@@ -6,7 +6,7 @@ account verification, password reset, and email change processes.
 It also includes a manager that handles the generation and maintenance of these codes,
 ensuring their uniqueness and validity.
 
-The models are linked to users through their email addresses
+The models are linked to accounts through their email addresses
 and include fields to track code creation and expiration times.
 
 This module is designed to be reusable across different verification flows in the system.
@@ -27,21 +27,23 @@ from user_app.utils import generate_random_code
 
 
 class VerificationCodeManager(models.Manager):
-    def keep_latest_code(self, user_email: str) -> None:
+    def keep_latest_code(self, account_email: str) -> None:
         """
-        Removes all verification codes for a user, except the most recent one.
+        Removes all verification codes for an account, except the most recent one.
 
-        This method retrieves all records associated with the given user's email,
+        This method retrieves all records associated with the given account's email,
         ordered by the "created_at" field in descending order. It keeps the most
         recent record and deletes the rest.
 
         Args:
-            user_email (str): The email of the user whose older codes should be removed.
+            account_email (str): The email of the account whose older codes should be removed.
 
         Returns:
             None
         """
-        codes = self.model.objects.filter(user_id=user_email).order_by("-created_at")
+        codes = self.model.objects.filter(account_id=account_email).order_by(
+            "-created_at"
+        )
         if codes.count() > 1:
             # Keep the latest code and delete the rest.
             codes.exclude(pk=codes.first().pk).delete()
@@ -74,12 +76,11 @@ class VerificationCodeBaseModel(models.Model):
 
     This model is used as a base class for models intended to store verification codes
     for various scenarios such as: account activation, email change
-    and password reset (in case the user has forgotten their password).
+    and password reset (in case the account has forgotten their password).
 
     Fields:
-                          and has a maximum length of 16 characters.
     - `code` (CharField): The verification code. This field is required, must be unique,
-
+                          and has a maximum length of 16 characters.
     - `created_at` (DateTimeField): The timestamp when the code was created.
                                     It is automatically set to the current time if
                                     not provided.
@@ -108,7 +109,7 @@ class VerificationCodeBaseModel(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         """
-        This method was overridden so that if the user does not directly set fields
+        This method was overridden so that if the account does not directly set fields
         such as created_at, expires_at and code, they are automatically set.
         """
         if not self.pk:
@@ -130,29 +131,29 @@ class AccountActivationCodeModel(VerificationCodeBaseModel):
     """
     Model for storing account activation codes.
 
-    This model is used to store activation codes for verifying user accounts.
+    This model is used to store activation codes for verifying account accounts.
     It extends the `verificationCodeBaseModel` and includes additional fields
     specific to account activation.
 
     Fields:
-    - user (ForeignKey): A foreign key relationship to the default user defined in
-                         settings.AUTH_USER_MODEL, representing the user that owns
+    - account (ForeignKey): A foreign key relationship to the default account defined in
+                         settings.AUTH_USER_MODEL, representing the account that owns
                          this token.
 
 
-    How to relate the user to this model?:
-        You can either pass a user instance to the .user=user_instance or
-        the user's email to the .user_id=user_instance.email.
+    How to relate the account to this model?:
+        You can either pass an account instance to the .account=account_instance or
+        the account's email to the .account_id=account_instance.email.
     """
 
     _prefix = ACTIVATE_ACCOUNT_PREFIX
-    user = models.ForeignKey(
+    account = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=False,
         related_name="account_activation_codes",
         to_field="email",
-        db_column="user_email",
+        db_column="account_email",
     )
 
     class Meta:
@@ -164,30 +165,30 @@ class ChangeEmailCodeModel(VerificationCodeBaseModel):
     """
     Model for storing email change verification codes.
 
-    This model stores codes used for changing a user's email address.
+    This model stores codes used for changing an account's email address.
     It extends the `verificationCodeBaseModel` and includes additional fields for the
     actual and new email addresses.
 
     Fields:
-    - user (ForeignKey): A foreign key relationship to the default user defined in
-                         settings.AUTH_USER_MODEL, representing the user that owns
+    - account (ForeignKey): A foreign key relationship to the default account defined in
+                         settings.AUTH_USER_MODEL, representing the account that owns
                          this token.
 
-    - `new_email` (EmailField): The user's new email address. This field is required.
+    - `new_email` (EmailField): The account's new email address. This field is required.
 
-    How to relate the user to this model?:
-        You can either pass a user instance to the .user=user_instance or
-        the user's email to the .user_id=user_instance.email.
+    How to relate the account to this model?:
+        You can either pass an account instance to the .account=account_instance or
+        the account's email to the .account_id=account_instance.email.
     """
 
     _prefix = CHANGE_EMAIL_PREFIX
-    user = models.ForeignKey(
+    account = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=False,
         related_name="change_email_codes",
         to_field="email",
-        db_column="old_user_email",
+        db_column="old_account_email",
     )
     new_email = models.EmailField(unique=False, null=False, blank=False)
 
@@ -200,28 +201,28 @@ class ResetPasswordCodeModel(VerificationCodeBaseModel):
     """
     Model for storing password reset verification codes.
 
-    This model stores codes used for resetting a user's password.
-    It extends the `VerificationCodeBaseModel` and is associated with the user
+    This model stores codes used for resetting an account's password.
+    It extends the `VerificationCodeBaseModel` and is associated with the account
     via their email address.
 
     Fields:
-    - user (ForeignKey): A foreign key relationship to the default user defined in
-                         settings.AUTH_USER_MODEL, representing the user that owns
+    - account (ForeignKey): A foreign key relationship to the default account defined in
+                         settings.AUTH_USER_MODEL, representing the account that owns
                          this token.
 
-    How to relate the user to this model?:
-        You can either pass a user instance to the .user=user_instance or
-        the user's email to the .user_id=user_instance.email.
+    How to relate the account to this model?:
+        You can either pass an account instance to the .account=account_instance or
+        the account's email to the .account=account_instance.email.
     """
 
     _prefix = RESET_PASSWORD_PREFIX
-    user = models.ForeignKey(
+    account = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=False,
         related_name="reset_password_codes",
         to_field="email",
-        db_column="user_email",
+        db_column="account_email",
     )
 
     class Meta:

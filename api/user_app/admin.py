@@ -2,11 +2,11 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from user_app import models
 
-User = get_user_model()
+Account = get_user_model()
 
 
-@admin.register(User)
-class UserProfileAdmin(admin.ModelAdmin):
+@admin.register(Account)
+class AccountAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "first_name",
@@ -29,15 +29,15 @@ class PendingAccountsAdmin(admin.ModelAdmin):
         "first_reminder_at",
         "second_reminder_at",
         "activation_deadline",
-        "user",
+        "account",
     )
 
     ordering = ("activation_deadline",)
     list_per_page = 10
 
 
-@admin.register(models.UsersPendingDeletionNotificationModel)
-class UsersPendingDeletionNotificationAdmin(admin.ModelAdmin):
+@admin.register(models.AccountsPendingDeletionNotificationModel)
+class AccountsPendingDeletionNotificationAdmin(admin.ModelAdmin):
     list_display = ("id", "email")
 
     ordering = ("id",)
@@ -46,7 +46,7 @@ class UsersPendingDeletionNotificationAdmin(admin.ModelAdmin):
 
 @admin.register(models.ValidTokenModel)
 class ValidTokenAdmin(admin.ModelAdmin):
-    list_display = ("id", "jti", "exp", "typ", "user_id")
+    list_display = ("id", "jti", "exp", "typ", "account_id")
 
     ordering = ("exp",)
     list_per_page = 10
@@ -54,7 +54,7 @@ class ValidTokenAdmin(admin.ModelAdmin):
 
 @admin.register(models.BlacklistTokenModel)
 class BlacklistTokenAdmin(admin.ModelAdmin):
-    list_display = ("id", "jti", "exp", "typ", "user_id")
+    list_display = ("id", "jti", "exp", "typ", "account_id")
 
     ordering = ("exp",)
     list_per_page = 10
@@ -62,7 +62,7 @@ class BlacklistTokenAdmin(admin.ModelAdmin):
 
 @admin.register(models.AccountActivationCodeModel)
 class AccountActivationCodeAdmin(admin.ModelAdmin):
-    list_display = ("id", "code", "created_at", "expires_at", "user_id")
+    list_display = ("id", "code", "created_at", "expires_at", "account_id")
 
     ordering = ("expires_at",)
     list_per_page = 10
@@ -70,7 +70,7 @@ class AccountActivationCodeAdmin(admin.ModelAdmin):
 
 @admin.register(models.ChangeEmailCodeModel)
 class ChangeEmailCodeAdmin(admin.ModelAdmin):
-    list_display = ("id", "code", "new_email", "created_at", "expires_at", "user_id")
+    list_display = ("id", "code", "new_email", "created_at", "expires_at", "account_id")
 
     ordering = ("expires_at",)
     list_per_page = 10
@@ -78,7 +78,7 @@ class ChangeEmailCodeAdmin(admin.ModelAdmin):
 
 @admin.register(models.ResetPasswordCodeModel)
 class ResetPasswordCodeAdmin(admin.ModelAdmin):
-    list_display = ("id", "code", "created_at", "expires_at", "user_id")
+    list_display = ("id", "code", "created_at", "expires_at", "account_id")
 
     ordering = ("expires_at",)
     list_per_page = 10

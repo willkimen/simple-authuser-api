@@ -19,22 +19,24 @@ from user_app.authentication.token_service import (
     create_token,
 )
 from user_app.constants.http_response import (
+    ACCOUNT_NOT_ACTIVATED,
+    ACCOUNT_NOT_FOUND,
+    ACCOUNT_TOKEN_MISMATCH,
     IS_NOT_ACCESS_OR_REFRESH_TOKEN,
     IS_NOT_REFRESH_TOKEN,
     LOGIN_SUCCESSFUL,
     LOGOUT_SUCCESSFUL,
     TOKEN_ACCESS_CREATED,
     TOKEN_IS_VALID,
-    USER_ACCOUNT_NOT_ACTIVATED,
-    USER_NOT_FOUND,
-    USER_TOKEN_MISMATCH,
 )
 from user_app.documentation_scheme.token import (
+    account_not_activated_response,
+    account_not_found_response,
     authentication_errors_response,
     blacklist_request,
     blacklist_response,
-    blacklist_token_and_user_not_activated,
-    blacklist_token_and_user_token_mismatch,
+    blacklist_token_and_account_not_activated,
+    blacklist_token_and_account_token_mismatch,
     is_not_access_or_refresh_response,
     is_not_refresh_response,
     login_successful_response,
@@ -43,33 +45,31 @@ from user_app.documentation_scheme.token import (
     refresh_request,
     token_access_created_response,
     token_is_valid_response,
-    user_account_not_activated_response,
-    user_not_found_response,
     verify_token_request,
 )
 from user_app.models import BlacklistTokenModel
 from user_app.utils import deep_merge_dict
 
-User = get_user_model()
+Account = get_user_model()
 
 
 @extend_schema(
     request=obtain_token_pair_request,
     responses={
         200: login_successful_response,
-        403: user_account_not_activated_response,
-        404: user_not_found_response,
+        403: account_not_activated_response,
+        404: account_not_found_response,
     },
 )
 @api_view(["POST"])
 @authentication_classes([])
 def obtain_token_pair(request: Request) -> Response:
     """
-    Authenticates a user and returns a pair of tokens.
+    Authenticates an account and returns a pair of tokens.
 
-    This view receives the user's email and password, verifies if the credentials
+    This view receives the account's email and password, verifies if the credentials
     are correct and if the account is active. If authentication is successful,
-    it returns a pair of tokens (access and refresh) for the user.
+    it returns a pair of tokens (access and refresh) for the account.
 
     Authentication:
 
@@ -79,21 +79,21 @@ def obtain_token_pair(request: Request) -> Response:
     email: str | None = request.data.get("email", None)
     password: str | None = request.data.get("password", None)
 
-    # Verify if user exists.
+    # Verify if account exists.
     try:
-        user = User.objects.get(email=email)
-        if not user.check_password(password):
-            return Response(USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
-    except User.DoesNotExist:
-        return Response(USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+        account = Account.objects.get(email=email)
+        if not account.check_password(password):
+            return Response(ACCOUNT_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+    except Account.DoesNotExist:
+        return Response(ACCOUNT_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
-    # Verify if user has activated account.
-    if user.is_active is False:
-        return Response(USER_ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
+    # Verify if account has activated account.
+    if account.is_active is False:
+        return Response(ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
 
     # Return a pair token.
     return Response(
-        deep_merge_dict(LOGIN_SUCCESSFUL, create_pair_token(user.id)),
+        deep_merge_dict(LOGIN_SUCCESSFUL, create_pair_token(account.id)),
         status=status.HTTP_200_OK,
     )
 
@@ -104,8 +104,8 @@ def obtain_token_pair(request: Request) -> Response:
         201: token_access_created_response,
         400: is_not_refresh_response,
         401: authentication_errors_response,
-        403: blacklist_token_and_user_not_activated,
-        404: user_not_found_response,
+        403: blacklist_token_and_account_not_activated,
+        404: account_not_found_response,
     },
 )
 @api_view(["POST"])
@@ -116,7 +116,7 @@ def refresh_token_access(request: Request) -> Response:
 
     This view receives a refresh token, validates it, and returns a new access token.
     It ensures that the token is of type 'refresh' and belongs to an existing
-    active user.
+    active account.
 
     Authentication:
 
@@ -136,15 +136,15 @@ def refresh_token_access(request: Request) -> Response:
     if payload["typ"] != "refresh":
         return Response(IS_NOT_REFRESH_TOKEN, status=status.HTTP_400_BAD_REQUEST)
 
-    # Verify if user exists.
+    # Verify if account exists.
     try:
-        user = User.objects.get(id=payload["uid"])
-    except User.DoesNotExist:
-        return Response(USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+        account = Account.objects.get(id=payload["uid"])
+    except Account.DoesNotExist:
+        return Response(ACCOUNT_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
-    # Checks if the user does not have an activated account
-    if user.is_active is False:
-        return Response(USER_ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
+    # Checks if the account does not have an activated account
+    if account.is_active is False:
+        return Response(ACCOUNT_NOT_ACTIVATED, status=status.HTTP_403_FORBIDDEN)
 
     # Return new access token.
     return Response(
@@ -159,7 +159,7 @@ def refresh_token_access(request: Request) -> Response:
         200: logout_successful_response,
         400: is_not_access_or_refresh_response,
         401: authentication_errors_response,
-        403: blacklist_token_and_user_token_mismatch,
+        403: blacklist_token_and_account_token_mismatch,
     },
 )
 @api_view(["POST"])
@@ -170,11 +170,11 @@ def blacklist_token(request: Request) -> Response:
 
     This view receives an access or refresh token, validates it, and adds it to
     the blacklist to ensure it can no longer be used. It also verifies that the
-    authenticated user matches the token's owner.
+    authenticated account matches the token's owner.
 
     Authentication:
 
-        - The user must be authenticated using JWT tokens.
+        - The account must be authenticated using JWT tokens.
 
         - The token should be provided in the `Authorization` header as a Bearer token.
     """
@@ -195,13 +195,13 @@ def blacklist_token(request: Request) -> Response:
             IS_NOT_ACCESS_OR_REFRESH_TOKEN, status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Verify that the authenticated user matches the token's owner.
+    # Verify that the authenticated account matches the token's owner.
     if request.user.id != payload["uid"]:
-        return Response(USER_TOKEN_MISMATCH, status=status.HTTP_403_FORBIDDEN)
+        return Response(ACCOUNT_TOKEN_MISMATCH, status=status.HTTP_403_FORBIDDEN)
 
     # Insert the JTI token in blacklist
     BlacklistTokenModel.objects.create(
-        user_id=request.user.id,
+        account_id=request.user.id,
         jti=payload["jti"],
         exp=payload["exp"],
         typ=payload["typ"],

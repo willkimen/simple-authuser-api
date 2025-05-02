@@ -2,9 +2,9 @@ import importlib
 
 from django.contrib.auth import get_user_model
 
-# Gets the user model configured in the Django project.
-# Used for reference in tests where the user model is needed.
-User = get_user_model()
+# Gets the account model configured in the Django project.
+# Used for reference in tests where the account model is needed.
+Account = get_user_model()
 
 # =====================================
 # CONSTANTS FOR FAKE DATA
@@ -35,12 +35,12 @@ LOGGER_EMAIL_TASK_ERROR_FUNCTION_PATCH = "logger.email_task_error"
 # Constant for mocking the method that limits the number of requests
 ALLOW_REQUEST_FUNCTION_TO_PATCH = "FivePerMinuteRateLimit.allow_request"
 
-# Constants for mocking functions that send confirmation codes to users
+# Constants for mocking functions that send confirmation codes to accounts
 SEND_EMAIL_CHANGE_CODE_FUNCTION_TO_PATCH = "send_email_change_code"
 SEND_RESET_PASSWORD_CODE_FUNCTION_TO_PATCH = "send_reset_password_code"
 SEND_ACCOUNT_ACTIVATION_CODE_FUNCTION_TO_PATCH = "send_account_activation_code"
 
-# Constants for mocking functions that notify the user
+# Constants for mocking functions that notify the account
 NOTIFY_ACTIVATED_ACCOUNT_FUNCTION_TO_PATCH = "notify_activated_account"
 NOTIFY_CHANGED_EMAIL_FUNCTION_TO_PATCH = "notify_changed_email"
 NOTIFY_RESET_PASSWORD_FUNCTION_TO_PATCH = "notify_reset_password"
@@ -92,7 +92,7 @@ TOKEN_UTILS_MODULE_PATH = importlib.import_module(
     "user_app.authentication.token_service"
 ).__name__
 
-# Path to the view responsible for user account activation.
+# Path to the view responsible for account activation.
 ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH = importlib.import_module(
     "user_app.views.activate_account_views"
 ).__name__
@@ -103,7 +103,9 @@ RESET_PASSWORD_VIEWS_MODULE_PATH = importlib.import_module(
 ).__name__
 
 # Path to the profile module used in views.
-PROFILE_VIEWS_MODULE_PATH = importlib.import_module("user_app.views.profile_views").__name__
+PROFILE_VIEWS_MODULE_PATH = importlib.import_module(
+    "user_app.views.profile_views"
+).__name__
 
 # Path to the view responsible for email change.
 CHANGE_EMAIL_VIEWS_MODULE_PATH = importlib.import_module(

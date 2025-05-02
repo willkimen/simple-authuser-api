@@ -15,7 +15,7 @@ from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
     TOKEN_UTILS_MODULE_PATH,
-    User,
+    Account,
 )
 
 # =========== Objects and constants ==============
@@ -27,9 +27,9 @@ NEW_EMAIL = "new_email@email.com"
 
 # ============ Fixtures ================
 @pytest.fixture
-def user():
-    """Creates and returns a User object for use in tests."""
-    return User.objects.create_user(
+def account():
+    """Creates and returns a Account object for use in tests."""
+    return Account.objects.create_user(
         first_name="fake_first_name",
         last_name="fake_last_name",
         email=OLD_EMAIL,
@@ -39,7 +39,7 @@ def user():
 
 
 @pytest.fixture
-def client(user) -> APIClient:
+def client(account) -> APIClient:
     """
     Provides an API client with JWT authentication in the request header.
 
@@ -48,7 +48,7 @@ def client(user) -> APIClient:
     """
     token = jwt.encode(
         {
-            "uid": user.id,
+            "uid": account.id,
             "typ": "access",
             "jti": "fake_jti",
             "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
@@ -61,22 +61,26 @@ def client(user) -> APIClient:
 
 
 @pytest.fixture
-def code(user) -> str:
+def code(account) -> str:
     """
     Creates and returns a valid verification code
-    for changing the user's email.
+    for changing the account's email.
     """
-    return ChangeEmailCodeModel.objects.create(user=user, new_email=NEW_EMAIL).code
+    return ChangeEmailCodeModel.objects.create(
+        account=account, new_email=NEW_EMAIL
+    ).code
 
 
 @pytest.fixture
-def expired_code(user) -> str:
+def expired_code(account) -> str:
     """
     Creates and returns an expired verification code for
     testing expiration scenarios.
     """
     return ChangeEmailCodeModel.objects.create(
-        user=user, new_email=NEW_EMAIL, expires_at=timezone.now() - timedelta(minutes=1)
+        account=account,
+        new_email=NEW_EMAIL,
+        expires_at=timezone.now() - timedelta(minutes=1),
     ).code
 
 
@@ -168,19 +172,19 @@ def test_change_email_successful(
     allow_request_function_mock: MagicMock, client: APIClient, code: str
 ):
     """
-    This test ensures that a user's email is successfully updated when a valid
+    This test ensures that an account's email is successfully updated when a valid
     email change code is provided.
 
     Mocked elements:
     - allow_request_function_mock: Mocks the rate limit, allowing the request
                                    to proceed.
     """
-    expected_detail_message = http_response.USER_EMAIL_CHANGED["detail"]
-    expected_code = http_response.USER_EMAIL_CHANGED["code"]
+    expected_detail_message = http_response.ACCOUNT_EMAIL_CHANGED["detail"]
+    expected_code = http_response.ACCOUNT_EMAIL_CHANGED["code"]
     expected_status_code = status.HTTP_200_OK
 
-    # Checks if there's user with old email in database, before change.
-    assert User.objects.filter(email=OLD_EMAIL).exists()
+    # Checks if there's account with old email in database, before change.
+    assert Account.objects.filter(email=OLD_EMAIL).exists()
 
     actual_response = client.post(url, data={"code": code}, format="json")
 
@@ -189,10 +193,10 @@ def test_change_email_successful(
     assert expected_code == actual_response.data["code"]
     # Check if pair token is included in response.
     assert "access" and "refresh" in actual_response.data
-    # Checks if user with new email exists.
-    assert User.objects.filter(email=NEW_EMAIL).exists()
-    # Checks if user with old email not exists.
-    assert not User.objects.filter(email=OLD_EMAIL).exists()
+    # Checks if account with new email exists.
+    assert Account.objects.filter(email=NEW_EMAIL).exists()
+    # Checks if account with old email not exists.
+    assert not Account.objects.filter(email=OLD_EMAIL).exists()
 
 
 @pytest.mark.django_db
@@ -201,11 +205,11 @@ def test_change_email_successful(
     return_value=True,
 )
 @patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_delete_code_when_user_email_changed_successfully(
+def test_delete_code_when_account_email_changed_successfully(
     allow_request_function_mock: MagicMock, client: APIClient, code: str
 ):
     """
-    After the user's email has been changed, the code must be
+    After the account's email has been changed, the code must be
     removed from the database.
 
     Mocked elements:

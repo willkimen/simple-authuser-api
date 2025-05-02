@@ -12,14 +12,14 @@ ERROR_SENDING_EMAIL = {
     "detail": "There was an error sending the email. Please try again later.",
 }
 
-USER_REGISTERED_SUCCESSFULLY = {
-    "code": "USER_REGISTERED_SUCCESSFULLY",
+ACCOUNT_REGISTERED_SUCCESSFULLY = {
+    "code": "ACCOUNT_REGISTERED_SUCCESSFULLY",
     "detail": "Registration successful! A confirmation email has been sent.",
 }
 
-USER_NOT_FOUND = {
-    "code": "USER_NOT_FOUND",
-    "detail": "User not found. Please check the information and try again.",
+ACCOUNT_NOT_FOUND = {
+    "code": "ACCOUNT_NOT_FOUND",
+    "detail": "Account not found. Please check the information and try again.",
 }
 
 EMAIL_ALREADY_EXISTS = {
@@ -32,13 +32,13 @@ EMAIL_ALREADY_IN_USE = {
     "detail": "This email is already associated with your account.",
 }
 
-USER_UPDATED_SUCCESSFULLY = {
-    "code": "USER_UPDATED_SUCCESSFULLY",
+ACCOUNT_UPDATED_SUCCESSFULLY = {
+    "code": "ACCOUNT_UPDATED_SUCCESSFULLY",
     "detail": "Your information was updated successfully.",
 }
 
-USER_DELETED_SUCCESSFULLY = {
-    "code": "USER_DELETED_SUCCESSFULLY",
+ACCOUNT_DELETED_SUCCESSFULLY = {
+    "code": "ACCOUNT_DELETED_SUCCESSFULLY",
     "detail": "Account deleted successfully.",
 }
 
@@ -47,8 +47,8 @@ CODE_NOT_FOUND = {
     "detail": "The code provided was not found. Please check and try again.",
 }
 
-USER_HAS_ALREADY_ACTIVATED = {
-    "code": "USER_HAS_ALREADY_ACTIVATED",
+ACCOUNT_HAS_ALREADY_ACTIVATED = {
+    "code": "ACCOUNT_HAS_ALREADY_ACTIVATED",
     "detail": "Your account has already been activated.",
 }
 
@@ -57,18 +57,18 @@ CODE_EXPIRED = {
     "detail": "The code has expired. Please request a new verification code.",
 }
 
-USER_EMAIL_CHANGED = {
-    "code": "USER_EMAIL_CHANGED",
+ACCOUNT_EMAIL_CHANGED = {
+    "code": "ACCOUNT_EMAIL_CHANGED",
     "detail": "Email changed successfully. Please log in again using your new email address.",
 }
 
-USER_PASSWORD_CHANGED = {
-    "code": "USER_PASSWORD_CHANGED",
+ACCOUNT_PASSWORD_CHANGED = {
+    "code": "ACCOUNT_PASSWORD_CHANGED",
     "detail": "Password changed successfully. Please log in again using your new password.",
 }
 
-USER_PASSWORD_RESET = {
-    "code": "USER_PASSWORD_RESET",
+ACCOUNT_PASSWORD_RESET = {
+    "code": "ACCOUNT_PASSWORD_RESET",
     "detail": "Password reset successfully. Please log in again using your new password.",
 }
 
@@ -77,18 +77,18 @@ PASSWORD_INCORRECT = {
     "detail": "The current password is incorrect. Please try again.",
 }
 
-ACTIVATED_USER = {
-    "code": "USER_ACTIVATED",
+ACTIVATED_ACCOUNT = {
+    "code": "ACCOUNT_ACTIVATED",
     "detail": "Your account was successfully activated.",
 }
 
-EMAIL_SEND_TO_USER_SUCCESSFULLY = {
-    "code": "EMAIL_SEND_TO_USER_SUCCESSFULLY",
+EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY = {
+    "code": "EMAIL_SEND_TO_ACCOUNT_SUCCESSFULLY",
     "detail": "Email sent successfully.",
 }
 
-USER_ACCOUNT_NOT_ACTIVATED = {
-    "code": "USER_ACCOUNT_NOT_ACTIVATED",
+ACCOUNT_NOT_ACTIVATED = {
+    "code": "ACCOUNT_NOT_ACTIVATED",
     "detail": "Your account has not been activated yet.",
 }
 
@@ -122,9 +122,9 @@ IS_NOT_ACCESS_OR_REFRESH_TOKEN = {
     "detail": "The token provided is neither an access nor a refresh token.",
 }
 
-USER_TOKEN_MISMATCH = {
-    "code": "USER_TOKEN_MISMATCH",
-    "detail": "The authenticated user does not match the user associated with the token.",
+ACCOUNT_TOKEN_MISMATCH = {
+    "code": "ACCOUNT_TOKEN_MISMATCH",
+    "detail": "The authenticated account does not match the account associated with the token.",
 }
 
 

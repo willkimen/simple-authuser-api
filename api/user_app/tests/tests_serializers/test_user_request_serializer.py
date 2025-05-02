@@ -1,13 +1,13 @@
 """
 This module performs several tests related to errors and success in validating 
-User data, using UserSerializer.
+Account data, using UserSerializer.
 """
 
 import pytest
 from rest_framework.exceptions import ErrorDetail
 from user_app.constants import validation_error_messages
-from user_app.serializers import UserRequestSerializer
-from user_app.tests.constants import User
+from user_app.serializers import AccountRequestSerializer
+from user_app.tests.constants import Account
 
 # ========== Objects and constants ============
 CONFIRMATION_PASSWORD_DIFFERENCE = "1234_!Fake_difference"
@@ -16,9 +16,9 @@ INVALID_PASSWORD = "1234"
 
 # ============== Fixtures  ======================
 @pytest.fixture
-def valid_user_data() -> dict[str, str]:
+def valid_account_data() -> dict[str, str]:
     """
-    Returns valid data for a new user.
+    Returns valid data for a new account.
     """
 
     return {
@@ -31,62 +31,64 @@ def valid_user_data() -> dict[str, str]:
 
 
 @pytest.fixture
-def user_data_with_mismatched_passwords(valid_user_data: dict) -> dict[str, str]:
+def account_data_with_mismatched_passwords(valid_account_data: dict) -> dict[str, str]:
     """
-    Returns user data where the passwords do not match.
+    Returns account data where the passwords do not match.
     """
-    valid_user_data["confirmation_password"] = CONFIRMATION_PASSWORD_DIFFERENCE
-    return valid_user_data
+    valid_account_data["confirmation_password"] = CONFIRMATION_PASSWORD_DIFFERENCE
+    return valid_account_data
 
 
 @pytest.fixture
-def user_data_with_invalid_passwords(valid_user_data: dict) -> dict[str, str]:
+def account_data_with_invalid_passwords(valid_account_data: dict) -> dict[str, str]:
     """
-    Returns user data with an invalid password.
+    Returns account data with an invalid password.
     """
     # Set an invalid password for both keys on the same line.
-    valid_user_data["password"] = valid_user_data["confirmation_password"] = (
+    valid_account_data["password"] = valid_account_data["confirmation_password"] = (
         INVALID_PASSWORD
     )
-    return valid_user_data
+    return valid_account_data
 
 
 # ============== Tests ==================
 @pytest.mark.django_db
-def test_user_persisted_successfully(valid_user_data: dict):
+def test_account_persisted_successfully(valid_account_data: dict):
     """
-    Tests if a user with valid data is correctly created and persisted in the database.
+    Tests if an account with valid data is correctly created and persisted in the database.
     """
-    # Initialize the serializer with the user data
-    actual_serializer = UserRequestSerializer(data=valid_user_data)
+    # Initialize the serializer with the account data
+    actual_serializer = AccountRequestSerializer(data=valid_account_data)
 
-    # Check if the serializer is valid and the user is persisted in the database
+    # Check if the serializer is valid and the account is persisted in the database
     assert actual_serializer.is_valid()
     id = actual_serializer.save().id
-    assert User.objects.filter(id=id).exists()
+    assert Account.objects.filter(id=id).exists()
 
 
 @pytest.mark.django_db
-def test_serializer_does_not_should_return_sensitive_fields(valid_user_data: dict):
+def test_serializer_does_not_should_return_sensitive_fields(valid_account_data: dict):
     """
     Tests if the serializer does not return
     fields like passoword and confirmation_password
     """
-    actual_serializer = UserRequestSerializer(data=valid_user_data)
+    actual_serializer = AccountRequestSerializer(data=valid_account_data)
 
     assert actual_serializer.is_valid()
     assert "password" and "confirmation_password" not in actual_serializer.data
 
 
 @pytest.mark.django_db
-def test_invalid_when_passwords_differ(user_data_with_mismatched_passwords: dict):
+def test_invalid_when_passwords_differ(account_data_with_mismatched_passwords: dict):
     """
     Tests if an error is raised when the passwords do not match.
     """
     expected_error_message = validation_error_messages.PASSWORD_DO_NOT_MATCH
 
-    # Initialize the serializer with the user data
-    actual_serializer = UserRequestSerializer(data=user_data_with_mismatched_passwords)
+    # Initialize the serializer with the account data
+    actual_serializer = AccountRequestSerializer(
+        data=account_data_with_mismatched_passwords
+    )
 
     # Check if the serializer is invalid and the error message is as expected
     assert not actual_serializer.is_valid()
@@ -104,12 +106,12 @@ def test_invalid_when_passwords_differ(user_data_with_mismatched_passwords: dict
 
 
 @pytest.mark.django_db
-def test_confirmation_password_field_not_persisted(valid_user_data: dict):
+def test_confirmation_password_field_not_persisted(valid_account_data: dict):
     """
-    Tests if the confirmation_password field is not persisted in the user model.
+    Tests if the confirmation_password field is not persisted in the account model.
     """
-    # Initialize the serializer with the user data
-    actual_serializer = UserRequestSerializer(data=valid_user_data)
+    # Initialize the serializer with the account data
+    actual_serializer = AccountRequestSerializer(data=valid_account_data)
 
     # Check if the serializer is valid and the confirmation_password field
     # is not present in the saved object
@@ -118,7 +120,7 @@ def test_confirmation_password_field_not_persisted(valid_user_data: dict):
 
 
 @pytest.mark.django_db
-def test_invalid_password_validation(user_data_with_invalid_passwords: dict):
+def test_invalid_password_validation(account_data_with_invalid_passwords: dict):
     """
     Tests if invalid password validation returns the expected errors.
     """
@@ -128,8 +130,10 @@ def test_invalid_password_validation(user_data_with_invalid_passwords: dict):
         validation_error_messages.NUMERIC_PASSWORD,
     ]
 
-    # Initialize the serializer with the user data
-    actual_serializer = UserRequestSerializer(data=user_data_with_invalid_passwords)
+    # Initialize the serializer with the account data
+    actual_serializer = AccountRequestSerializer(
+        data=account_data_with_invalid_passwords
+    )
 
     # Check if the serializer is invalid
     assert not actual_serializer.is_valid()
