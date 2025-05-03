@@ -1,5 +1,5 @@
 import pytest
-from user_app.models.code_models import (
+from user_app.models.code import (
     AccountActivationCodeModel,
     ChangeEmailCodeModel,
     ResetPasswordCodeModel,

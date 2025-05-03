@@ -20,7 +20,7 @@ from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -146,7 +146,7 @@ def valid_refresh_token(payload: dict) -> str:
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_blacklisted_refresh_token_not_generate_new_access_token(
     client: APIClient, blacklisted_refresh_token: str
 ):
@@ -171,7 +171,7 @@ def test_blacklisted_refresh_token_not_generate_new_access_token(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_non_refresh_token_not_generate_new_access_token(
     client: APIClient, incorrect_type_token: str
 ):
@@ -196,8 +196,8 @@ def test_non_refresh_token_not_generate_new_access_token(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_nonexistent_user_not_generate_access_token(
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_nonexistent_account_not_generate_access_token(
     client: APIClient, refresh_token_for_nonexistent_account: str
 ):
     """
@@ -223,7 +223,7 @@ def test_nonexistent_user_not_generate_access_token(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_inactive_account_not_generate_access_token(
     client: APIClient, refresh_token_for_inactive_account: str
 ):
@@ -248,7 +248,7 @@ def test_inactive_account_not_generate_access_token(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_valid_refresh_token_creates_access_token(
     client: APIClient, valid_refresh_token: str
 ):

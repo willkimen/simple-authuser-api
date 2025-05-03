@@ -13,7 +13,7 @@ from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -126,7 +126,7 @@ def expired_refresh_token(payload: dict) -> str:
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_expired_access_token(client: APIClient, expired_access_token: str):
     """
     Test that a expired access token returns the appropriate error.
@@ -150,7 +150,7 @@ def test_expired_access_token(client: APIClient, expired_access_token: str):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_expired_refresh_token(client: APIClient, expired_refresh_token: str):
     """
     Test that a expired refresh token returns the appropriate error.
@@ -174,7 +174,7 @@ def test_expired_refresh_token(client: APIClient, expired_refresh_token: str):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_already_in_blacklist(client: APIClient, blacklisted_token: str):
     """
     Test that a JWT token already blacklisted returns the appropriate error message.
@@ -191,7 +191,7 @@ def test_token_already_in_blacklist(client: APIClient, blacklisted_token: str):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_type_must_be_access_or_refresh(
     client: APIClient, incorrect_typ_token: str
 ):
@@ -213,7 +213,7 @@ def test_token_type_must_be_access_or_refresh(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_valid_token_successfully(client: APIClient, valid_token: str):
     """
     Tests if a valid token is processed successfully.

@@ -17,7 +17,7 @@ from user_app.constants import http_response
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -57,7 +57,7 @@ def client_auth_header() -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_first_name_successfully(client_auth_header: APIClient):
     """
     Test that an account can successfully update their first name.
@@ -79,7 +79,7 @@ def test_update_first_name_successfully(client_auth_header: APIClient):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_last_name_successfully(client_auth_header: APIClient):
     """
     Test that an account can successfully update their last name.
@@ -101,7 +101,7 @@ def test_update_last_name_successfully(client_auth_header: APIClient):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_update_first_and_last_name_successfully(client_auth_header: APIClient):
     """
     Test that an account can successfully update both their first and last names.

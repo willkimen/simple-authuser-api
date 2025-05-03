@@ -12,7 +12,7 @@ from user_app.constants import http_response
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -35,7 +35,7 @@ def client() -> APIClient:
 
 
 @pytest.fixture
-def data_user_nonexistent() -> dict[str:str]:
+def data_account_nonexistent() -> dict[str:str]:
     """returns data for a non-existent account."""
     return {"email": NONEXISTENT_EMAIL, "password": ACCOUNT_DATA["password"]}
 
@@ -54,21 +54,21 @@ def activated_account() -> None:
 
 # =========== Tests ===================
 @pytest.mark.django_db
-def test_nonexistent_user_does_not_return_token_pair(
-    client: APIClient, data_user_nonexistent: dict[str, str]
+def test_nonexistent_account_does_not_return_token_pair(
+    client: APIClient, data_account_nonexistent: dict[str, str]
 ):
     """
     Test that attempting to log in with a nonexistent account does not return a JWT pair.
 
     Args:
         client (APIClient): The test client used to make HTTP requests.
-        data_user_nonexistent (dict[str, str]): Dictionary containing login data for an account that does not exist.
+        data_account_nonexistent (dict[str, str]): Dictionary containing login data for an account that does not exist.
     """
     expected_detail_message = http_response.ACCOUNT_NOT_FOUND["detail"]
     expected_code = http_response.ACCOUNT_NOT_FOUND["code"]
     expected_status_code = status.HTTP_404_NOT_FOUND
 
-    actual_response = client.post(url, data=data_user_nonexistent, format="json")
+    actual_response = client.post(url, data=data_account_nonexistent, format="json")
 
     assert expected_status_code == actual_response.status_code
     assert expected_detail_message == actual_response.data["detail"]
@@ -107,7 +107,7 @@ def test_account_with_not_activated_account_does_not_return_token_pair(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_returns_token_pair_successfully(activated_account: None, client: APIClient):
     """
     Test that logging in with valid credentials for an activated

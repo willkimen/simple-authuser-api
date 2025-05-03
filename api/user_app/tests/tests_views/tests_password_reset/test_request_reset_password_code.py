@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 from user_app.constants import http_response
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
-    RESET_PASSWORD_VIEWS_MODULE_PATH,
+    PASSWORD_RESET_VIEWS_MODULE_PATH,
     Account,
 )
 
@@ -49,7 +49,7 @@ def activate_account():
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{PASSWORD_RESET_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_send_code_when_non_existent_email_in_database(
@@ -74,7 +74,7 @@ def test_does_not_send_code_when_non_existent_email_in_database(
 
 @pytest.mark.django_db
 @patch(
-    f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{PASSWORD_RESET_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_does_not_send_code_when_deactivate_account(
@@ -119,7 +119,7 @@ def test_does_not_send_code_when_request_limit_is_reached(client: APIClient):
 
 @pytest.mark.django_db
 @patch(
-    f"{RESET_PASSWORD_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{PASSWORD_RESET_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_sends_the_code_to_the_account_email_successfully(

@@ -16,7 +16,7 @@ from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -135,7 +135,7 @@ def valid_token(payload: dict) -> str:
 
 # ========== Tests ================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_already_in_blacklist(
     client_auth_header: APIClient, blacklisted_token: str
 ):
@@ -155,7 +155,7 @@ def test_token_already_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_type_must_be_access_or_refresh(
     client_auth_header: APIClient, incorrect_typ_token: str
 ):
@@ -176,8 +176,8 @@ def test_token_type_must_be_access_or_refresh(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_user_must_match_token_owner(
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_account_must_match_token_owner(
     client_auth_header: APIClient, token_with_different_account_id: str
 ):
     """
@@ -197,7 +197,7 @@ def test_user_must_match_token_owner(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_logout_success_when_valid_token_is_provided(
     client_auth_header: APIClient, valid_token: str, payload: dict
 ):

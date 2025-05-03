@@ -14,16 +14,16 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_app.constants import http_response
-from user_app.models.code_models import (
+from user_app.models.code import (
     AccountActivationCodeModel,
     ChangeEmailCodeModel,
     ResetPasswordCodeModel,
 )
-from user_app.models.token_models import BlacklistTokenModel, ValidTokenModel
+from user_app.models.token import BlacklistTokenModel, ValidTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -192,7 +192,7 @@ def client_auth_header_with_stored_tokens(
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_account_deletion_successful(client_auth_header: APIClient):
     """
     Tests that the account can successfully delete their own account.
@@ -216,7 +216,7 @@ def test_account_deletion_successful(client_auth_header: APIClient):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_verification_codes_are_removed_when_account_is_deleted(
     client_auth_header_with_stored_verification_codes: APIClient,
 ):
@@ -247,9 +247,13 @@ def test_verification_codes_are_removed_when_account_is_deleted(
     assert Account.objects.filter(
         id=expected_account_delete.id, email=expected_account_delete.email
     ).exists()
-    assert AccountActivationCodeModel.objects.filter(account=expected_account_delete).exists()
+    assert AccountActivationCodeModel.objects.filter(
+        account=expected_account_delete
+    ).exists()
     assert ChangeEmailCodeModel.objects.filter(account=expected_account_delete).exists()
-    assert ResetPasswordCodeModel.objects.filter(account=expected_account_delete).exists()
+    assert ResetPasswordCodeModel.objects.filter(
+        account=expected_account_delete
+    ).exists()
 
     client_auth_header_with_stored_verification_codes.delete(url)
 
@@ -259,13 +263,17 @@ def test_verification_codes_are_removed_when_account_is_deleted(
     assert not AccountActivationCodeModel.objects.filter(
         account=expected_account_delete
     ).exists()
-    assert not ChangeEmailCodeModel.objects.filter(account=expected_account_delete).exists()
-    assert not ResetPasswordCodeModel.objects.filter(account=expected_account_delete).exists()
+    assert not ChangeEmailCodeModel.objects.filter(
+        account=expected_account_delete
+    ).exists()
+    assert not ResetPasswordCodeModel.objects.filter(
+        account=expected_account_delete
+    ).exists()
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_tokens_are_removed_when_user_is_deleted(
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_tokens_are_removed_when_account_is_deleted(
     client_auth_header_with_stored_tokens: APIClient,
 ):
     """
@@ -301,4 +309,6 @@ def test_tokens_are_removed_when_user_is_deleted(
         account=expected_account_delete
     ).exists()
     assert not ValidTokenModel.objects.filter(account=expected_account_delete).exists()
-    assert not BlacklistTokenModel.objects.filter(account=expected_account_delete).exists()
+    assert not BlacklistTokenModel.objects.filter(
+        account=expected_account_delete
+    ).exists()

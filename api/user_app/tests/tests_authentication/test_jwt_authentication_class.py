@@ -30,7 +30,7 @@ from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -292,7 +292,7 @@ def request_with_incorrect_type_token(payload_with_activated_account: dict) -> R
 
 # ================ Tests =======================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_token_type_is_incorrect(
     request_with_incorrect_type_token: Request,
 ):
@@ -366,7 +366,7 @@ def test_authentication_fails_when_incorrect_format_auth_header(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_expired_token(expired_token_request: Request):
     """
     Test that authentication fails when the JWT is expired.
@@ -383,7 +383,7 @@ def test_authentication_fails_when_expired_token(expired_token_request: Request)
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_invalid_secret_token(
     token_request_with_invalid_secret: Request,
 ):
@@ -401,7 +401,7 @@ def test_authentication_fails_when_invalid_secret_token(
     assert expected_error_message == str(e.value)
 
 
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_malformed_token(malformed_token_request: Request):
     """
     Test that authentication fails when the JWT is malformed.
@@ -417,7 +417,7 @@ def test_authentication_fails_when_malformed_token(malformed_token_request: Requ
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_invalid_algorithm_token(
     token_request_with_invalid_algorithm: Request,
 ):
@@ -436,7 +436,7 @@ def test_authentication_fails_when_invalid_algorithm_token(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_blacklisted_token(
     request_with_blacklisted_token: Request,
 ):
@@ -455,8 +455,8 @@ def test_authentication_fails_when_blacklisted_token(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_authentication_fails_when_nonexistent_user(
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_authentication_fails_when_nonexistent_account(
     token_request_with_nonexistent_account: Request,
 ):
     """
@@ -474,7 +474,7 @@ def test_authentication_fails_when_nonexistent_user(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_success(
     token_request_with_activated_account: Request,
     activated_account,
@@ -508,7 +508,7 @@ def test_authentication_success(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_authentication_fails_when_account_deactivated(
     token_request_with_deactivated_account: Request,
 ):

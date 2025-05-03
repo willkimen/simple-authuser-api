@@ -9,14 +9,14 @@ from user_app.tests.constants import (
     CREATE_PAYLOAD_FUNCTION_TO_PATCH,
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
 )
 
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{CREATE_PAYLOAD_FUNCTION_TO_PATCH}")
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{CREATE_PAYLOAD_FUNCTION_TO_PATCH}")
 def test_token_persisted_in_database(
     create_payload_function_mock: MagicMock, payload: dict
 ):

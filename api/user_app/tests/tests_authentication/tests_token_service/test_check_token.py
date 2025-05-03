@@ -25,7 +25,7 @@ from user_app.models import BlacklistTokenModel
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
 )
 
 # ========== Objects and constants ============
@@ -113,7 +113,7 @@ def token_with_invalid_algorithm(payload: dict) -> str:
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_expired_token(token_expired: str):
     """
     Test if the function raises ExpiredSignatureError when the token is expired.
@@ -129,7 +129,7 @@ def test_expired_token(token_expired: str):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_invalid_signature(token_with_invalid_secret: str):
     """
     Test if the function raises InvalidSignatureError when the token has
@@ -146,7 +146,7 @@ def test_invalid_signature(token_with_invalid_secret: str):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_decode_error(token_malformed: str):
     """
     Test if the function raises DecodeError when the token is malformed.
@@ -162,7 +162,7 @@ def test_decode_error(token_malformed: str):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_invalid_algorithm(token_with_invalid_algorithm: str):
     """
     Test if the function raises InvalidAlgorithmError when the token has
@@ -179,7 +179,7 @@ def test_invalid_algorithm(token_with_invalid_algorithm: str):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_token_in_black_list(token: str):
     """
     Test if the function raises BlacklistTokenException when the token is
@@ -204,7 +204,7 @@ def test_token_in_black_list(token: str):
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_success_create_token(token: str, payload: dict):
     """
     Test to ensure that a JWT is successfully created and can be decoded to match

@@ -15,7 +15,7 @@ from rest_framework.test import APIClient
 from user_app.constants import http_response
 from user_app.models import AccountActivationCodeModel, PendingAccountsModel
 from user_app.tests.constants import (
-    ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH,
+    ACCOUNT_ACTIVATION_VIEWS_MODULE_PATH,
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
     Account,
 )
@@ -77,7 +77,7 @@ def code_for_deactivated_account(deactivated_account) -> str:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACCOUNT_ACTIVATION_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_successful_account_activation(
@@ -117,7 +117,7 @@ def test_successful_account_activation(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACCOUNT_ACTIVATION_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_successfully_activated_account_removes_the_code_in_the_database(
@@ -146,7 +146,7 @@ def test_successfully_activated_account_removes_the_code_in_the_database(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACCOUNT_ACTIVATION_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_not_activate_account_when_expired_code(
@@ -178,7 +178,7 @@ def test_not_activate_account_when_expired_code(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACCOUNT_ACTIVATION_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_expired_code_is_removed_from_the_database(
@@ -205,7 +205,7 @@ def test_expired_code_is_removed_from_the_database(
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACCOUNT_ACTIVATION_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_not_activate_account_when_code_field_does_not_exists(
@@ -266,7 +266,7 @@ def test_not_activate_account_when_request_limit_is_reached(client: APIClient):
 
 @pytest.mark.django_db
 @patch(
-    f"{ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{ACCOUNT_ACTIVATION_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
 def test_successfully_activated_account_removes_pending_account(

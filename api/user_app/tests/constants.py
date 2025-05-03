@@ -88,28 +88,28 @@ RESET_PASSWORD_CODE_EMAIL_CLASS_TO_PATCH = "ResetPasswordCodeEmail"
 # They use `importlib.import_module` to load the module names.
 
 # Path to the token-related utility module.
-TOKEN_UTILS_MODULE_PATH = importlib.import_module(
+TOKEN_SERVICE_MODULE_PATH = importlib.import_module(
     "user_app.authentication.token_service"
 ).__name__
 
 # Path to the view responsible for account activation.
-ACTIVATE_ACCOUNT_VIEWS_MODULE_PATH = importlib.import_module(
-    "user_app.views.activate_account_views"
+ACCOUNT_ACTIVATION_VIEWS_MODULE_PATH = importlib.import_module(
+    "user_app.views.account_activation"
 ).__name__
 
 # Path to the view responsible for password reset.
-RESET_PASSWORD_VIEWS_MODULE_PATH = importlib.import_module(
-    "user_app.views.reset_password_views"
+PASSWORD_RESET_VIEWS_MODULE_PATH = importlib.import_module(
+    "user_app.views.password_reset"
 ).__name__
 
 # Path to the profile module used in views.
-PROFILE_VIEWS_MODULE_PATH = importlib.import_module(
-    "user_app.views.profile_views"
+ACCOUNT_MANAGEMENT_VIEWS_MODULE_PATH = importlib.import_module(
+    "user_app.views.account_management"
 ).__name__
 
 # Path to the view responsible for email change.
-CHANGE_EMAIL_VIEWS_MODULE_PATH = importlib.import_module(
-    "user_app.views.change_email_views"
+EMAIL_CHANGE_VIEWS_MODULE_PATH = importlib.import_module(
+    "user_app.views.email_change"
 ).__name__
 
 # Path to the email service module, containing email sending functions.

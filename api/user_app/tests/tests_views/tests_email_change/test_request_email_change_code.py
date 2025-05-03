@@ -11,7 +11,7 @@ from user_app.constants import http_response
 from user_app.tests.constants import (
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -63,8 +63,8 @@ def client_auth_header(activated_account) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-def test_do_not_send_code_if_email_is_same_as_logged_in_user(
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_do_not_send_code_if_email_is_same_as_logged_in_account(
     client_auth_header: APIClient,
 ):
     """
@@ -86,7 +86,7 @@ def test_do_not_send_code_if_email_is_same_as_logged_in_user(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_do_not_send_code_if_email_already_exists_in_database(
     client_auth_header: APIClient,
 ):
@@ -111,7 +111,7 @@ def test_do_not_send_code_if_email_already_exists_in_database(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_send_code_successfully(client_auth_header: APIClient):
     """
     Tests the successful case of sending the confirmation email to

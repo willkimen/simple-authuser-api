@@ -11,10 +11,10 @@ from user_app.constants import http_response
 from user_app.models import ChangeEmailCodeModel
 from user_app.tests.constants import (
     ALLOW_REQUEST_FUNCTION_TO_PATCH,
-    CHANGE_EMAIL_VIEWS_MODULE_PATH,
+    EMAIL_CHANGE_VIEWS_MODULE_PATH,
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -87,10 +87,10 @@ def expired_code(account) -> str:
 # ============ Tests ================
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{EMAIL_CHANGE_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_do_not_change_email_if_code_does_not_exist(
     allow_request_function_mock: MagicMock, client: APIClient
 ):
@@ -115,10 +115,10 @@ def test_do_not_change_email_if_code_does_not_exist(
 
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{EMAIL_CHANGE_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_do_not_change_email_if_code_is_expired(
     allow_request_function_mock: MagicMock, client: APIClient, expired_code: str
 ):
@@ -143,10 +143,10 @@ def test_do_not_change_email_if_code_is_expired(
 
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{EMAIL_CHANGE_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_delete_code_if_expired(
     allow_request_function_mock: MagicMock, client: APIClient, expired_code: str
 ):
@@ -164,10 +164,10 @@ def test_delete_code_if_expired(
 
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{EMAIL_CHANGE_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_change_email_successful(
     allow_request_function_mock: MagicMock, client: APIClient, code: str
 ):
@@ -201,10 +201,10 @@ def test_change_email_successful(
 
 @pytest.mark.django_db
 @patch(
-    f"{CHANGE_EMAIL_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
+    f"{EMAIL_CHANGE_VIEWS_MODULE_PATH}.{ALLOW_REQUEST_FUNCTION_TO_PATCH}",
     return_value=True,
 )
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_delete_code_when_account_email_changed_successfully(
     allow_request_function_mock: MagicMock, client: APIClient, code: str
 ):
@@ -223,7 +223,7 @@ def test_delete_code_when_account_email_changed_successfully(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_does_not_change_email_when_request_limit_is_reached(client: APIClient):
     """
     This test ensures that the API enforces rate limiting and returns an error when

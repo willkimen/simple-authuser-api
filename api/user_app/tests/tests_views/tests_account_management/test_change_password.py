@@ -11,10 +11,10 @@ from rest_framework.test import APIClient
 from user_app.constants import http_response
 from user_app.tests.constants import (
     FAKE_SECRET,
-    PROFILE_VIEWS_MODULE_PATH,
+    ACCOUNT_MANAGEMENT_VIEWS_MODULE_PATH,
     REVOKE_TOKENS_FUNCTION_TO_PATCH,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
     Account,
 )
 
@@ -64,8 +64,8 @@ def client(account) -> APIClient:
 
 # ============ Tests ================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(f"{PROFILE_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{ACCOUNT_MANAGEMENT_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
 def test_password_not_changed_when_actual_password_does_not_match(
     revoke_tokens_function_mock: MagicMock, client: APIClient
 ):
@@ -91,8 +91,8 @@ def test_password_not_changed_when_actual_password_does_not_match(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(f"{PROFILE_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{ACCOUNT_MANAGEMENT_VIEWS_MODULE_PATH}.{REVOKE_TOKENS_FUNCTION_TO_PATCH}")
 def test_change_password_successfully(
     revoke_tokens_function_mock: MagicMock, client: APIClient
 ):
@@ -120,7 +120,7 @@ def test_change_password_successfully(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
 def test_new_tokens_returned_when_password_is_changed_successfully(client: APIClient):
     """
     Test that new tokens are returned when the password is changed successfully.

@@ -3,14 +3,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from django.utils import timezone
+from user_app.authentication.token_service import revoke_tokens
 from user_app.models import BlacklistTokenModel, ValidTokenModel
 from user_app.tests.constants import (
     CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH,
     FAKE_SECRET,
     TOKEN_SECRET_SETTING_TO_PATCH,
-    TOKEN_UTILS_MODULE_PATH,
+    TOKEN_SERVICE_MODULE_PATH,
 )
-from user_app.authentication.token_service import revoke_tokens
 
 
 # ========== Objects, auxiliary functions and constants ============
@@ -133,8 +133,8 @@ def payloads(activated_account) -> list[dict]:
 
 # ============= Tests ======================
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
 def test_token_persisted_in_blacklist(
     create_pair_token_function_mock: MagicMock, persisted_valid_payload: dict
 ):
@@ -162,8 +162,8 @@ def test_token_persisted_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
 def test_expired_token_does_not_persisted_in_blacklist(
     create_pair_token_function_mock: MagicMock,
     persisted_valid_payload: dict,
@@ -193,8 +193,8 @@ def test_expired_token_does_not_persisted_in_blacklist(
 
 
 @pytest.mark.django_db
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
-@patch(f"{TOKEN_UTILS_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{CREATE_PAIR_TOKEN_FUNCTION_TO_PATCH}")
 def test_all_tokens_are_deleted(
     create_pair_token_function_mock: MagicMock,
     persisted_valid_payload: dict,

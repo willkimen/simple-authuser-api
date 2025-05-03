@@ -1,6 +1,6 @@
 """
 This module performs several tests related to errors and success in validating 
-Account data, using UserSerializer.
+Account data, using AccountSerializer.
 """
 
 import pytest
