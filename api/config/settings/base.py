@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from user_app.constants.logging import (
+from account_auth.constants.logging import (
     EMAIL_TASK_ERROR_LEVEL,
     EMAIL_TASK_ERROR_LEVEL_NAME,
     EMAIL_TASK_ERROR_LOGGER_NAME,
@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
-    "user_app",
+    "account_auth",
     "django_celery_beat",
     "drf_spectacular",
 ]
@@ -72,7 +72,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Rest Framework Configurations
 # -----------------------------------------------------------------------------
 REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "user_app.custom_exception_handler.custom_exception_handler",
+    "EXCEPTION_HANDLER": "account_auth.custom_exception_handler.custom_exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
@@ -106,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # User model configuration
 # -----------------------------------------------------------------------------
-AUTH_USER_MODEL = "user_app.AccountModel"
+AUTH_USER_MODEL = "account_auth.AccountModel"
 
 
 # Internationalization

@@ -1,0 +1,280 @@
+"""
+This module contains tests for the JWT refresh functionality.
+It verifies the behavior of the JWT refresh endpoint (`refresh_token_access`). 
+The endpoint expects a refresh token and returns a new access token if 
+the provided refresh token is valid. It handles various scenarios including 
+blacklisted tokens, non-existent accounts, and inactive accounts.
+"""
+
+from datetime import timedelta
+from unittest.mock import patch
+
+import jwt
+import pytest
+from django.urls import reverse
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APIClient
+from account_auth.constants import authentication, http_response
+from account_auth.models import BlacklistTokenModel
+from account_auth.tests.constants import (
+    FAKE_SECRET,
+    TOKEN_SECRET_SETTING_TO_PATCH,
+    TOKEN_SERVICE_MODULE_PATH,
+    Account,
+)
+
+# =========== Objects and constants ==============
+url: str = reverse("refresh_token_access")
+UID_NON_EXIST = 100
+UID = 1
+INCORRECT_TYP = "access"
+
+
+# ============ Fixtures ================
+@pytest.fixture
+def client() -> APIClient:
+    """
+    Provides an API client for making HTTP requests.
+
+    Returns:
+        APIClient: An instance of the Django REST Framework APIClient.
+    """
+    return APIClient()
+
+
+@pytest.fixture
+def activated_account():
+    return Account.objects.create(
+        id=UID,
+        first_name="fake_first_name",
+        last_name="fake_last_name",
+        email="fakeemail@email.com",
+        is_active=True,
+    )
+
+
+@pytest.fixture
+def payload(activated_account) -> dict:
+    return {
+        "uid": activated_account.id,
+        "typ": "refresh",
+        "jti": "fake_jti",
+        "exp": int((timezone.now() + timedelta(seconds=60)).timestamp()),
+    }
+
+
+@pytest.fixture
+def blacklisted_refresh_token(payload: dict) -> str:
+    """
+    Provides a refresh token that is blacklisted.
+
+    Returns:
+        str: An encoded JWT refresh token that is in the blacklist.
+    """
+
+    BlacklistTokenModel.objects.create(
+        account_id=payload["uid"],
+        jti=payload["jti"],
+        typ=payload["typ"],
+        exp=payload["exp"],
+    )
+
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def incorrect_type_token(payload: dict) -> str:
+    """
+    Provides a valid access token with an incorrect token type.
+
+    This fixture creates a token with a type that is not expected by
+    the refresh token endpoint.
+    The token has a valid structure but uses an incorrect 'typ' field.
+
+    Returns:
+        str: An encoded JWT token with an incorrect type.
+    """
+    payload["typ"] = INCORRECT_TYP
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def refresh_token_for_nonexistent_account(payload: dict) -> str:
+    """
+    Provides a refresh token for a non-existent account.
+
+    Returns:
+        str: An encoded JWT refresh token for a non-existent account.
+    """
+    payload["uid"] = UID_NON_EXIST
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def refresh_token_for_inactive_account(payload: dict) -> str:
+    """
+    Provides a refresh token for an inactive account.
+
+    Returns:
+        str: An encoded JWT refresh token for an inactive account.
+    """
+    inactive_account = Account.objects.create(
+        id=20,
+        first_name="fake_first_name",
+        last_name="fake_last_name",
+        email="fakeotheremail@email.com",
+        is_active=False,
+    )
+    payload["uid"] = inactive_account.id
+
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+@pytest.fixture
+def valid_refresh_token(payload: dict) -> str:
+    """
+    Provides a valid refresh token.
+
+    This fixture creates an account and generates a valid refresh token.
+
+    Returns:
+        str: An encoded JWT refresh token for an active account.
+    """
+    return jwt.encode(payload, FAKE_SECRET)
+
+
+# ========== Tests ================
+@pytest.mark.django_db
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_blacklisted_refresh_token_not_generate_new_access_token(
+    client: APIClient, blacklisted_refresh_token: str
+):
+    """
+    Tests that a blacklisted refresh token does not generate a new access token.
+
+    Args:
+        client (APIClient): The test client used to make HTTP requests.
+        blacklisted_refresh_token (str): The refresh token that is blacklisted.
+    """
+    expected_detail_message = authentication.TOKEN_IN_BLACKLIST["detail"]
+    expected_code = authentication.TOKEN_IN_BLACKLIST["code"]
+    expected_status_code = status.HTTP_403_FORBIDDEN
+
+    actual_response = client.post(
+        url, data={"refresh": blacklisted_refresh_token}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_non_refresh_token_not_generate_new_access_token(
+    client: APIClient, incorrect_type_token: str
+):
+    """
+    Tests that a non-refresh token does not generate a new access token.
+
+    Args:
+        client (APIClient): The test client used to make HTTP requests.
+        incorrect_type_token (str): The JWT access token provided as a refresh token.
+    """
+    expected_detail_message = http_response.IS_NOT_REFRESH_TOKEN["detail"]
+    expected_code = http_response.IS_NOT_REFRESH_TOKEN["code"]
+    expected_status_code = status.HTTP_400_BAD_REQUEST
+
+    actual_response = client.post(
+        url, data={"refresh": incorrect_type_token}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_nonexistent_account_not_generate_access_token(
+    client: APIClient, refresh_token_for_nonexistent_account: str
+):
+    """
+    Tests that a refresh token for a non-existent account does not
+    generate an access token.
+
+    Args:
+        client (APIClient): The test client used to make HTTP requests.
+        refresh_token_for_nonexistent_account (str): The refresh token for a
+                                                  non-existent account.
+    """
+    expected_detail_message = http_response.ACCOUNT_NOT_FOUND["detail"]
+    expected_code = http_response.ACCOUNT_NOT_FOUND["code"]
+    expected_status_code = status.HTTP_404_NOT_FOUND
+
+    actual_response = client.post(
+        url, data={"refresh": refresh_token_for_nonexistent_account}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_inactive_account_not_generate_access_token(
+    client: APIClient, refresh_token_for_inactive_account: str
+):
+    """
+    Tests that a refresh token for an inactive account does not generate an access token.
+
+    Args:
+        client (APIClient): The test client used to make HTTP requests.
+        refresh_token_for_inactive_account (str): The refresh token for an inactive account.
+    """
+    expected_detail_message = http_response.ACCOUNT_NOT_ACTIVATED["detail"]
+    expected_code = http_response.ACCOUNT_NOT_ACTIVATED["code"]
+    expected_status_code = status.HTTP_403_FORBIDDEN
+
+    actual_response = client.post(
+        url, data={"refresh": refresh_token_for_inactive_account}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+
+@pytest.mark.django_db
+@patch(f"{TOKEN_SERVICE_MODULE_PATH}.{TOKEN_SECRET_SETTING_TO_PATCH}", FAKE_SECRET)
+def test_valid_refresh_token_creates_access_token(
+    client: APIClient, valid_refresh_token: str
+):
+    """
+    Tests that a valid refresh token successfully generates a new access token.
+
+    Args:
+        client (APIClient): The test client used to make HTTP requests.
+        valid_refresh_token (str): The valid refresh token.
+    """
+    expected_detail_message = http_response.TOKEN_ACCESS_CREATED["detail"]
+    expected_code = http_response.TOKEN_ACCESS_CREATED["code"]
+    expected_status_code = status.HTTP_201_CREATED
+    expected_typ_payload = "access"
+    expected_uid_payload = UID
+
+    actual_response = client.post(
+        url, data={"refresh": valid_refresh_token}, format="json"
+    )
+
+    assert expected_detail_message == actual_response.data["detail"]
+    assert expected_code == actual_response.data["code"]
+    assert expected_status_code == actual_response.status_code
+
+    actual_payload = jwt.decode(
+        actual_response.data["access"], FAKE_SECRET, algorithms="HS256"
+    )
+    assert expected_typ_payload == actual_payload["typ"]
+    assert expected_uid_payload == actual_payload["uid"]

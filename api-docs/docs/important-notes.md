@@ -278,8 +278,8 @@ In this project, we define specific queues for task types (e.g., emails, removal
 
 ```python
 app.conf.task_routes = {
-    "user_app.tasks.task_remove_exp_code": {"queue": REMOVALS_QUEUE_NAME},
-    "user_app.tasks.task_send_account_activation_code": {"queue": EMAIL_QUEUE_NAME},
+    "account_auth.tasks.task_remove_exp_code": {"queue": REMOVALS_QUEUE_NAME},
+    "account_auth.tasks.task_send_account_activation_code": {"queue": EMAIL_QUEUE_NAME},
     ...
 }
 ```
@@ -294,11 +294,11 @@ If you forget to register a new task here:
 
 ### ✅ What You Should Do
 
-Whenever you define a new task (e.g., in `user_app/tasks.py`), **make sure to add it to `task_routes`** in `celery.py` like so:
+Whenever you define a new task (e.g., in `account_auth/tasks.py`), **make sure to add it to `task_routes`** in `celery.py` like so:
 
 ```python
 app.conf.task_routes.update({
-    "user_app.tasks.my_new_task": {"queue": EMAIL_QUEUE_NAME},
+    "account_auth.tasks.my_new_task": {"queue": EMAIL_QUEUE_NAME},
 })
 ```
 
