@@ -980,8 +980,8 @@ This is a basic protection mechanism. It's helpful in production but might get i
 <p>Every time you create a new Celery task in your Django project, <strong>you must explicitly register it in the <code>celery.py</code> module</strong> if you're using custom queues via <code>task_routes</code>.</p>
 <p>In this project, we define specific queues for task types (e.g., emails, removals), and use <code>app.conf.task_routes</code> to route each task accordingly:</p>
 <div class="highlight"><pre><span></span><code><span class="n">app</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">task_routes</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;user_app.tasks.task_remove_exp_code&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">REMOVALS_QUEUE_NAME</span><span class="p">},</span>
-    <span class="s2">&quot;user_app.tasks.task_send_account_activation_code&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">EMAIL_QUEUE_NAME</span><span class="p">},</span>
+    <span class="s2">&quot;account_auth.tasks.task_remove_exp_code&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">REMOVALS_QUEUE_NAME</span><span class="p">},</span>
+    <span class="s2">&quot;account_auth.tasks.task_send_account_activation_code&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">EMAIL_QUEUE_NAME</span><span class="p">},</span>
     <span class="o">...</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -993,9 +993,9 @@ This is a basic protection mechanism. It's helpful in production but might get i
 <li>This could lead to tasks silently not running or being stuck.</li>
 </ul>
 <h3 id="what-you-should-do">✅ What You Should Do</h3>
-<p>Whenever you define a new task (e.g., in <code>user_app/tasks.py</code>), <strong>make sure to add it to <code>task_routes</code></strong> in <code>celery.py</code> like so:</p>
+<p>Whenever you define a new task (e.g., in <code>account_auth/tasks.py</code>), <strong>make sure to add it to <code>task_routes</code></strong> in <code>celery.py</code> like so:</p>
 <div class="highlight"><pre><span></span><code><span class="n">app</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">task_routes</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-    <span class="s2">&quot;user_app.tasks.my_new_task&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">EMAIL_QUEUE_NAME</span><span class="p">},</span>
+    <span class="s2">&quot;account_auth.tasks.my_new_task&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">EMAIL_QUEUE_NAME</span><span class="p">},</span>
 <span class="p">})</span>
 </code></pre></div>
 <blockquote>
