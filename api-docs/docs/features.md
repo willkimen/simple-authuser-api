@@ -27,6 +27,9 @@
 - After login, a pair of tokens (**access** and **refresh**) is generated and sent to the client.
 - These tokens can be added to the blacklist, rendering them invalid immediately.
 
+![Authentication flow with JWT (access and refresh tokens)](img/flow-jwt.png)
+<figcaption>Authentication flow with JWT (access and refresh tokens)</figcaption>
+
 ## 📬 Account Activation
 - After registration, the user receives a verification code in the registered email.
 - The account must be activated using this code, which is valid for a specific period.
