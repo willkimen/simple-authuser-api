@@ -74,7 +74,7 @@ pytest==8.1.1
 pytest-django==4.8.0
 python-crontab==3.2.0
 python-dateutil==2.9.0.post0
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 PyYAML==6.0.2
 pyyaml_env_tag==0.1
 redis==5.2.0
