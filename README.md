@@ -1,13 +1,13 @@
-# 🧪 Django Authentication – A Case Study
+# 🧪 Django Authentication – A Case Study  (Legacy)
 
 > [!NOTE]
 > **Project Status: Legacy / Planned Overhaul**  
 > This monolithic API has been **deprecated** and split into two independent microservices to improve scalability and separation of concerns:
 > 
-> * 🔐 **Authentication Logic:** Moved to the [Auth Service](https://github.com).
-> * ✉️ **Transactional Emails:** Extracted and rewritten in Go inside the [Email Service](https://github.com).
+> * 🔐 **Authentication Logic:** Moved to the [Auth Service](https://github.com/willkimen/auth-service).
+> * ✉️ **Transactional Emails:** Extracted and rewritten in Go inside the [Email Service](https://github.com/willkimen/email-service).
 > 
-> **Future Plans:** In the future, I intend to refactor this specific repository to significantly improve its architectural design, making it much cleaner, highly decoupled, and easier to maintain as a demonstration of best practices.
+> **Future Plans:** In the future, I intend to refactor this specific repository to significantly improve its architectural design, making it much cleaner, highly decoupled, and easier to maintain.
 
 
 A comprehensive case study to deeply understand how authentication works in Django Rest Framework (DRF).  
