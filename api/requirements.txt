@@ -68,7 +68,7 @@ pycodestyle==2.11.1
 pyflakes==3.2.0
 Pygments==2.18.0
 PyJWT==2.8.0
-pymdown-extensions==10.15
+pymdown-extensions==10.21.3
 pyright==1.1.370
 pytest==8.1.1
 pytest-django==4.8.0
